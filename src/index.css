@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+/* Highlight the code you want to comment and press "ctrl+/" if you want to comment the specific code */
+
+
+/* To monitor the size or locations of all elements */
+* {            
+  
+   border: 1px solid red;
+}  
+  
