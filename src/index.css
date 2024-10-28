@@ -10,6 +10,5 @@
 /* To monitor the size or locations of all elements */
 * {            
   
-   border: 1px solid red;
+   border: 1px solid rgb(0, 0, 0);
 }  
-  
