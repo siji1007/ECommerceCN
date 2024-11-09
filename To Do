@@ -1,0 +1,19 @@
+THIS IS THE TXT FILE FOR TO DO LIST, THIS IS THE DOCUMENTATION THAT YOU CAN TRACK THE COLLABORATORS HISTORY
+
+Client Side User Interface                                         ANJELO AGUILAR IS RESPONSIBLE TO CHANGE/ADD IN THE USER INTERFACE / FRONTEND
+Home Page      [Insert here the data you change the page UI]
+Shop Page      [Insert here the data you change the page UI]
+Vendor Page    [Insert here the data you change the page UI]
+About Page     [Insert here the data you change the page UI]
+
+
+
+BACKEND (SERVER SIDE)                                            CJ IS RESPONSIBLE FOR THE REQUEST, DATA PROCESSING AND DATA SECURITY
+server.py Start[NOV 9 2024]   
+
+
+DATABASE                                                        CJ/PAUL IS RESPONSIBLE TO HAVE A WELL STRUCTURED DATABASE ON WHERE THE DATA STORES  {ENCYPTION}
+
+Database queries 
+"add tables here"
+
