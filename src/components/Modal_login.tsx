@@ -14,10 +14,6 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
         setIsSignUp(!isSignUp);  // Switch between login and signup
     };
 
-    function handleSubmit(event: FormEvent<HTMLFormElement>): void {
-        throw new Error('Function not implemented.');
-    }
-
     return (
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-8 rounded-md w-96 relative">
@@ -75,7 +71,7 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                         </button>
                     </form>
                 ) : (
-                    <form onSubmit={handleSubmit}>
+                    <form >
                         <div className="mb-4">
                             <label htmlFor="email" className="block text-sm font-semibold">Email</label>
                             <input

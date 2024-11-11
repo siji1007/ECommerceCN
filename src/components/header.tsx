@@ -13,21 +13,21 @@ const Header: React.FC = () => {
 
     return (
         <>
-            <nav className="w-full h-19 bg-green-800 flex justify-between items-center px-4 text-white">
+            <nav className="w-full h-19 bg-gradient-to-r from-white to-green-900 flex justify-between items-center px-4 text-white">
                 <div className="flex">
                     <img src={logo} alt="Logo"  className="h-16 w-16 object-contain" />
                     <div className='ml-4 flex flex-col justify-center'>
-                        <div className="text-white text-lg sm:text-sm md:text-lg lg:text-xm font-bold">Camarines Norte</div>
-                        <div className="text-white text-sm sm:text-sm md:text-xs lg:text-xm font-bold">Tour & Shop Hub</div>
+                        <div className="text-green-900 text-lg sm:text-sm md:text-lg lg:text-xm font-bold">Camarines Norte</div>
+                        <div className="text-green-900  text-sm sm:text-sm md:text-xs lg:text-xm font-bold">Tour & Shop Hub</div>
                     </div>
                 </div>
                 
                 {/* Desktop Links */}
                 <ul className="hidden md:flex justify-center space-x-6 mr-8">
-                    <li><Link to="/" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full">Home</Link></li>
-                    <li><Link to="/shop" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full">Shop</Link></li>
-                    <li><Link to="/vendor" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full">Vendor</Link></li>
-                    <li><Link to="/about" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full">About</Link></li>
+                    <li><Link to="/"  className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">Home</Link></li>
+                    <li><Link to="/shop" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">Shop</Link></li>
+                    <li><Link to="/vendor" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">Vendor</Link></li>
+                    <li><Link to="/about" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">About</Link></li>
                     <li className='flex ml-auto justify-center items-center'> <Link to="#" onClick={toggleModal} className="flex items-center space-x-2"> <FaUser /> </Link> </li>
 
                 </ul>
