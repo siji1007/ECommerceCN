@@ -1,19 +1,29 @@
+
+
+
+
 THIS IS THE TXT FILE FOR TO DO LIST, THIS IS THE DOCUMENTATION THAT YOU CAN TRACK THE COLLABORATORS HISTORY
 
+
+
+
+File Source Management                                             Christina Sena IS RESPONSIBLE IN FILE MANAGEMENT 
+
+
 Client Side User Interface                                         ANJELO AGUILAR IS RESPONSIBLE TO CHANGE/ADD IN THE USER INTERFACE / FRONTEND
-Home Page      [Insert here the data you change the page UI]
-Shop Page      [Insert here the data you change the page UI]
+Home Page      [Angelo Aguilar] -- FoxBurger Branch
+Shop Page      [Christian John Ibanez]  -- Main Branch 
 Vendor Page    [Insert here the data you change the page UI]
 About Page     [Insert here the data you change the page UI]
 
 
 
 BACKEND (SERVER SIDE)                                            CJ IS RESPONSIBLE FOR THE REQUEST, DATA PROCESSING AND DATA SECURITY
-server.py Start[NOV 9 2024]   
+server.py Start[NOV 9 2024] connection  ✔
 
 
 DATABASE                                                        CJ/PAUL IS RESPONSIBLE TO HAVE A WELL STRUCTURED DATABASE ON WHERE THE DATA STORES  {ENCYPTION}
 
-Database queries 
-"add tables here"
+Database queries    
+"add tables here" [NOV 9 2024] MySql Xammp
 

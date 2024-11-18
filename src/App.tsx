@@ -5,6 +5,7 @@ import Vendors from '../src/pages/Vendor';
 import About from '../src/pages/About';
 import './App.css';
 import Header from './components/header';
+import Footer from './components/footer';
 import Cookies from 'js-cookie';
 import { useEffect } from 'react';
 
@@ -31,15 +32,20 @@ function App() {
 
   return (
   
-    <Router>
-      <Header />
-      <Routes>
-        <Route path='/' element={<HomePage/>}/>
-        <Route path='/shop' element={<Shop/>}/>
-        <Route path='/vendor' element={<Vendors/>}/>
-        <Route path='/about' element={<About/>}/>
-      </Routes>
-    </Router>
+      <Router>
+        <Header />
+        <Routes>
+          <Route path='/' element={<HomePage/>}/>
+          <Route path='/shop' element={<Shop/>}/>
+          <Route path='/vendor' element={<Vendors/>}/>
+          <Route path='/about' element={<About/>}/>
+        </Routes>
+        <div className='w-full h-full bg-red-900 flex flex-none justify-between p-2'>
+        <Footer/>
+        </div>
+        
+      </Router>
+ 
   )
 }
 

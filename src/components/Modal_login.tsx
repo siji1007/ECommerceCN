@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import { FC, useState, FormEvent } from 'react';
 
 interface ModalLoginProps {
     isOpen: boolean;
@@ -6,12 +6,34 @@ interface ModalLoginProps {
 }
 
 const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
-    const [isSignUp, setIsSignUp] = useState(false);  // Toggle between login and signup forms
+    const [isSignUp, setIsSignUp] = useState(false); 
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
 
     if (!isOpen) return null;
 
     const toggleForm = () => {
-        setIsSignUp(!isSignUp);  // Switch between login and signup
+        setIsSignUp(!isSignUp);
+        clearForm();
+    };
+
+    const clearForm = () => {
+        setName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+    };
+
+    const handleLoginSubmit = (event: FormEvent) => {
+        event.preventDefault();
+        console.log('Login Data:', { email, password });
+    };
+
+    const handleSignUpSubmit = (event: FormEvent) => {
+        event.preventDefault();
+        console.log('Sign Up Data:', { name, email, password, confirmPassword });
     };
 
     return (
@@ -23,17 +45,23 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                 >
                     ×
                 </button>
-                <h2 className="text-xl font-bold mb-4">{isSignUp ? "Sign Up" : "Login"}</h2>
+                <h2 className="flex text-xl font-bold mb-4 justify-center items-center">
+                    {isSignUp ? "Sign Up" : "Login"}
+                </h2>
                 
                 {isSignUp ? (
-                    <form>
+                    <form onSubmit={handleSignUpSubmit}>
                         <div className="mb-4">
                             <label htmlFor="name" className="block text-sm font-semibold">Full Name</label>
                             <input
                                 type="text"
                                 id="name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md"
                                 placeholder="Enter your full name"
+                                autoComplete="name"
+                                required
                             />
                         </div>
                         <div className="mb-4">
@@ -41,8 +69,11 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                             <input
                                 type="email"
                                 id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md"
                                 placeholder="Enter your email"
+                                required
                             />
                         </div>
                         <div className="mb-4">
@@ -50,8 +81,11 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                             <input
                                 type="password"
                                 id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md"
                                 placeholder="Create a password"
+                                required
                             />
                         </div>
                         <div className="mb-4">
@@ -59,8 +93,11 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                             <input
                                 type="password"
                                 id="confirmPassword"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md"
                                 placeholder="Confirm your password"
+                                required
                             />
                         </div>
                         <button
@@ -71,14 +108,17 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                         </button>
                     </form>
                 ) : (
-                    <form >
+                    <form onSubmit={handleLoginSubmit} >
                         <div className="mb-4">
                             <label htmlFor="email" className="block text-sm font-semibold">Email</label>
                             <input
                                 type="email"
                                 id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md"
                                 placeholder="Enter your email"
+                                required
                             />
                         </div>
                         <div className="mb-4">
@@ -86,8 +126,11 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                             <input
                                 type="password"
                                 id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md"
                                 placeholder="Enter your password"
+                                required
                             />
                         </div>
                         <button
@@ -109,6 +152,18 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                             {isSignUp ? "Login" : "Sign Up"}
                         </button>
                     </span>
+                    {isSignUp && (
+                        <p className="mt-2 text-xs text-gray-500">
+                            By signing up, you agree to our
+                            <a href="/terms-of-service" target="_blank" className="text-blue-500 hover:underline ml-1 mr-1">
+                                Terms of Service
+                            </a> 
+                            and 
+                            <a href="/privacy-policy" target="_blank" className="text-blue-500 hover:underline ml-1">
+                                Privacy Policy
+                            </a>.
+                        </p>
+    )}
                 </div>
             </div>
         </div>
