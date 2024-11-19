@@ -38,14 +38,12 @@ const Header: React.FC = () => {
                     ☰
                 </div>
 
-                {/* Mobile Links */}
                 {/* Sidebar for Mobile */}
                 <div
                 className={`fixed top-0 right-0 h-full w-1/2  bg-green-800 via-green-800 bg-[length:100%] transform ${
                     isOpen ? 'translate-x-0' : 'translate-x-full'
                 } transition-transform duration-300 ease-in-out z-50`}
-                
-                
+            
                 >
                     <button
                         className="absolute top-4 right-4 text-white text-2xl"
@@ -62,12 +60,13 @@ const Header: React.FC = () => {
 
                     {/* Profile Icon */}
                     <div className="absolute bottom-8 right-8 text-4xl cursor-pointer">
-                        <Link to="/profile" className="text-white hover:text-gray-300">
+                        <Link onClick={toggleModal} className="text-white hover:text-gray-300">
                         <FaUser/>
                         </Link>
                     </div>
                 </div>
             </nav>
+         
             <ModalLogin isOpen={isModalOpen} onClose={toggleModal} />
         </>
     );

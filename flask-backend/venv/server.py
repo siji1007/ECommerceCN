@@ -1,14 +1,12 @@
 from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from connection import db, init_app
 
 app = Flask(__name__)
 CORS(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:@localhost/tourism_ecommerce'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+init_app(app)
 
-db = SQLAlchemy(app)
 
 class SessionCookieUnauth(db.Model):
     __tablename__ = 'session_cookies_unauth'
@@ -16,7 +14,7 @@ class SessionCookieUnauth(db.Model):
     unauth_cookie = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
-# Route to store the unauthorized cookie in the database
+
 @app.route('/api/store-unauth-cookie', methods=['POST'])
 def store_unauth_cookie():
     data = request.json
@@ -28,6 +26,10 @@ def store_unauth_cookie():
         db.session.commit()
         return jsonify({"message": "Cookie stored successfully"}), 201
     return jsonify({"message": "Invalid request"}), 400
+
+
+
+
 
 if __name__ == '__main__':
     app.run(port=5000)
