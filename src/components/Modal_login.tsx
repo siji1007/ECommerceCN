@@ -6,11 +6,15 @@ interface ModalLoginProps {
 }
 
 const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
-    const [isSignUp, setIsSignUp] = useState(false); 
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
+    const [isSignUp, setIsSignUp] = useState(false);
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [month, setMonth] = useState('');
+    const [day, setDay] = useState('');
+    const [year, setYear] = useState('');
+    const [gender, setGender] = useState('');
+    const [emailOrMobile, setEmailOrMobile] = useState('');
     const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
 
     if (!isOpen) return null;
 
@@ -20,25 +24,29 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
     };
 
     const clearForm = () => {
-        setName('');
-        setEmail('');
+        setFirstName('');
+        setLastName('');
+        setMonth('');
+        setDay('');
+        setYear('');
+        setGender('');
+        setEmailOrMobile('');
         setPassword('');
-        setConfirmPassword('');
     };
 
     const handleLoginSubmit = (event: FormEvent) => {
         event.preventDefault();
-        console.log('Login Data:', { email, password });
+        console.log('Login Data:', { emailOrMobile, password });
     };
 
     const handleSignUpSubmit = (event: FormEvent) => {
         event.preventDefault();
-        console.log('Sign Up Data:', { name, email, password, confirmPassword });
+        console.log('Sign Up Data:', { firstName, lastName, month, day, year, gender, emailOrMobile, password });
     };
 
     return (
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-8 rounded-md w-96 relative">
+            <div className="bg-white p-8 rounded-md w-1/2 relative ">
                 <button
                     onClick={onClose}
                     className="absolute top-2 right-2 text-gray-600 text-xl"
@@ -48,57 +56,71 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                 <h2 className="flex text-xl font-bold mb-4 justify-center items-center">
                     {isSignUp ? "Sign Up" : "Login"}
                 </h2>
-                
                 {isSignUp ? (
                     <form onSubmit={handleSignUpSubmit}>
-                        <div className="mb-4">
-                            <label htmlFor="name" className="block text-sm font-semibold">Full Name</label>
-                            <input
-                                type="text"
-                                id="name"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                                placeholder="Enter your full name"
-                                autoComplete="name"
-                                required
-                            />
+                        {/* Full Name Section */}
+                        <div className="mb-4 flex gap-4">
+                            <div className="w-1/2">
+                                <label htmlFor="firstName" className="block text-sm font-semibold"> First Name </label>
+                                <input type="text" id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your first name" required />  
+                            </div>
+                            <div className="w-1/2">
+                                <label htmlFor="lastName" className="block text-sm font-semibold">
+                                    Last Name
+                                </label>
+                                <input type="text" id="lastName" value={lastName}onChange={(e) => setLastName(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your last name" required
+                                />
+                            </div>
                         </div>
+                        {/* Birthdate Section */}
                         <div className="mb-4">
-                            <label htmlFor="email" className="block text-sm font-semibold">Email</label>
-                            <input
-                                type="email"
-                                id="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                                placeholder="Enter your email"
-                                required
-                            />
+
+                        <label htmlFor="month" className="block text-sm font-semibold mt-2" style={{ whiteSpace: "nowrap" }} >
+                            Birthdate
+                        </label>
+                        <div className="flex flex-1 gap-4">
+                            <div className="flex-1">
+                                <select id="month" value={month} onChange={(e) => setMonth(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-md w-full" required> <option value="">Month</option> <option value="January">January</option> <option value="February">February</option> {/* Continue with all months */} </select>
+                            </div>
+                            <div className="flex-1">
+                                <select id="day" value={day} onChange={(e) => setDay(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-md w-full" required >
+                                    <option value="">Day</option>
+                                    {Array.from({ length: 31 }, (_, i) => (
+                                        <option key={i + 1} value={i + 1}>
+                                            {i + 1}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex-1">
+                                <select id="year" value={year} onChange={(e) => setYear(e.target.value)}
+                                    className="px-4 py-2 border border-gray-300 rounded-md w-full"
+                                    required
+                                >
+                                    <option value="">Year</option>
+                                    {Array.from({ length: 100 }, (_, i) => (
+                                        <option key={i} value={new Date().getFullYear() - i}>
+                                            {new Date().getFullYear() - i}
+                                        </option>
+                                    ))}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
+
+                        {/* Email or Mobile Number Section */}
                         <div className="mb-4">
-                            <label htmlFor="password" className="block text-sm font-semibold">Password</label>
-                            <input
-                                type="password"
-                                id="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                                placeholder="Create a password"
-                                required
-                            />
+                            <label htmlFor="emailOrMobile" className="block text-sm font-semibold">
+                                Email or Mobile Number
+                            </label>
+                            <input type="text" id="emailOrMobile" value={emailOrMobile} onChange={(e) => setEmailOrMobile(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your email or mobile number" required />
                         </div>
+                        {/* Password Section */}
                         <div className="mb-4">
-                            <label htmlFor="confirmPassword" className="block text-sm font-semibold">Confirm Password</label>
-                            <input
-                                type="password"
-                                id="confirmPassword"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                                placeholder="Confirm your password"
-                                required
-                            />
+                            <label htmlFor="password" className="block text-sm font-semibold">
+                                New Password
+                            </label>
+                            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Create a password" required />
                         </div>
                         <button
                             type="submit"
@@ -108,30 +130,18 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                         </button>
                     </form>
                 ) : (
-                    <form onSubmit={handleLoginSubmit} >
+                    <form onSubmit={handleLoginSubmit}>
                         <div className="mb-4">
-                            <label htmlFor="email" className="block text-sm font-semibold">Email</label>
-                            <input
-                                type="email"
-                                id="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                                placeholder="Enter your email"
-                                required
-                            />
+                            <label htmlFor="emailOrMobile" className="block text-sm font-semibold">
+                                Email or Mobile Number
+                            </label>
+                            <input type="text" id="emailOrMobile" value={emailOrMobile} onChange={(e) => setEmailOrMobile(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your email or mobile number" required />
                         </div>
                         <div className="mb-4">
-                            <label htmlFor="password" className="block text-sm font-semibold">Password</label>
-                            <input
-                                type="password"
-                                id="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                                placeholder="Enter your password"
-                                required
-                            />
+                            <label htmlFor="password" className="block text-sm font-semibold">
+                                Password
+                            </label>
+                            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your password" required />
                         </div>
                         <button
                             type="submit"
@@ -141,29 +151,23 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                         </button>
                     </form>
                 )}
-
                 <div className="mt-4 text-center">
-                    <span className="text-sm text-gray-600">
-                        {isSignUp ? "Already have an account?" : "Don't have an account?"}
-                        <button
-                            onClick={toggleForm}
-                            className="ml-2 text-blue-500 hover:underline"
-                        >
-                            {isSignUp ? "Login" : "Sign Up"}
-                        </button>
-                    </span>
-                    {isSignUp && (
-                        <p className="mt-2 text-xs text-gray-500">
-                            By signing up, you agree to our
-                            <a href="/terms-of-service" target="_blank" className="text-blue-500 hover:underline ml-1 mr-1">
-                                Terms of Service
-                            </a> 
-                            and 
-                            <a href="/privacy-policy" target="_blank" className="text-blue-500 hover:underline ml-1">
-                                Privacy Policy
-                            </a>.
+                    {isSignUp ? (
+                        <p className="text-sm">
+                            Already have an account?{' '}
+                            <span className="text-blue-600 cursor-pointer" onClick={toggleForm} > Login </span>
                         </p>
-    )}
+                    ) : (
+                        <p className="text-sm">
+                            Don't have an account?{' '}
+                            <span
+                                className="text-blue-600 cursor-pointer"
+                                onClick={toggleForm}
+                            >
+                                Sign Up
+                            </span>
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

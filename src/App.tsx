@@ -40,10 +40,6 @@ function App() {
           <Route path='/vendor' element={<Vendors/>}/>
           <Route path='/about' element={<About/>}/>
         </Routes>
-        <div className='w-full h-full bg-red-900 flex flex-none justify-between p-2'>
-        <Footer/>
-        </div>
-        
       </Router>
  
   )

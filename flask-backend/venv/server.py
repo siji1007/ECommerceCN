@@ -28,8 +28,5 @@ def store_unauth_cookie():
     return jsonify({"message": "Invalid request"}), 400
 
 
-
-
-
 if __name__ == '__main__':
     app.run(port=5000)
