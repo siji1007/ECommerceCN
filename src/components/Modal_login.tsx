@@ -1,4 +1,5 @@
 import { FC, useState, FormEvent } from 'react';
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 interface ModalLoginProps {
     isOpen: boolean;
@@ -6,6 +7,7 @@ interface ModalLoginProps {
 }
 
 const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
+    const [showPassword, setShowPassword] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -17,6 +19,11 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
     const [password, setPassword] = useState('');
 
     if (!isOpen) return null;
+
+    const handleTogglePassword = () => {
+        setShowPassword(!showPassword);
+      };
+    
 
     const toggleForm = () => {
         setIsSignUp(!isSignUp);
@@ -34,16 +41,75 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
         setPassword('');
     };
 
-    const handleLoginSubmit = (event: FormEvent) => {
-        event.preventDefault();
-        console.log('Login Data:', { emailOrMobile, password });
-    };
+    const handleLoginSubmit = async (e) => {
+        e.preventDefault();
 
-    const handleSignUpSubmit = (event: FormEvent) => {
-        event.preventDefault();
-        console.log('Sign Up Data:', { firstName, lastName, month, day, year, gender, emailOrMobile, password });
-    };
+        // Prepare the data to be sent to the Flask API
+        const data = {
+            emailOrMobile,
+            password
+        };
 
+        try {
+            // Send the login request to the backend
+            const response = await fetch('http://127.0.0.1:5000/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('LOGIN');
+                // Optionally, store user data in localStorage or context and redirect to a protected page
+            } else {
+                alert(result.message || 'Invalid credentials');
+            }
+        } catch (error) {
+            console.error('Request failed', error);
+            alert('An error occurred while trying to log in');
+        }
+    };
+    const handleSignUpSubmit = async (e) => {
+        e.preventDefault(); // Prevent default form submission behavior
+    
+        // Create the data object to be sent to the Flask server
+        const data = {
+            first_name: firstName,      // Send first name
+            last_name: lastName,        // Send last name
+            birth_month: month,         // Send birth month
+            birth_day: day,             // Send birth day
+            birth_year: year,           // Send birth year
+            email_or_mobile: emailOrMobile,  // Send email or mobile
+            password: password,         // Send password
+        };
+    
+        try {
+            const response = await fetch("http://127.0.0.1:5000/api/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            });
+    
+            const result = await response.json();
+            if (response.ok) {
+                console.log("User registered successfully:", result);
+                // Optionally redirect or show success message
+            } else {
+                console.error("Error registering user:", result.message);
+                // Show error message
+            }
+        } catch (error) {
+            console.error("Request failed", error);
+        }
+    };
+    
+    
     return (
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-8 rounded-md w-1/2 relative ">
@@ -137,12 +203,31 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
                             </label>
                             <input type="text" id="emailOrMobile" value={emailOrMobile} onChange={(e) => setEmailOrMobile(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your email or mobile number" required />
                         </div>
-                        <div className="mb-4">
-                            <label htmlFor="password" className="block text-sm font-semibold">
-                                Password
-                            </label>
-                            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your password" required />
-                        </div>
+                        <div className="mb-4 relative">
+                                <label htmlFor="password" className="block text-sm font-semibold">
+                                    Password
+                                </label>
+                                <div className="relative"> {/* Wrap the input and button */}
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        id="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-md pr-10"  // Add pr-10 for padding to the right
+                                        placeholder="Enter your password"
+                                        required
+                                    />
+                                    {/* Eye icon button to toggle password visibility */}
+                                    <button
+                                        className="absolute inset-y-0 right-2 flex items-center justify-center text-gray-600"
+                                        type="button"
+                                        onClick={handleTogglePassword}
+                                    >
+                                        {/* Displaying the correct icon */}
+                                        {showPassword ? <FaEye size={20} /> : <FaEyeSlash size={20} />}
+                                    </button>
+                                </div>
+                            </div>
                         <button
                             type="submit"
                             className="w-full bg-green-800 text-white py-2 rounded-md"
