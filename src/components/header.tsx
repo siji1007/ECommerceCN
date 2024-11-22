@@ -13,7 +13,7 @@ const Header: React.FC = () => {
 
     return (
         <>
-            <nav className="w-full h-19 bg-gradient-to-r from-white to-green-900 flex justify-between items-center px-4 text-white">
+            <nav className="z-10 w-full h-19 bg-gradient-to-r from-white to-green-900 flex justify-between items-center px-4 text-white">
                 <div className="flex">
                     <img src={logo} alt="Logo"  className="h-16 w-16 object-contain" />
                     <div className='ml-4 flex flex-col justify-center'>
@@ -40,7 +40,7 @@ const Header: React.FC = () => {
 
                 {/* Sidebar for Mobile */}
                 <div
-                className={`fixed top-0 right-0 h-full w-1/2  bg-green-800 via-green-800 bg-[length:100%] transform ${
+                className={` fixed top-0 right-0 h-full w-1/2  bg-green-800 via-green-800 bg-[length:100%] transform ${
                     isOpen ? 'translate-x-0' : 'translate-x-full'
                 } transition-transform duration-300 ease-in-out z-50`}
             
