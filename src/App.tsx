@@ -3,6 +3,7 @@ import HomePage from '../src/pages/Home';
 import Shop from '../src/pages/Shop';
 import Vendors from '../src/pages/Vendor';
 import About from '../src/pages/About';
+import Error404 from '../src/pages/Error404';
 import './App.css';
 import Header from './components/header';
 import Footer from './components/footer';
@@ -39,6 +40,7 @@ function App() {
           <Route path='/shop' element={<Shop/>}/>
           <Route path='/vendor' element={<Vendors/>}/>
           <Route path='/about' element={<About/>}/>
+          <Route path='*' element={<Error404/>}/>
         </Routes>
       </Router>
  
