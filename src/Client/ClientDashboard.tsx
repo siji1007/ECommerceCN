@@ -77,9 +77,11 @@ const ClientDashboard: React.FC = () =>{
     };
   
     return (
-        <div className="flex h-screen"> {/* main div of clientDashboard*/}
+   
+       
+        <div className="flex mt-9"> {/* main div of clientDashboard*/}
           {/* Sidebar Section */}
-          <div className="w-64 bg-white text-white flex flex-col items-center py-8">
+          <div className="w-64 bg-white text-white flex flex-col items-center py-8 h-screen">
           <div className="flex flex-col items-center justify-center mb-8">
             <img
                 src={Profile}

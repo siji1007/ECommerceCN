@@ -99,11 +99,11 @@ def login():
         email_or_mobile = data.get('emailOrMobile')
         password = data.get('password')
 
-        # Query the database for the user
+
         user = User.query.filter_by(email_or_mobile=email_or_mobile).first()
 
         if user:
-            # Directly compare the provided password with the stored password
+
             if user.password == password:
                 return jsonify({"message": "LOGIN", "user": {"first_name": user.first_name, "last_name": user.last_name}}), 200
             else:

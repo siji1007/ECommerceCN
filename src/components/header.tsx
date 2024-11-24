@@ -30,6 +30,7 @@ const Header: React.FC = () => {
                     <li><Link to="/shop" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">Shop</Link></li>
                     <li><Link to="/vendor" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">Vendor</Link></li>
                     <li><Link to="/about" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">About</Link></li>
+                    <li><h1 className='font-bold'>Name</h1></li>
                     <li className='flex ml-auto justify-center items-center'> <Link to="#" onClick={toggleModal} className="flex items-center space-x-2"> <FaUser /> </Link> </li>
 
                 </ul>
