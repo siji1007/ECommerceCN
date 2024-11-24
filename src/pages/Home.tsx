@@ -112,7 +112,7 @@ const HomePage: React.FC = () => {
      {/* Details about Camarines Norte */}
       <div className="relative z-60 flex flex-col lg:flex-row items-center justify-between w-full h-auto bg-center text-left p-[10vh] px-4 sm:px-8">
         {/* Overlay */}
-        <div className="absolute inset-0 bg-white"></div>
+        <div className="absolute inset-0 bg-white opacity-80"></div>
 
         {/* Content Section */}
         <div className="relative w-full lg:w-7/12 text-left z-60 m-10">
@@ -132,6 +132,32 @@ const HomePage: React.FC = () => {
         <div className="relative w-full lg:w-5/12 mt-4 lg:mt-0 m-10">
           <img src="src/assets/temp.png" alt="Festival" className="w-full h-auto rounded-lg shadow-lg object-cover" />
         </div>
+      </div>
+
+      <div className="relative z-60 flex flex-col lg:flex-row items-center justify-between w-full h-auto bg-center text-left p-[10vh] px-4 sm:px-8">
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gray-300 opacity-60"></div>
+        
+        {/* Image Section */}
+        <div className="relative w-full lg:w-5/12 mt-4 lg:mt-0 m-10">
+          <img src="src/assets/temp.png" alt="Festival" className="w-full h-auto rounded-lg shadow-lg object-cover" />
+        </div>
+        
+        {/* Content Section */}
+        <div className="relative w-full lg:w-7/12 text-left z-60 m-10">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-left">
+            First Jose Rizal Monument
+          </h1>
+          <p className="text-lg sm:text-xl md:text-1xl text-gray-700">
+            Camarines Norte is a captivating destination offering pristine beaches, rich history,
+            and natural beauty. Discover Calaguas Island, known for its powdery white sands and turquoise waters,
+            perfect for relaxation or adventure. Surfers flock to Bagasbas Beach for its consistent waves. Dive into history at Paracale, the "Gold Town," 
+            and visit the First Rizal Monument, a unique tribute to the national hero. Nature lovers can trek to hidden gems like Malatap Falls and Mananap Falls,
+            offering refreshing escapes. Camarines Norte’s blend of adventure, tranquility, and culture makes it a must-visit for travelers seeking an authentic and unforgettable experience.
+          </p>
+        </div>
+
+        
       </div>
 
 
@@ -158,7 +184,7 @@ const HomePage: React.FC = () => {
         <div className="absolute inset-0 bg-blue-950"></div>
         <div className="relative p-4 sm:p-8 w-full text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-            Accomodations
+            Top Selling Foods
           </h1>
 
           {/* Acommodation */}
@@ -174,7 +200,7 @@ const HomePage: React.FC = () => {
         <div className="absolute inset-0 bg-orange-500"></div>
         <div className="relative p-4 sm:p-8 w-full text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-            Best Selling Products
+            Top Selling Furnitures
           </h1>
 
           {/* Products */}

@@ -1,9 +1,9 @@
 const footer: React.FC=()=>{
     return(
         <>
-        <div className="relative p-10 z-10 bg-gray-900 h-auto text-white"> 
+        <div className="relative p-10 z-60 bg-gray-900 h-auto text-white"> 
             <div className="flex flex-row  justify-center items-stretch gap-[5vw]">
-                <div className="relative font-bold text-2xl lg:text-4xl sm:text-3xl">
+                <div className="relative font-bold text-lg lg:text-4xl sm:text-3xl">
                 Pages
                 <div className="flex flex-col">
                     <a href="/" target="_blank" className="font-normal text-lg hover:text-gray-400">Home</a>
@@ -12,7 +12,7 @@ const footer: React.FC=()=>{
                     
                 </div>
                 </div>
-                <div className="relative font-bold text-2xl lg:text-4xl sm:text-3xl">
+                <div className="flex flex-col font-bold text-lg lg:text-4xl sm:text-3xl">
                     Contact
                     <div className="flex flex-col">
                         <a href="https://www.instagram.com/kunoupeko/" target="_blank" className="font-normal text-lg hover:text-gray-400"><i className="fab fa-facebook mr-2"></i>Facebook</a>
@@ -20,14 +20,14 @@ const footer: React.FC=()=>{
                         <a href="https://www.instagram.com/kunoupeko/" target="_blank" className="font-normal text-lg hover:text-gray-400"><i className="fab fa-instagram mr-2"></i>Instagram</a>
                     </div>
                 </div>
-                <div className="relative font-bold text-2xl lg:text-4xl sm:text-3xl">
+                <div className="relative font-bold text-lg lg:text-4xl sm:text-3xl">
                     Address
                     <div className="absolute text-sm">
                         <p className="font-normal " >Main Campus: F. Pimentel Ave, Camarines Norte, Daet, 4600, Philippines</p>
                     </div>
                     
                 </div>
-                <div className="relative font-bold text-2xl lg:text-4xl sm:text-3xl">
+                <div className="relative font-bold text-lg lg:text-4xl sm:text-3xl">
                     About Us
                     <div className="absolute text-sm">
                         <p className="font-normal " >ewan ko lalagay ko dito xd</p>
