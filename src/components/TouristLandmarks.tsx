@@ -45,7 +45,7 @@ const TouristLandmarks: React.FC = () => {
               {landmarks.map((landmark) => (
                 <div
                   key={landmark.id}
-                  className="flex-none w-[300px] h-[30vh] scale-90 bg-black shadow-lg rounded-lg overflow-hidden transition-all duration-150 ease-in-out transform hover:cursor-pointer hover:scale-100 hover:mx-5"
+                  className="flex-none w-[300px] h-[40vh] scale-90 bg-black shadow-lg rounded-lg overflow-hidden transition-all duration-150 ease-in-out transform hover:cursor-pointer hover:scale-100 hover:mx-5"
                 >
                   <img
                     src={landmark.img}

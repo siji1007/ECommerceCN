@@ -42,6 +42,7 @@ function App() {
           <Route path='/about' element={<About/>}/>
           <Route path='*' element={<Error404/>}/>
         </Routes>
+        <Footer />
       </Router>
  
   )

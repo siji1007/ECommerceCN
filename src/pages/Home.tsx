@@ -1,31 +1,42 @@
-import React, { useState , useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Parallax , ParallaxBanner} from 'react-scroll-parallax';
 import TouristLandmarks from '../components/TouristLandmarks';
 
 const HomePage: React.FC = () => {
   
+
   /* Video */
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [videoHeight, setVideoHeight] = useState<string>("auto");
 
-  const videoRef = useRef(undefined);
   useEffect(() => {
-      videoRef.current.defaultMuted = true;
-  })
+    const handleResize = () => {
+      if (videoRef.current) {
+        // Get the video's dimensions
+        const videoHeight = videoRef.current.videoHeight;
+        const videoWidth = videoRef.current.videoWidth;
 
-  /* Scroll */
-  const [scale, setScale] = useState(1);
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const newScale = 1 + scrollY * 0.0005; // Adjust scaling factor
-      setScale(newScale);
+        // Maintain aspect ratio
+        const aspectRatio = videoHeight / videoWidth;
+        const containerWidth = videoRef.current.clientWidth;
+
+        setVideoHeight(`${containerWidth * aspectRatio}px`);
+      }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    // Resize on metadata load and window resize
+    if (videoRef.current) {
+      videoRef.current.addEventListener("loadedmetadata", handleResize);
+    }
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      if (videoRef.current) {
+        videoRef.current.removeEventListener("loadedmetadata", handleResize);
+      }
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
-
 
   return (
     <div>
@@ -57,90 +68,122 @@ const HomePage: React.FC = () => {
           }
         `}
       </style>
-      
-      <div className="relative flex flex-col md:flex-row items-center justify-center w-full h-[95vh] bg-center text-left">
-        <img
-        src='src/assets/Home.jpg'
-        style={{
-          transform: `scale(${scale})`,
-          transition: "transform 0.1s linear",
-        }}
-        className='fixed inset-0 h-full w-full object-cover'
-        alt='homebackground'
-        >
-        </img>
-        <div className="absolute inset-0 bg-black opacity-50"></div>
 
-        {/* Content Section */}
-
-        <div className="relative z-60 p-4 sm:p-8 w-full lg:w-3/4 text-left">
-          <h1 className="text-6xl sm:text-8xl md:text-8xl lg:text-7xl font-bold text-white mb-4">
-            Welcome to Camarines Norte Tour & Shop Hub
-
-          </h1>
-          <p className="text-1xl sm:text-base md:text-lg text-gray-300">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, 
-          sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-           Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-           Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-           Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-          </p>
-        </div>
-
-      </div>
-      
-      {/* ToC Section */}
-
-      <div className="relative z-60 flex flex-col lg:flex-row  w-full h-[50vh] bg-center text-center justify-center">
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-green-950"></div>
-          <div className="relative p-4 sm:p-8 w-full lg:w-full text-center">
-            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-5xl font-bold text-white mb-4">
-                Tourist Landmarks
-            </h1>
-
-          {/* Landmarks */}
-          <div className="flex flex-col lg:flex-row lg:justify-center lg:items-center">
-            <TouristLandmarks/>
-          </div>
-        </div>
-      </div>
-
-      {/* Calaguas Section */}
-      <div className="relative z-60 flex flex-col lg:flex-row items-center justify-start w-full h-[95vh] bg-center text-left">
+      <div
+        className="relative flex flex-col md:flex-row items-center justify-center w-full bg-center text-left "
+        style={{ height: videoHeight }}
+      >
         {/* Video Background */}
         <video
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute lg:fixed bottom-0 w-full h-auto object-cover"
           ref={videoRef}
           autoPlay
           loop
           muted
-          playsInline>
-          <source src="src/assets/calaguas.mp4" type="video/mp4" />
+          playsInline
+        >
+          <source src="src/assets/norte.mp4" type="video/mp4" />
           Your browser does not support the video.
         </video>
+        <div className="absolute inset-0 bg-black opacity-0"></div>
+      </div>
+
+      {/* Why Visit Us? */}
+      <div className="relative z-60 flex flex-col lg:flex-row items-center justify-center w-full h-[90vh] bg-center text-left py-[10vh] px-4 sm:px-8">
         {/* Overlay */}
-        <div className="absolute inset-0 bg-black opacity-50"></div>
+        <div className="absolute inset-0 bg-black opacity-80"></div>
 
         {/* Content Section */}
-        <div className="relative p-4 sm:p-8 w-full lg:w-1/2 text-left">
-          <h1 className="text-8xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-white mb-4">
-            Calaguas Island
+        <div className="relative w-full lg:w-11/12 text-left">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 text-center py-16">
+            Why Visit Us?
           </h1>
-          <p className="text-3xl sm:4xl md:text-lg p-4 text-gray-300 mb-4">
-            Vinzons, Camarines Norte
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-300">
+            Camarines Norte is a captivating destination offering pristine beaches, rich history,
+            and natural beauty. Discover Calaguas Island, known for its powdery white sands and turquoise waters,
+            perfect for relaxation or adventure. Surfers flock to Bagasbas Beach for its consistent waves. Dive into history at Paracale, the "Gold Town,"
+            and visit the First Rizal Monument, a unique tribute to the national hero. Nature lovers can trek to hidden gems like Malatap Falls and Mananap Falls, 
+            offering refreshing escapes. Camarines Norte’s blend of adventure, tranquility, and culture makes it a must-visit for travelers seeking an authentic and unforgettable experience.
           </p>
-          <p className="text-3xl sm:4xl md:text-lg p-4 text-gray-300">
-            Calaguas Island in Camarines Norte is a serene tropical destination
-            known for its powdery white sand beaches and clear blue waters, offering
-            a perfect escape for camping, snorkeling, and swimming. Its unspoiled
-            beauty and peaceful atmosphere make it a favorite for nature lovers and
-            adventure seekers.
+        </div>
+      </div>
+
+
+     {/* Details about Camarines Norte */}
+      <div className="relative z-60 flex flex-col lg:flex-row items-center justify-between w-full h-auto bg-center text-left p-[10vh] px-4 sm:px-8">
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-white"></div>
+
+        {/* Content Section */}
+        <div className="relative w-full lg:w-7/12 text-left z-60 m-10">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-left">
+            Batayog Festival
+          </h1>
+          <p className="text-lg sm:text-xl md:text-1xl text-gray-700">
+            Camarines Norte is a captivating destination offering pristine beaches, rich history,
+            and natural beauty. Discover Calaguas Island, known for its powdery white sands and turquoise waters,
+            perfect for relaxation or adventure. Surfers flock to Bagasbas Beach for its consistent waves. Dive into history at Paracale, the "Gold Town," 
+            and visit the First Rizal Monument, a unique tribute to the national hero. Nature lovers can trek to hidden gems like Malatap Falls and Mananap Falls,
+            offering refreshing escapes. Camarines Norte’s blend of adventure, tranquility, and culture makes it a must-visit for travelers seeking an authentic and unforgettable experience.
           </p>
         </div>
 
-        
+        {/* Image Section */}
+        <div className="relative w-full lg:w-5/12 mt-4 lg:mt-0 m-10">
+          <img src="src/assets/temp.png" alt="Festival" className="w-full h-auto rounded-lg shadow-lg object-cover" />
+        </div>
       </div>
+
+
+
+      {/* ToC Section */}
+      <div className="relative z-60 flex flex-col lg:flex-row w-full h-[80vh] bg-center text-center justify-center">
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-green-900"></div>
+        <div className="relative p-4 sm:p-8 w-full text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            Top Tourist Landmarks
+          </h1>
+
+          {/* Landmarks */}
+          <div className="flex flex-col lg:flex-row lg:justify-center lg:items-center">
+            
+          </div>
+        </div>
+      </div>
+
+      {/* Hotel*/}
+      <div className="relative z-60 flex flex-col lg:flex-row w-full h-[60vh] bg-center text-center justify-center">
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-blue-950"></div>
+        <div className="relative p-4 sm:p-8 w-full text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            Accomodations
+          </h1>
+
+          {/* Acommodation */}
+          <div className="flex flex-col lg:flex-row lg:justify-center lg:items-center">
+            <TouristLandmarks />
+          </div>
+        </div>
+      </div>
+
+      {/* Best Selling Products */}
+      <div className="relative z-60 flex flex-col lg:flex-row w-full h-[60vh] bg-center text-center justify-center">
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-orange-500"></div>
+        <div className="relative p-4 sm:p-8 w-full text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            Best Selling Products
+          </h1>
+
+          {/* Products */}
+          <div className="flex flex-col lg:flex-row lg:justify-center lg:items-center">
+            <TouristLandmarks />
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };
