@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-const Products: React.FC = () => {
+import { Link } from 'react-router-dom';
+const ProductsAdd: React.FC = () => {
 
     const [images, setImages] = useState([]);
 
@@ -69,17 +70,17 @@ const Products: React.FC = () => {
 
         {/* Pricing Section */}
         <div className="mb-6 ">
-          <label className="block text-gray-700 font-semibold">Pricing</label>
+          <label className="block text-gray-700 font-bold border-b border-gray-700">Pricing</label>
           <div className="flex space-x-4 mt-2">
             {/* Price Div */}
             <div className="flex-1">
-              <label className="block text-gray-600">Price</label>
+              <label className="block text-gray-600 font-semibold">Price</label>
               <input type="number" placeholder="Enter price" className="mt-1 p-2 border border-gray-300 rounded w-full" />
             </div>
 
             {/* Discount Price Div */}
             <div className="flex-1">
-              <label className="block text-gray-600">Discounted Price</label>
+              <label className="block text-gray-600 font-semibold">Discounted Price</label>
               <input type="number" placeholder="Enter discounted price" className="mt-1 p-2 border border-gray-300 rounded w-full" />
             </div>
           </div>
@@ -95,7 +96,6 @@ const Products: React.FC = () => {
         <div className="mb-6">
           <label className="block text-gray-700 font-semibold">Product Category</label>
           <input type="text" placeholder="Enter category" className="mt-2 p-2 border border-gray-300 rounded w-full" />
-        
         </div>
 
         {/* Collection Section */}
@@ -117,11 +117,15 @@ const Products: React.FC = () => {
       </div>
 
       {/* Add Button */}
-      <div className="absolute bottom-4 right-4">
-        <button className="bg-green-500 text-white px-6 py-3 rounded">Add</button>
+      
+      <div className="absolute space-x-2 bottom-4 right-4">
+        <Link to = "/clientprofile/product-list">
+            <button className=" text-black px-6 py-3 rounded mb-20">Back</button>
+        </Link>
+        <button className="bg-green-900 text-white px-6 py-3 rounded mb-20">Add</button>
       </div>
     </div>
   );
 };
 
-export default Products;
+export default ProductsAdd;

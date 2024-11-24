@@ -15,7 +15,9 @@ const Header: React.FC = () => {
         <>
             <nav className="z-10 w-full h-19 bg-gradient-to-r from-white to-green-900 flex justify-between items-center px-4 text-white">
                 <div className="flex">
-                    <img src={logo} alt="Logo"  className="h-16 w-16 object-contain" />
+                    <Link to = '/'>
+                        <img src={logo} alt="Logo"  className="h-16 w-16 object-contain" />
+                    </Link>
                     <div className='ml-4 flex flex-col justify-center'>
                         <div className="text-green-900 text-lg sm:text-sm md:text-lg lg:text-xm font-bold">Camarines Norte</div>
                         <div className="text-green-900  text-sm sm:text-sm md:text-xs lg:text-xm font-bold">Tour & Shop Hub</div>

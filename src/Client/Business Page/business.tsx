@@ -8,7 +8,9 @@ const Business: React.FC = () => {
     if (step === 1) {
       setStep(2); // Go to the submit section
     } else {
-      alert('Form Submitted!'); // Handle the submit action
+      
+        alert('Form Submitted!'); // Handle the submit action
+        localStorage.setItem('BusinessStatus', 'verified');
     }
   };
 
