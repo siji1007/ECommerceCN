@@ -8,6 +8,7 @@ import './App.css';
 import Header from './components/header';
 import Clientdashboard from '../src/Client/ClientDashboard';
 import Business from './Client/Business Page/business';
+import ProductUpload from './Client/Business Page/products';
 import Footer from './components/footer';
 import Cookies from 'js-cookie';
 import { useEffect } from 'react';
@@ -42,8 +43,10 @@ function App() {
           <Route path='/shop' element={<Shop/>}/>
           <Route path='/vendor' element={<Vendors/>}/>
           <Route path='/about' element={<About/>}/>
+          <Route path='products' element={<ProductUpload/>}/>
           <Route path='/clientprofile/*' element={<Clientdashboard/>}>
             <Route path='business-form' element={<Business/>}/>
+          
           
           </Route>
           <Route path='*' element={<Error404/>}/>
