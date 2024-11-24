@@ -1,7 +1,9 @@
 const AboutPage: React.FC = () =>{
     return(
         <>
-            <h1>This is about page</h1>
+        <div className="relative m-5">
+            <h1 className="justify-center pt-16 text-center">This is about page</h1>
+        </div>
         </>
     )
 }
