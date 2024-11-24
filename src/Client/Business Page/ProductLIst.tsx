@@ -187,7 +187,12 @@ const ProductList: React.FC = () => {
         </div>
         
       )}
-      <div className='flex w-full justify-end'>
+      <div className='flex w-full justify-end space-x-2'>
+      <Link to = "/clientprofile">
+        <button className='mt-2 p-10 py-2  text-black rounded-md '>
+            Back
+        </button>
+      </Link>
         <Link to = "/products-add">
         <button className='mt-2 p-10 py-2 bg-green-900 text-white rounded-md hover:bg-blue-600'>
             Add

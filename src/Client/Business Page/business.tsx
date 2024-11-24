@@ -119,24 +119,24 @@ const Business: React.FC = () => {
                                 </div>
                             </div>
                         </section>
-        </div>
-      )}
+                        </div>
+                    )}
 
-      {/* Submit Section */}
-      {step === 2 && (
-        <div className="mb-6 shadow p-4 bg-white rounded">
-          <h2 className="text-xl font-bold text-gray-700 mb-4">Submit Your Information</h2>
-          
-          <p className="mb-4">Review your shop information and submit.</p>
+            {/* Submit Section */}
+            {step === 2 && (
+                <div className="mb-6 shadow p-4 bg-white rounded">
+                <h2 className="text-xl font-bold text-gray-700 mb-4">Submit Your Information</h2>
+                
+                <p className="mb-4">Review your shop information and submit.</p>
 
-          {/* Display the values if needed, or just a message */}
-          <div className="mb-4">
-            <p><strong>Shop Name:</strong> [Shop Name]</p>
-            <p><strong>Shop Category:</strong> [Shop Category]</p>
-            <p><strong>Shop Location:</strong> [Shop Location]</p>
-          </div>
-        </div>
-      )}
+                {/* Display the values if needed, or just a message */}
+                <div className="mb-4">
+                    <p><strong>Shop Name:</strong> [Shop Name]</p>
+                    <p><strong>Shop Category:</strong> [Shop Category]</p>
+                    <p><strong>Shop Location:</strong> [Shop Location]</p>
+                </div>
+                </div>
+            )}
        
 
       {/* Navigation Button */}

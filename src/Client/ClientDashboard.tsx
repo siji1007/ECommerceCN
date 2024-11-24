@@ -10,12 +10,14 @@ import ProductList from './Business Page/ProductLIst';
 const ClientDashboard: React.FC = () =>{
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
     const [isBusinessForm, setIsBusinessForm] = useState(false);
     const [isProductList, setIsProductList] = useState(false);
     const [isDisabledPesonalInfo, setIsDisabledPersonalInfo] = useState(true);
     const [isDisabledAddress, setIsDisabledAddress] = useState(true);
     const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false); 
     const [isEditingAddress,setIsEditingAddress] = useState(false);
+
     const navigateToProductList = () => {
         navigate('/clientprofile/product-list');
       };
@@ -25,13 +27,19 @@ const ClientDashboard: React.FC = () =>{
     const navigate = useNavigate();
 
     const isActive = location.pathname === '/clientprofile';
+    const isProducts = location.pathname == '/clientprofile/product-list';
+    const isStart = location.pathname == '/clientprofile/business-form';
   
 
     useEffect(() => {
       const path = location.pathname;
 
-      setIsBusinessForm(path.includes('business-form'));
-      setIsProductList(path.includes("product-list"));
+      const businessFormIncluded = path.includes('business-form');
+        const productListIncluded = path.includes('product-list');
+
+        setIsBusinessForm(businessFormIncluded);
+        setIsProductList(productListIncluded);
+        setIsDropdownOpen(businessFormIncluded || productListIncluded);
     }, [location]); 
   
    
@@ -91,7 +99,7 @@ const ClientDashboard: React.FC = () =>{
                 <Link to="/clientprofile">
                     <button
                         className={`w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center 
-                        ${isActive ? 'bg-green-600 text-white' : ' text-black hover:bg-green-600'}`}
+                        ${isActive ? 'bg-green-600 text-white' : ' text-black hover:bg-green-600 hover:text-white'}`}
                     >
                         <AiFillProfile className="h-5 w-5 mr-2" />
                         Personal Information
@@ -115,15 +123,15 @@ const ClientDashboard: React.FC = () =>{
                     Tutorial
                 </button>
                 <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
-                    Privacy Policy
+                Contract Details
                 </button>
                 <Link to="business-form">
-                    <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded" onClick={StartBusiness}>
+                    <button  className={`w-full py-2 px-4 text-left text-black font-semibold ${isStart ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`} onClick={StartBusiness}>
                         Start
                     </button>
                 </Link>
                 <button
-                    className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded"
+                      className={`w-full py-2 px-4 text-left text-black font-semibold ${isProducts ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`}
                     onClick={navigateToProductList}
                     >
                     Products
@@ -185,10 +193,37 @@ const ClientDashboard: React.FC = () =>{
                             <input type="text" id="lastname" name="lastname" className="w-full p-2 border border-gray-300 rounded" placeholder="Enter Lastname"         disabled={isDisabledPesonalInfo} />
                             </div>
                         </div>
-                        <div> 
-                            <label htmlFor="birthdate" className="block text-gray-600 font-medium mb-1"> Email </label>
-                            <input type="text" id="Email" name="Email" className="w-full p-2 border border-gray-300 rounded" placeholder="Email"         disabled={isDisabledPesonalInfo} /> 
-                        </div>
+                        <div className="flex justify-between items-center gap-4"> 
+                            {/* Email Section */}
+                            <section className="flex-1">
+                                <label htmlFor="Email" className="block text-gray-600 font-medium mb-1">Email</label>
+                                <input 
+                                type="text" 
+                                id="Email" 
+                                name="Email" 
+                                className="w-full p-2 border border-gray-300 rounded" 
+                                placeholder="Email" 
+                                disabled={isDisabledPesonalInfo} 
+                                />
+                            </section>
+
+                            {/* Gender Section */}
+                            <section className="flex-1 text-left ">
+                                <label className="block text-gray-600 font-medium mb-1">Gender</label> 
+                                <div className="flex justify-start gap-4 border border-gray-300 p-2"> 
+                                <label className="flex items-center"> <input type="radio" name="gender" value="female" className="mr-2" disabled={isDisabledPesonalInfo} /> Female </label>
+                                <label className="flex items-center">
+                                    <input type="radio" name="gender" value="male" className="mr-2" disabled={isDisabledPesonalInfo} /> Male </label>
+                                <label className="flex items-center">
+                                    <input type="radio" name="gender" value="custom" className="mr-2" disabled={isDisabledPesonalInfo} />
+                                    Custom
+                                </label>
+                                </div>
+                            </section>
+</div>
+
+
+                        
                         
                         {/* Birthdate */}
                         <div> 
