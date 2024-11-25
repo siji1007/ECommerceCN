@@ -19,6 +19,19 @@ const ProductsAdd: React.FC = () => {
       const newImages = images.filter((_, i) => i !== index);
       setImages(newImages);
     };
+
+
+    let url = window.location.href;
+    let match = url.match(/id=(\d+)/);  // This will match 'id=2' or similar
+    
+    const id = match ? match[1] : null;
+    
+    if (!id) {
+        return <div>ID not found in the URL</div>;
+    }
+
+ 
+
   
   return (
     <div className="flex flex-wrap space-x-2 w-full relative h-screen">
@@ -119,7 +132,7 @@ const ProductsAdd: React.FC = () => {
       {/* Add Button */}
       
       <div className="absolute space-x-2 bottom-4 right-4">
-        <Link to = "/clientprofile/product-list">
+        <Link to={`/clientprofile/id=${id}/product-list`}>
             <button className=" text-black px-6 py-3 rounded mb-20">Back</button>
         </Link>
         <button className="bg-green-900 text-white px-6 py-3 rounded mb-20">Add</button>

@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { useEffect, useState } from 'react';
 import HomePage from '../src/pages/Home';
 import Shop from '../src/pages/Shop';
 import Vendors from '../src/pages/Vendor';
@@ -12,29 +13,37 @@ import ProductUpload from './Client/Business Page/productsAdd';
 import ProductList from './Client/Business Page/ProductLIst';
 import Footer from './components/footer';
 import Cookies from 'js-cookie';
-import { useEffect } from 'react';
+
 
 function App() {
-  useEffect(() => {
-    // Check if the unauthorized cookie exists
-    if (!Cookies.get('unauth_cookie')) {
-      const randomCookieValue = Math.random().toString(36).substr(2) + Date.now().toString(36);
-      Cookies.set('unauth_cookie', randomCookieValue, { expires: 7 });
+  // useEffect(() => {
+  //   // Check if the unauthorized cookie exists
+  //   if (!Cookies.get('unauth_cookie')) {
+  //     const randomCookieValue = Math.random().toString(36).substr(2) + Date.now().toString(36);
+  //     Cookies.set('unauth_cookie', randomCookieValue, { expires: 7 });
 
-      // Send the cookie to the Flask server
-      fetch('http://localhost:5000/api/store-unauth-cookie', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ unauth_cookie: randomCookieValue }),
-      })
-      .then(response => response.json())
-      .then(data => console.log(data.message))
-      .catch(error => console.error('Error:', error));
-    }
-   }, []);
+  //     // Send the cookie to the Flask server
+  //     fetch('http://localhost:5000/api/store-unauth-cookie', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ unauth_cookie: randomCookieValue }),
+  //     })
+  //     .then(response => response.json())
+  //     .then(data => console.log(data.message))
+  //     .catch(error => console.error('Error:', error));
+  //   }
+  //  }, []);
+    const [userId, setUserId] = useState<string | null>(null);
 
+    useEffect(() => {
+      const authData = localStorage.getItem('Auth');
+      if (authData) {
+        setUserId(authData);
+      }
+  
+    }, []);
   return (
   
       <Router>
@@ -44,12 +53,11 @@ function App() {
           <Route path='/shop' element={<Shop/>}/>
           <Route path='/vendor' element={<Vendors/>}/>
           <Route path='/about' element={<About/>}/>
-          <Route path='/products-add' element={<ProductUpload/>}/>
-          <Route path='/clientprofile/*' element={<Clientdashboard/>}>
+          <Route path={`/clientprofile/id=${userId}`} element={<Clientdashboard />}>
             <Route path='business-form' element={<Business/>}/>
-            <Route path='Products' element={<ProductList/>}/>
-
-          
+            <Route path='product-list' element={<ProductList/>}/>
+            <Route path='products-add' element={<ProductUpload/>}/>
+            
           
           </Route>
           <Route path='*' element={<Error404/>}/>

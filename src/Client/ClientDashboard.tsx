@@ -6,29 +6,77 @@ import { AiFillProfile } from "react-icons/ai";
 import { useState, useEffect } from 'react';
 import Business from './Business Page/business';
 import ProductList from './Business Page/ProductLIst';
+import ProductAdd from './Business Page/productsAdd';
+import axios from 'axios';
 
 const ClientDashboard: React.FC = () =>{
-
+    const [firstName, setFirstName] = useState<string>('');
+    const [lastName, setLastName] = useState<string>('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+    const [user, setUser] = useState<{ first_name: string } | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [isBusinessForm, setIsBusinessForm] = useState(false);
     const [isProductList, setIsProductList] = useState(false);
+    const [isProductAdd, setIsProductAdd] = useState(false);
     const [isDisabledPesonalInfo, setIsDisabledPersonalInfo] = useState(true);
     const [isDisabledAddress, setIsDisabledAddress] = useState(true);
     const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false); 
     const [isEditingAddress,setIsEditingAddress] = useState(false);
 
+        // Extract the ID from the URL
+        let url = window.location.href;
+        let match = url.match(/id=(\d+)/);  // This will match 'id=2' or similar
+        
+        const id = match ? match[1] : null;
+        
+        if (!id) {
+            return <div>ID not found in the URL</div>;
+        }
+    
+        useEffect(() => {
+            const userId = id;  // The user ID you want to query for
+    
+            // Send the GET request with the id query parameter
+            fetch(`http://127.0.0.1:5000/api/get-credentials?id=${userId}`, {
+                method: 'GET',
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('User not found or server error');
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    setUser(data);
+                    {
+                        setFirstName(data.first_name);
+                        setLastName(data.last_name);
+
+                       
+
+                    }
+                    setError('');
+                })
+                .catch((error) => {
+                    setUser(error.message);
+                    console.error('Error:', error);
+                });
+        }, []);
+
     const navigateToProductList = () => {
-        navigate('/clientprofile/product-list');
+        navigate(`/clientprofile/id=${id}/product-list`);
       };
-      
+
+     
+        
 
     const location = useLocation();
     const navigate = useNavigate();
 
-    const isActive = location.pathname === '/clientprofile';
-    const isProducts = location.pathname == '/clientprofile/product-list';
-    const isStart = location.pathname == '/clientprofile/business-form';
+    const isActive = location.pathname === `/clientprofile/id=${id}`;
+    const isProducts = location.pathname === `/clientprofile/id=${id}/product-list` ||location.pathname === `/clientprofile/id=${id}/products-add` ;
+   
+    const isStart = location.pathname == `/clientprofile/id=${id}/business-form`;
   
 
     useEffect(() => {
@@ -36,10 +84,12 @@ const ClientDashboard: React.FC = () =>{
 
       const businessFormIncluded = path.includes('business-form');
         const productListIncluded = path.includes('product-list');
+        const productAddIncluded = path.includes('products-add');
 
         setIsBusinessForm(businessFormIncluded);
         setIsProductList(productListIncluded);
-        setIsDropdownOpen(businessFormIncluded || productListIncluded);
+        setIsProductAdd(productAddIncluded);
+        setIsDropdownOpen(businessFormIncluded || productListIncluded || productAddIncluded);
     }, [location]); 
   
    
@@ -69,7 +119,7 @@ const ClientDashboard: React.FC = () =>{
       };
   
     const StartBusiness = () => {
-      const newPath = isBusinessForm ? '/clientprofile' : '/clientprofile/business-form';
+      const newPath = isBusinessForm ? `/clientprofile/id=${id}` : `/clientprofile/id=${id}/business-form`;
   
    
       navigate(newPath);
@@ -98,7 +148,7 @@ const ClientDashboard: React.FC = () =>{
 
 
             <div className="w-full p-2  flex flex-col h-full mb-10">
-                <Link to="/clientprofile">
+                <Link   to={`/clientprofile/id=${id}`}>
                     <button
                         className={`w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center 
                         ${isActive ? 'bg-green-600 text-white' : ' text-black hover:bg-green-600 hover:text-white'}`}
@@ -146,11 +196,7 @@ const ClientDashboard: React.FC = () =>{
                 Settings
                 </button>
                 {/* This div ensures the logout button is pushed to the bottom */}
-                <div className="mt-auto ">
-                    <button className="w-full py-2 px-4 text-left bg-green-900 text-center hover:bg-green-600 rounded font-bold">
-                    Logout
-                    </button>
-                </div>
+              
             </div>
 
           </div>
@@ -161,7 +207,10 @@ const ClientDashboard: React.FC = () =>{
                 <Business />
                 ) : isProductList ? (
                 <ProductList />
-                ) : (
+                ) : isProductAdd ? (
+                <ProductAdd/>
+                ):
+                (
                     <>
                         <section className="mb-6 shadow p-4 bg-white rounded relative">{/* Client Information Section */}
                         {/* Edit Button */}
@@ -183,16 +232,18 @@ const ClientDashboard: React.FC = () =>{
                             </label>
                             <input
                                 type="text"
-                                id="firstname"
-                                name="firstname"
-                                className="w-full p-2 border border-gray-300 rounded"
-                                placeholder="Enter Firstname"
+                                id="firstName"
+                                value={firstName} // Bind the input value to `firstName`
+                                onChange={(e) => setFirstName(e.target.value)} // Allow updates to `firstName`
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                                placeholder="Enter your first name"
+                              
                                 disabled={isDisabledPesonalInfo}
                             />
                             </div>
                             <div className="flex-1">
                             <label htmlFor="lastname" className="block text-gray-600 font-medium mb-1"> Lastname </label>
-                            <input type="text" id="lastname" name="lastname" className="w-full p-2 border border-gray-300 rounded" placeholder="Enter Lastname"         disabled={isDisabledPesonalInfo} />
+                            <input type="text" id="lastname" value={lastName}  name="lastname"  className="w-full p-2 border border-gray-300 rounded" placeholder="Enter Lastname"   onChange={(e) => setLastName(e.target.value)}      disabled={isDisabledPesonalInfo} />
                             </div>
                         </div>
                         <div className="flex justify-between items-center gap-4"> 

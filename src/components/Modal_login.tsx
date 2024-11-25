@@ -1,6 +1,7 @@
 import { FC, useState, FormEvent } from 'react';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+
 interface ModalLoginProps {
     isOpen: boolean;
     onClose: () => void;
@@ -64,7 +65,10 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
 
             if (response.ok) {
                 alert('LOGIN');
-                // Optionally, store user data in localStorage or context and redirect to a protected page
+                alert(`LOGIN successful! Welcome, ${result.user.full_name}`)
+                localStorage.setItem('userFullName', result.user.full_name);
+                localStorage.setItem('Auth', result.user.id)
+                window.location.reload(); 
             } else {
                 alert(result.message || 'Invalid credentials');
             }
@@ -99,6 +103,7 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
             const result = await response.json();
             if (response.ok) {
                 console.log("User registered successfully:", result);
+             
                 // Optionally redirect or show success message
             } else {
                 console.error("Error registering user:", result.message);

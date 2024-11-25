@@ -66,6 +66,16 @@ const ProductList: React.FC = () => {
     }
   };
 
+  let url = window.location.href;
+  let match = url.match(/id=(\d+)/);  // This will match 'id=2' or similar
+  
+  const id = match ? match[1] : null;
+  
+  if (!id) {
+      return <div>ID not found in the URL</div>;
+  }
+
+
   const filteredProducts = products.filter(
     (product) =>
       (selectedCategory === 'All' || product.category === selectedCategory) &&
@@ -188,12 +198,12 @@ const ProductList: React.FC = () => {
         
       )}
       <div className='flex w-full justify-end space-x-2'>
-      <Link to = "/clientprofile">
+      <Link to={`/clientprofile/id=${id}`}>
         <button className='mt-2 p-10 py-2  text-black rounded-md '>
             Back
         </button>
       </Link>
-        <Link to = "/products-add">
+        <Link to={`/clientprofile/id=${id}/products-add`}>
         <button className='mt-2 p-10 py-2 bg-green-900 text-white rounded-md hover:bg-blue-600'>
             Add
         </button>

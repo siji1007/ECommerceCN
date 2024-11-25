@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from connection import db, init_app
+import secrets
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -13,6 +14,10 @@ class SessionCookieUnauth(db.Model):
     s_unauth_id = db.Column(db.Integer, primary_key=True)
     unauth_cookie = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Foreign Key to users table
+
+    user = db.relationship('User', backref=db.backref('sessions', lazy=True))  # Link back to User
+
 
 
 @app.route('/api/store-unauth-cookie', methods=['POST'])
@@ -45,7 +50,7 @@ class User(db.Model):
         self.last_name = last_name
         self.birth_month = birth_month
         self.birth_day = birth_day
-        self.birth_year = birth_year
+        self.birth_year = birth_years
         self.gender = gender
         self.email_or_mobile = email_or_mobile
         self.password = password
@@ -99,13 +104,31 @@ def login():
         email_or_mobile = data.get('emailOrMobile')
         password = data.get('password')
 
-
+        # Find the user by email or mobile
         user = User.query.filter_by(email_or_mobile=email_or_mobile).first()
 
         if user:
-
             if user.password == password:
-                return jsonify({"message": "LOGIN", "user": {"first_name": user.first_name, "last_name": user.last_name}}), 200
+                full_name = f"{user.first_name} {user.last_name}"
+
+                # Generate a session cookie value
+                unauth_cookie = secrets.token_hex(16)  # Generates a secure random session token
+
+                # Store the session cookie in the database, linking it to the user
+                new_session_cookie = SessionCookieUnauth(unauth_cookie=unauth_cookie, user_id=user.id)
+                db.session.add(new_session_cookie)
+                db.session.commit()
+
+                # Return success with the user's full name and session cookie
+                return jsonify({
+                    "message": "LOGIN successful",
+                      "user": {
+                        "id": user.id,  # Include user ID in the response
+                        "full_name": full_name
+                    },
+                    "unauth_cookie": unauth_cookie  # Send session cookie to the client,
+                }), 200
+
             else:
                 return jsonify({"message": "Invalid credentials"}), 401
         else:
@@ -113,7 +136,40 @@ def login():
 
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({"message": "An error occurred", "error": str(e)}), 500
+        return jsonify({"message": "Server error"}), 500
+    
+
+
+
+
+
+@app.route('/api/get-credentials', methods=['GET'])
+def get_credentials():
+    try:
+        # Retrieve the 'id' from the query parameters
+        user_id = request.args.get('id')
+
+        if not user_id:
+            return jsonify({"message": "User ID is required"}), 400  # Return an error if no ID is provided
+
+        # Retrieve the user by 'id'
+        user = User.query.filter_by(id=user_id).first()
+
+        if not user:
+            return jsonify({"message": "User not found"}), 404  # Return an error if user is not found
+
+        # Return the user's first name
+        return jsonify({
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name":user.last_name
+        }), 200
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": "Server error"}), 500
+
+     
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(debug=True,port=5000)

@@ -29,7 +29,7 @@ const vendorPage: React.FC = () => {
   }, {});
 
   return (
-    <div className="mt-20">
+    <div className="mt-20 relative h-screen">
       {/* Search and Filter Section */}
       <div className="flex justify-end items-center p-4">
         <input
