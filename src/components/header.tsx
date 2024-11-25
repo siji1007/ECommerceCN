@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import logo from '../assets/logoIcon.png';
 import { FaUser } from 'react-icons/fa';
 import ModalLogin from '../components/Modal_login';
@@ -7,9 +7,12 @@ import ModalLogin from '../components/Modal_login';
 const Header: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const location = useLocation(); // Get the current location
 
     const toggleMenu = () => setIsOpen(!isOpen);
     const toggleModal = () => setIsModalOpen(!isModalOpen);
+
+    const isActive = (path: string) => location.pathname === path;
 
     return (
         <>
@@ -26,10 +29,10 @@ const Header: React.FC = () => {
                 
                 {/* Desktop Links */}
                 <ul className="hidden md:flex justify-center space-x-6 mr-8">
-                    <li><Link to="/"  className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">Home</Link></li>
-                    <li><Link to="/shop" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">Shop</Link></li>
-                    <li><Link to="/vendor" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">Vendor</Link></li>
-                    <li><Link to="/about" className="relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full active:after:w-full focus:after:w-full">About</Link></li>
+                    <li><Link to="/" className={`relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full ${ isActive('/') ? 'after:w-full after:bg-white' : '' }`} > Home </Link></li>
+                    <li><Link to="/shop" className={`relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full ${ isActive('/shop') ? 'after:w-full after:bg-white' : '' }`} > Shop </Link></li>
+                    <li><Link to="/vendor" className={`relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full ${ isActive('/vendor') ? 'after:w-full after:bg-white' : '' }`} > Vendor </Link></li>
+                    <li><Link to="/about" className={`relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full ${ isActive('/about') ? 'after:w-full after:bg-white' : '' }`} > About </Link></li>
                     <li><h1 className='font-bold'>Name</h1></li>
                     <li className='flex ml-auto justify-center items-center'> <Link to="#" onClick={toggleModal} className="flex items-center space-x-2"> <FaUser /> </Link> </li>
 
