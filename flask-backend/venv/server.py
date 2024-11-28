@@ -4,7 +4,9 @@ from connection import db, init_app
 import secrets
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+
+CORS(app, supports_credentials=True, origins=["*"])
+
 
 init_app(app)
 
@@ -162,7 +164,9 @@ def get_credentials():
         return jsonify({
             "id": user.id,
             "first_name": user.first_name,
-            "last_name":user.last_name
+            "last_name":user.last_name,
+            "email" : user.email_or_mobile,
+            "gender":user.gender
         }), 200
 
     except Exception as e:
@@ -172,4 +176,4 @@ def get_credentials():
      
 
 if __name__ == '__main__':
-    app.run(debug=True,port=5000)
+    app.run(host="0.0.0.0",port=8082)

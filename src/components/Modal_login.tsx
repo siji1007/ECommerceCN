@@ -1,5 +1,6 @@
 import { FC, useState, FormEvent } from 'react';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import host_backend from '../host/host.txt?raw';
 
 
 interface ModalLoginProps {
@@ -18,6 +19,7 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
     const [gender, setGender] = useState('');
     const [emailOrMobile, setEmailOrMobile] = useState('');
     const [password, setPassword] = useState('');
+    const serverUrl = host_backend.trim();
 
     if (!isOpen) return null;
 
@@ -53,7 +55,7 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
 
         try {
             // Send the login request to the backend
-            const response = await fetch('http://127.0.0.1:5000/api/login', {
+            const response = await fetch( serverUrl + '/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -92,7 +94,7 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
         };
     
         try {
-            const response = await fetch("http://127.0.0.1:5000/api/register", {
+            const response = await fetch( serverUrl + "/api/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
