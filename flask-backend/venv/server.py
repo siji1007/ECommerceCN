@@ -166,7 +166,10 @@ def get_credentials():
             "first_name": user.first_name,
             "last_name":user.last_name,
             "email" : user.email_or_mobile,
-            "gender":user.gender
+            "gender":user.gender,
+            "birthmonth":user.birth_month,
+            "birthday":user.birth_day,
+            "birthyear":user.birth_year
         }), 200
 
     except Exception as e:
