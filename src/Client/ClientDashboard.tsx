@@ -4,9 +4,9 @@ import { useLocation, useNavigate, Link  } from 'react-router-dom';
 import { IoStorefrontSharp } from "react-icons/io5";
 import { AiFillProfile } from "react-icons/ai";
 import { useState, useEffect } from 'react';
-import Business from './Business Page/business';
-import ProductList from './Business Page/ProductLIst';
-import ProductAdd from './Business Page/productsAdd';
+import Business from './BusinessPage/business';
+import ProductList from './BusinessPage/ProductLIst';
+import ProductAdd from './BusinessPage/productsAdd';
 import host_backend from '../host/host.txt?raw';
 import axios from 'axios';
 
@@ -141,14 +141,7 @@ const ClientDashboard: React.FC = () =>{
                         
 
                         
-                       
-
-                        
-               
-                   
-                        
-
-                       
+                
 
                     }
                     setError('');
@@ -181,8 +174,7 @@ const ClientDashboard: React.FC = () =>{
      
   
     
-        
-
+    
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -370,7 +362,7 @@ const ClientDashboard: React.FC = () =>{
                 </button>
                 <Link to="business-form">
                     <button  className={`w-full py-2 px-4 text-left text-black font-semibold ${isStart ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`} onClick={StartBusiness}>
-                        Start
+                        Start Selling
                     </button>
                 </Link>
                 <button

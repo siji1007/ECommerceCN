@@ -34,48 +34,61 @@ const Business: React.FC = () => {
   }
 
 
+  
 
+
+
+  // const handleNext = async () => {
+  //   // const isFormValid = Object.values(formData).every((value) => value.trim() !== '');
+    
+  //   // if (!isFormValid) {
+  //   //   alert('Please fill in all required fields before proceeding.');
+  //   //   return; // Stop execution if validation fails
+  //   // }
+    
+  //   if (step === 1) {
+  //     try {
+  //       alert("next!");
+       
+  //     //   const userId = id;
+  //     //   const response = await axios.post(`${serverHost}/submit-form-vendor/${userId}`, formData, {
+  //     //     headers: {
+  //     //       'Content-Type': 'application/json',
+  //     //     },
+  //     //   });
+        
+  //     //   console.log(response.data.message); // Log success message
+  //     //   alert('Form data sent to server!');
+  //       setStep(2); // Proceed to the next step
+  //      } catch (error) {
+  //     //   console.error('Error submitting form:', error);
+  //     //   alert('Failed to submit form.');
+  //      }
+  //   } else {
+  //     alert('Form Submitted!');
+  //     localStorage.setItem('BusinessStatus', 'verified');
+  //   }
+  // };
+  
   const handleNext = async () => {
-    const isFormValid = Object.values(formData).every((value) => value.trim() !== '');
-    
-    if (!isFormValid) {
-      alert('Please fill in all required fields before proceeding.');
-      return; // Stop execution if validation fails
-    }
-    
     if (step === 1) {
-      try {
-        // Assuming userId is available in your component's state or props
-        const userId = id;
-        
-        // Send formData to Flask, including user_id in the URL
-        const response = await axios.post(`${serverHost}/submit-form/${userId}`, formData, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        console.log(response.data.message); // Log success message
-        alert('Form data sent to server!');
-        setStep(2); // Proceed to the next step
-      } catch (error) {
-        console.error('Error submitting form:', error);
-        alert('Failed to submit form.');
-      }
+      setStep(2); // Proceed to the next step
+    } else if (step === 2) {
+      setStep(3); // Proceed to review step
     } else {
       alert('Form Submitted!');
       localStorage.setItem('BusinessStatus', 'verified');
     }
   };
-  
 
 
   const handleBack = () => {
     if (step === 2) {
       setStep(1); // Go back to the shop information section
+    } else if (step === 3) {
+      setStep(2); // Go back to the address section
     }
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -234,43 +247,50 @@ const Business: React.FC = () => {
               </div>
           )}
 
-            {/* Submit Section */}
-            {step === 2 && (
-                <div className="mb-6 shadow p-4 bg-white rounded">
-                <h2 className="text-xl font-bold text-gray-700 mb-4">Submit Your Information</h2>
-                
-                <p className="mb-4">Review your shop information and submit.</p>
-
-                {/* Display the values if needed, or just a message */}
-                <div className="mb-4">
-                    <p><strong>Shop Name:</strong> [Shop Name]</p>
-                    <p><strong>Shop Category:</strong> [Shop Category]</p>
-                    <p><strong>Shop Location:</strong> [Shop Location]</p>
-                </div>
-                </div>
-            )}
-       
+      {/* Submit Section */}
+      {step === 2 && (
+          <>
+          <h1>Contract page</h1>
+          </>
+      )}
+  {/* Review Information Section */}
+  {step === 3 && (
+        <div className="shadow p-4 bg-white rounded">
+          <h2 className="text-xl font-bold text-gray-700 mb-4">Review Information</h2>
+          <div className="mb-4">
+            <p><strong>Business Name:</strong> {formData.businessName}</p>
+            <p><strong>Business Category:</strong> {formData.businessCategory}</p>
+            <p><strong>Business Email:</strong> {formData.businessEmail}</p>
+            <p><strong>Business Contact:</strong> {formData.businessContact}</p>
+            <p><strong>Province:</strong> {formData.province}</p>
+            <p><strong>City:</strong> {formData.city}</p>
+            <p><strong>Barangay:</strong> {formData.barangay}</p>
+            <p><strong>Postal Code:</strong> {formData.postalCode}</p>
+          </div>
+        </div>
+      )}
 
       {/* Navigation Button */}
       <div className="flex justify-end mt-6">
-      {step === 2 && (
+        {step === 2 || step === 3 ? (
           <button
             onClick={handleBack}
-            className=" text-black px-6 py-2"
+            className="text-black px-6 py-2"
           >
             Back
           </button>
-        )}
+        ) : null}
         <button
           onClick={handleNext}
-          type='submit'
-          className=" text-white px-6 py-2 rounded-lg bg-green-800 hover:bg-green-800 hover:text-white "
+          type="submit"
+          className="text-white px-6 py-2 rounded-lg bg-green-800 hover:bg-green-800 hover:text-white"
         >
-          {step === 1 ? 'Next' : 'Submit'}
+          {step === 1 ? 'Next' : step === 2 ? 'Next' : 'Submit'}
         </button>
       </div>
     </div>
   );
 };
+
 
 export default Business;
