@@ -7,10 +7,15 @@ import About from '../src/pages/About';
 import Error404 from '../src/pages/Error404';
 import './App.css';
 import Header from './components/header';
+
+
 import Clientdashboard from '../src/Client/ClientDashboard';
 import Business from './Client/Business Page/business';
 import ProductUpload from './Client/Business Page/productsAdd';
 import ProductList from './Client/Business Page/ProductLIst';
+
+import AdminDashboard from './Admin/adminDashboard';
+
 import Footer from './components/footer';
 import Cookies from 'js-cookie';
 
