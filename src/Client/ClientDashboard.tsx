@@ -1,9 +1,10 @@
 import Profile from '../../src/assets/profiles/Profile.jpg'
-import { FaEdit, FaCog, FaSave  } from 'react-icons/fa';
+import { FaEdit, FaCog, FaSave, FaBars  } from 'react-icons/fa';
 import { useLocation, useNavigate, Link  } from 'react-router-dom';
 import { IoStorefrontSharp } from "react-icons/io5";
 import { AiFillProfile } from "react-icons/ai";
 import { useState, useEffect } from 'react';
+import { MdArrowForward } from 'react-icons/md';
 import Business from './BusinessPage/business';
 import ProductList from './BusinessPage/ProductLIst';
 import ProductAdd from './BusinessPage/productsAdd';
@@ -29,6 +30,9 @@ const ClientDashboard: React.FC = () =>{
     const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false); 
     const [isEditingAddress,setIsEditingAddress] = useState(false);
     const serverUrl = host_backend.trim();
+
+
+
 
         // Extract the ID from the URL
         let url = window.location.href;
@@ -269,121 +273,117 @@ const ClientDashboard: React.FC = () =>{
 
 
 
-      // Get current location and fill in the address fields
-            const getCurrentLocation = () => {
-                if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(fetchAddressFromCoordinates, handleLocationError);
-                } else {
-                alert("Geolocation is not supported by this browser.");
-                }
-            };
+    // Get current location and fill in the address fields
+    const getCurrentLocation = () => {
+        if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(fetchAddressFromCoordinates, handleLocationError);
+        } else {
+        alert("Geolocation is not supported by this browser.");
+        }
+    };
 
-            // Fetch address using reverse geocoding API
-            const fetchAddressFromCoordinates = (position) => {
-                const { latitude, longitude } = position.coords;
-                const apiKey = "YOUR_GOOGLE_MAPS_API_KEY";  // Replace with your Google Maps API key
-                const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
+    // Fetch address using reverse geocoding API
+    const fetchAddressFromCoordinates = (position) => {
+        const { latitude, longitude } = position.coords;
+        const apiKey = "YOUR_GOOGLE_MAPS_API_KEY";  // Replace with your Google Maps API key
+        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
 
-                fetch(geocodeUrl)
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.results.length > 0) {
-                    const addressComponents = data.results[0].address_components;
-                    setStreetName(addressComponents.find(component => component.types.includes('route'))?.long_name || '');
-                    setBarangay(addressComponents.find(component => component.types.includes('sublocality_level_1'))?.long_name || '');
-                    setCity(addressComponents.find(component => component.types.includes('locality'))?.long_name || '');
-                    setProvince(addressComponents.find(component => component.types.includes('administrative_area_level_1'))?.long_name || '');
-                    setPostalCode(addressComponents.find(component => component.types.includes('postal_code'))?.long_name || '');
-                    } else {
-                    alert("Address not found.");
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error fetching address:", error);
-                    alert("Unable to fetch address.");
-                });
-            };
+        fetch(geocodeUrl)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.results.length > 0) {
+            const addressComponents = data.results[0].address_components;
+            setStreetName(addressComponents.find(component => component.types.includes('route'))?.long_name || '');
+            setBarangay(addressComponents.find(component => component.types.includes('sublocality_level_1'))?.long_name || '');
+            setCity(addressComponents.find(component => component.types.includes('locality'))?.long_name || '');
+            setProvince(addressComponents.find(component => component.types.includes('administrative_area_level_1'))?.long_name || '');
+            setPostalCode(addressComponents.find(component => component.types.includes('postal_code'))?.long_name || '');
+            } else {
+            alert("Address not found.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error fetching address:", error);
+            alert("Unable to fetch address.");
+        });
+    };
 
-            // Handle geolocation errors
-            const handleLocationError = (error) => {
-                alert("Error getting location: " + error.message);
-            };
+    // Handle geolocation errors
+    const handleLocationError = (error) => {
+        alert("Error getting location: " + error.message);
+    };
             
     return (
    
        
         <div className="flex mt-9"> {/* main div of clientDashboard*/}
-          {/* Sidebar Section */}
-          <div className="w-64 bg-white text-white flex flex-col items-center py-8 h-screen">
-          <div className="flex flex-col items-center justify-center mb-8">
-            <img
-                src={Profile}
-                alt="Profile"
-                className="w-24 h-24 rounded-full mb-4"
-            />
-            <h2 className="text-lg text-black font-semibold text-center">
-                SiJi
-            </h2>
-            {/* <h2 className="text-lg text-green-900 font-semibold text-center">
-                Verified
-            </h2> */}
-            </div>
-
-
-            <div className="w-full p-2  flex flex-col h-full mb-10">
-                <Link   to={`/clientprofile/id=${id}`}>
-                    <button
-                        className={`w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center 
-                        ${isActive ? 'bg-green-600 text-white' : ' text-black hover:bg-green-600 hover:text-white'}`}
-                    >
-                        <AiFillProfile className="h-5 w-5 mr-2" />
-                        Personal Information
-                    </button>
-                </Link>
-
-                {/* Register your business button */}
-                <button
-                    className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center"
-                    onClick={toggleDropdown} // Toggle dropdown on click
-                >
-                    <IoStorefrontSharp className="h-5 w-5 mr-2"/>
-
-                    Business
-                </button>
-
-            {/* Conditionally rendered dropdown */}
-            {isDropdownOpen && (
-                <div className="ml-4 mb-4">
-                <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
-                    Tutorial
-                </button>
-                <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
-                Contract Details
-                </button>
-                <Link to="business-form">
-                    <button  className={`w-full py-2 px-4 text-left text-black font-semibold ${isStart ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`} onClick={StartBusiness}>
-                        Start Selling
-                    </button>
-                </Link>
-                <button
-                      className={`w-full py-2 px-4 text-left text-black font-semibold ${isProducts ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`}
-                    onClick={navigateToProductList}
-                    >
-                    Products
-                    </button>
-
+            {/* Sidebar Section */}
+            <div className="w-64 bg-white text-white flex flex-col items-center py-8 h-screen">
+              <div className="flex flex-col items-center justify-center mb-8">
+                <img
+                    src={Profile}
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full mb-4"
+                />
+                <h2 className="text-lg text-black font-semibold text-center">
+                    SiJi
+                </h2>
+                {/* <h2 className="text-lg text-green-900 font-semibold text-center">
+                    Verified
+                </h2> */}
                 </div>
-                 )}
-                <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center">
-                <FaCog className="h-5 w-5 mr-2" />
-                Settings
-                </button>
-              
-              
-            </div>
 
-          </div>
-    
+
+                <div className="w-full p-2  flex flex-col h-full mb-10">
+                    <Link   to={`/clientprofile/id=${id}`}>
+                        <button
+                            className={`w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center 
+                            ${isActive ? 'bg-green-600 text-white' : ' text-black hover:bg-green-600 hover:text-white'}`}
+                        >
+                            <AiFillProfile className="h-5 w-5 mr-2" />
+                            Personal Information
+                        </button>
+                    </Link>
+
+                    {/* Register your business button */}
+                    <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center" onClick={toggleDropdown} >
+                        <IoStorefrontSharp className="h-5 w-5 mr-2"/>
+                        Business
+                    </button>
+
+                {/* Conditionally rendered dropdown */}
+                {isDropdownOpen && (
+                    <div className="ml-4 mb-4">
+                    <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
+                        Tutorial
+                    </button>
+                    <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
+                    Contract Details
+                    </button>
+                    <Link to="business-form">
+                        <button  className={`w-full py-2 px-4 text-left text-black font-semibold ${isStart ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`} onClick={StartBusiness}>
+                            Start Selling
+                        </button>
+                    </Link>
+                    <button
+                          className={`w-full py-2 px-4 text-left text-black font-semibold ${isProducts ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`}
+                        onClick={navigateToProductList}
+                        >
+                        Products
+                        </button>
+
+                    </div>
+                    )}
+                    <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center">
+                    <FaCog className="h-5 w-5 mr-2" />
+                    Settings
+                    </button>
+                  
+                  
+              </div>
+
+            </div>
+      
           {/* main div */}
           <main className="flex-1 bg-gray-100 p-8 overflow-y-auto">
                 {isBusinessForm ? (
@@ -413,16 +413,7 @@ const ClientDashboard: React.FC = () =>{
                             <label htmlFor="firstname" className="block text-gray-600 font-medium mb-1">
                                 Firstname
                             </label>
-                            <input
-                                type="text"
-                                id="firstName"
-                                value={firstName} // Bind the input value to `firstName`
-                                onChange={(e) => setFirstName(e.target.value)} // Allow updates to `firstName`
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                                placeholder="Enter your first name"
-                              
-                                disabled={isDisabledPesonalInfo}
-                            />
+                            <input type="text" id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your first name" disabled={isDisabledPesonalInfo} />
                             </div>
                             <div className="flex-1">
                             <label htmlFor="lastname" className="block text-gray-600 font-medium mb-1"> Lastname </label>
@@ -521,129 +512,73 @@ const ClientDashboard: React.FC = () =>{
                                 </div>
                             )}
                         </div>
-                    </div>
+                      </div>
 
                         </section>
                         <section className="mb-6 shadow p-4 bg-white rounded relative">
-      {/* Edit Button */}
-      <button
-        className="absolute top-4 right-4 text-green-900 hover:text-blue-700 font-medium"
-        onClick={isEditingAddress ? handleSaveClickAddress : handleInputClickAddress} // Toggle between Edit and Save
-      >
-        {isEditingAddress ? <FaSave size={20} /> : <FaEdit size={20} />}
-      </button>
+                          {/* Edit Button */}
+                          <button
+                            className="absolute top-4 right-4 text-green-900 hover:text-blue-700 font-medium"
+                            onClick={isEditingAddress ? handleSaveClickAddress : handleInputClickAddress} // Toggle between Edit and Save
+                          >
+                            {isEditingAddress ? <FaSave size={20} /> : <FaEdit size={20} />}
+                          </button>
 
-      {/* Province, City, Barangay */}
-      <h1 className='text-xl font-bold text-gray-700 mb-4'>Address</h1>
-      <div className="flex gap-4 mb-4">
-        <div className="flex-1">
-          <label htmlFor="province" className="block text-sm font-medium mb-1">Province</label>
-          <input
-            type="text"
-            id="province"
-            name="province"
-            className="w-full p-2 border border-gray-300 rounded"
-            placeholder="Select or type a Province"
-            list="provinces"
-            disabled={isDisabledAddress}
-            value={addressDetails.province}
-            onChange={(e) => setAddressDetails({ ...addressDetails, province: e.target.value })}
-          />
-          <datalist id="provinces">
-            <option value="Province 1" />
-            <option value="Province 2" />
-            <option value="Province 3" />
-            <option value="Province 4" />
-          </datalist>
-        </div>
-        <div className="flex-1">
-          <label htmlFor="city" className="block text-sm font-medium mb-1">City</label>
-          <input
-            type="text"
-            id="city"
-            name="city"
-            className="w-full p-2 border border-gray-300 rounded"
-            placeholder="Select or type a City"
-            list="cities"
-            disabled={isDisabledAddress}
-            value={addressDetails.city}
-            onChange={(e) => setAddressDetails({ ...addressDetails, city: e.target.value })}
-          />
-          <datalist id="cities">
-            <option value="City 1" />
-            <option value="City 2" />
-            <option value="City 3" />
-            <option value="City 4" />
-          </datalist>
-        </div>
-        <div className="flex-1">
-          <label htmlFor="barangay" className="block text-sm font-medium mb-1">Barangay</label>
-          <input
-            type="text"
-            id="barangay"
-            name="barangay"
-            className="w-full p-2 border border-gray-300 rounded"
-            placeholder="Select or type a Barangay"
-            list="barangays"
-            disabled={isDisabledAddress}
-            value={addressDetails.barangay}
-            onChange={(e) => setAddressDetails({ ...addressDetails, barangay: e.target.value })}
-          />
-          <datalist id="barangays">
-            <option value="Barangay 1" />
-            <option value="Barangay 2" />
-            <option value="Barangay 3" />
-            <option value="Barangay 4" />
-          </datalist>
-        </div>
-      </div>
+                          {/* Province, City, Barangay */}
+                          <h1 className='text-xl font-bold text-gray-700 mb-4'>Address</h1>
+                          <div className="flex gap-4 mb-4">
+                            <div className="flex-1">
+                              <label htmlFor="province" className="block text-sm font-medium mb-1">Province</label>
+                              <input type="text" id="province" name="province" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a Province" list="provinces" disabled={isDisabledAddress} value={addressDetails.province} onChange={(e) => setAddressDetails({ ...addressDetails, province: e.target.value })} />
+                              <datalist id="provinces">
+                                <option value="Province 1" />
+                                <option value="Province 2" />
+                                <option value="Province 3" />
+                                <option value="Province 4" />
+                              </datalist>
+                            </div>
+                            <div className="flex-1">
+                              <label htmlFor="city" className="block text-sm font-medium mb-1">City</label>
+                              <input type="text" id="city" name="city" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a City" list="cities" disabled={isDisabledAddress} value={addressDetails.city} onChange={(e) => setAddressDetails({ ...addressDetails, city: e.target.value })} />
+                              <datalist id="cities">
+                                <option value="City 1" />
+                                <option value="City 2" />
+                                <option value="City 3" />
+                                <option value="City 4" />
+                              </datalist>
+                            </div>
+                            <div className="flex-1">
+                              <label htmlFor="barangay" className="block text-sm font-medium mb-1">Barangay</label>
+                              <input type="text" id="barangay" name="barangay" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a Barangay" list="barangays" disabled={isDisabledAddress} value={addressDetails.barangay} onChange={(e) => setAddressDetails({ ...addressDetails, barangay: e.target.value })} />
+                              <datalist id="barangays">
+                                <option value="Barangay 1" />
+                                <option value="Barangay 2" />
+                                <option value="Barangay 3" />
+                                <option value="Barangay 4" />
+                              </datalist>
+                            </div>
+                          </div>
 
-      {/* Postal Code */}
-      <div className="mb-4">
-        <label htmlFor="postalCode" className="block text-sm font-medium mb-1">Postal Code</label>
-        <input
-          type="text"
-          id="postalCode"
-          name="postalCode"
-          className="w-full p-2 border border-gray-300 rounded"
-          placeholder="Postal Code"
-          disabled={isDisabledAddress}
-          value={addressDetails.postalCode}
-          onChange={(e) => setAddressDetails({ ...addressDetails, postalCode: e.target.value })}
-        />
-      </div>
+                          {/* Postal Code */}
+                          <div className="mb-4">
+                            <label htmlFor="postalCode" className="block text-sm font-medium mb-1">Postal Code</label>
+                            <input type="text" id="postalCode" name="postalCode" className="w-full p-2 border border-gray-300 rounded" placeholder="Postal Code" disabled={isDisabledAddress} value={addressDetails.postalCode} onChange={(e) => setAddressDetails({ ...addressDetails, postalCode: e.target.value })} />
+                          </div>
 
-      {/* Get Current Location Button */}
-      <button
-        type="button"
-        className="text-white bg-blue-500 hover:bg-blue-700 py-2 px-4 rounded"
-        onClick={() => {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(handlePositionSuccess, handlePositionError);
-          }
-        }}
-      >
-        Get Current Location
-      </button>
+                          {/* Get Current Location Button */}
+                          <button type="button" className="text-white bg-blue-500 hover:bg-blue-700 py-2 px-4 rounded" onClick={() => { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(handlePositionSuccess, handlePositionError); } }} > Get Current Location </button>
 
-      {/* Map */}
-      <div>
-        <label className="block text-sm font-medium mb-2">Map</label>
-        <div className="h-64 border border-gray-300 rounded">
-          {/* Display the dynamic iframe with the updated map URL */}
-          <iframe
-            title="Map"
-            className="w-full h-full rounded"
-            src={mapUrl}
-            loading="lazy"
-          ></iframe>
-        </div>
-      </div>
-    </section>
+                          {/* Map */}
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Map</label>
+                            <div className="h-64 border border-gray-300 rounded">
+                              {/* Display the dynamic iframe with the updated map URL */}
+                              <iframe title="Map" className="w-full h-full rounded" src={mapUrl} loading="lazy" ></iframe>
+                            </div>
+                          </div>
+                        </section>
                     </>
                     )}
-
-            
           </main>
         </div>
       );

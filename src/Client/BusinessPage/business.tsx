@@ -6,10 +6,6 @@ import hosting from "../../host/host.txt?raw";
 const Business: React.FC = () => {
   const serverHost = hosting.trim();
   const [step, setStep] = useState(1); // To track which section to display
-  const [userId, setUserId] = useState(null);
-  
-
-
   const [isEditing, setIsEditing] = useState(false); 
 
 
@@ -34,35 +30,32 @@ const Business: React.FC = () => {
   }
 
 
-  
-
 
 
   // const handleNext = async () => {
-  //   // const isFormValid = Object.values(formData).every((value) => value.trim() !== '');
+  //   const isFormValid = Object.values(formData).every((value) => value.trim() !== '');
     
-  //   // if (!isFormValid) {
-  //   //   alert('Please fill in all required fields before proceeding.');
-  //   //   return; // Stop execution if validation fails
-  //   // }
-    
+  //   if (!isFormValid) {
+  //     alert('Please fill in all required fields before proceeding.');
+  //     return; // Stop execution if validation fails
+  //   }
   //   if (step === 1) {
   //     try {
   //       alert("next!");
        
-  //     //   const userId = id;
-  //     //   const response = await axios.post(`${serverHost}/submit-form-vendor/${userId}`, formData, {
-  //     //     headers: {
-  //     //       'Content-Type': 'application/json',
-  //     //     },
-  //     //   });
+  //       const userId = id;
+  //       const response = await axios.post(`${serverHost}/submit-form-vendor/${userId}`, formData, {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       });
         
-  //     //   console.log(response.data.message); // Log success message
-  //     //   alert('Form data sent to server!');
+  //       console.log(response.data.message); // Log success message
+  //       alert('Form data sent to server!');
   //       setStep(2); // Proceed to the next step
   //      } catch (error) {
-  //     //   console.error('Error submitting form:', error);
-  //     //   alert('Failed to submit form.');
+  //       console.error('Error submitting form:', error);
+  //       alert('Failed to submit form.');
   //      }
   //   } else {
   //     alert('Form Submitted!');
@@ -70,9 +63,12 @@ const Business: React.FC = () => {
   //   }
   // };
   
-  const handleNext = async () => {
+  const handleNext = async (e) => {
     if (step === 1) {
       setStep(2); // Proceed to the next step
+      e.preventDefault();
+      alert(`Selected business category: ${formData.businessCategory}`);
+
     } else if (step === 2) {
       setStep(3); // Proceed to review step
     } else {
@@ -106,6 +102,25 @@ const Business: React.FC = () => {
   };
 
 
+  useEffect(() => {
+    if (id) {
+      const fetchBusinessEmail = async () => {
+        try {
+          const response = await axios.get(`${serverHost}/fetchEmail/${id}`);
+          const email = response.data.email;
+          if (email) {
+            setFormData((prev) => ({ ...prev, businessEmail: email }));
+          }
+        } catch (error) {
+          console.error("Error fetching business email:", error);
+        }
+      };
+      fetchBusinessEmail();
+    } else {
+      console.error("Invalid userId:", id);
+    }
+  }, [id]);
+  
   return (
     <div className="p-6">
 
@@ -133,7 +148,7 @@ const Business: React.FC = () => {
                 className="w-full p-2 border border-gray-300 rounded"
               >
                 <option value="" disabled>Select your business category</option>
-                <option value="Store owner">Store owner</option>
+                <option value="Business Owner">Business Owner</option>
                 <option value="Freelancer">Freelancer</option>
               </select>
             </div>
@@ -247,14 +262,19 @@ const Business: React.FC = () => {
               </div>
           )}
 
-      {/* Submit Section */}
+    {/* Submit Section */}
       {step === 2 && (
-          <>
-          <h1>Contract page</h1>
-          </>
+        formData.businessCategory === "Freelancer" ? (
+          <h1>Freelancer</h1>  // This will render if the businessCategory is "Freelancer"
+        ) : (
+          <h1>Business Owner</h1> // This will render if the businessCategory is not "Freelancer"
+        )
       )}
-  {/* Review Information Section */}
-  {step === 3 && (
+
+
+
+      {/* Review Information Section */}
+      {step === 3 && (
         <div className="shadow p-4 bg-white rounded">
           <h2 className="text-xl font-bold text-gray-700 mb-4">Review Information</h2>
           <div className="mb-4">

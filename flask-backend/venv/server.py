@@ -185,15 +185,22 @@ class Vendor(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     vendor_status = db.Column(db.String(50), default='Pending')
 
-@app.route('/submit-form/<int:user_id>', methods=['POST'])
+@app.route('/submit-form-vendor/<int:user_id>', methods=['POST'])
 def submit_form(user_id):
     form_data = request.json  # Parse the JSON payload
     print("Received form data:", form_data)  # Print to console
     
     if not user_id:
         return jsonify({"message": "User ID is required!"}), 400
-    
-    existing_vendor = Vendor.query.filter_by(vendor_email=form_data['businessEmail']).first()
+
+    # Fetch user email as default for businessEmail if not provided
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return jsonify({"message": "User not found!"}), 404
+
+    business_email = form_data.get('businessEmail', user.email_or_mobile)
+
+    existing_vendor = Vendor.query.filter_by(vendor_email=business_email).first()
     if existing_vendor:
         return jsonify({"message": "Email already exists. Please use a different email address."}), 400
 
@@ -217,6 +224,28 @@ def submit_form(user_id):
         db.session.rollback()  # Rollback in case of error
         print(f"Error inserting data: {e}")
         return jsonify({"message": "An error occurred while submitting the form!"}), 500
+    
+
+@app.route('/fetchEmail/<int:user_id>', methods=['GET'])
+def fetch_email_by_default(user_id):
+    try:
+        # Query the User table by user_id
+        user = User.query.filter_by(id=user_id).first()
+
+        # Check if the user exists
+        if not user:
+            return jsonify({"message": "User not found"}), 404
+
+        # Return the user's email
+        return jsonify({
+            "user_id": user.id,
+            "email": user.email_or_mobile  # Assuming email_or_mobile stores the user's email
+        }), 200
+
+    except Exception as e:
+        print(f"Error fetching email: {e}")
+        return jsonify({"message": "An error occurred while fetching the email"}), 500
+
 
 with app.app_context():
     db.create_all()
