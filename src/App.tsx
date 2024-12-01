@@ -8,14 +8,17 @@ import Error404 from '../src/pages/Error404';
 import './App.css';
 import Header from './components/header';
 import Clientdashboard from '../src/Client/ClientDashboard';
-import Business from './Client/Business Page/business';
-import ProductUpload from './Client/Business Page/productsAdd';
-import ProductList from './Client/Business Page/ProductLIst';
+import Business from './Client/BusinessPage/business';
+import ProductUpload from './Client/BusinessPage/productsAdd';
+import ProductList from './Client/BusinessPage/ProductLIst';
 import Footer from './components/footer';
+import host_backend from '../src/host/host.txt';
 import Cookies from 'js-cookie';
+import host from "./host/host.txt?raw";
 
 
 function App() {
+  const serverHost = host.trim();
   // useEffect(() => {
   //   // Check if the unauthorized cookie exists
   //   if (!Cookies.get('unauth_cookie')) {
@@ -23,7 +26,7 @@ function App() {
   //     Cookies.set('unauth_cookie', randomCookieValue, { expires: 7 });
 
   //     // Send the cookie to the Flask server
-  //     fetch('http://localhost:5000/api/store-unauth-cookie', {
+  //     fetch(serverHost + '/api/store-unauth-cookie', {
   //       method: 'POST',
   //       headers: {
   //         'Content-Type': 'application/json',
