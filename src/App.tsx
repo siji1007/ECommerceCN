@@ -11,6 +11,7 @@ import Clientdashboard from '../src/Client/ClientDashboard';
 import Business from './Client/BusinessPage/business';
 import ProductUpload from './Client/BusinessPage/productsAdd';
 import ProductList from './Client/BusinessPage/ProductLIst';
+import AdminDashboard from './Admin/adminDashboard';
 import Footer from './components/footer';
 import host_backend from '../src/host/host.txt';
 import Cookies from 'js-cookie';

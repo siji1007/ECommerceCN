@@ -1,9 +1,9 @@
 import ImageSlider from "../components/slider";
 
 const images = [
-    "https://via.placeholder.com/600x400?text=Slide+1",
-    "src/assets/slide1.png",
-    "src/assets/sound.png",
+    "src/assets/slide1.jpg",
+    "src/assets/slide2.jpg",
+    "src/assets/slide3.jpg",
   ];
 
 const shopPage: React.FC = () => {

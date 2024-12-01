@@ -117,20 +117,16 @@ const HomePage: React.FC = () => {
         {/* Content Section */}
         <div className="relative w-full lg:w-7/12 text-left z-60 m-10">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-left">
-            Batayog Festival
+            Bantayog Festival
           </h1>
-          <p className="text-lg sm:text-xl md:text-1xl text-gray-700">
-            Camarines Norte is a captivating destination offering pristine beaches, rich history,
-            and natural beauty. Discover Calaguas Island, known for its powdery white sands and turquoise waters,
-            perfect for relaxation or adventure. Surfers flock to Bagasbas Beach for its consistent waves. Dive into history at Paracale, the "Gold Town," 
-            and visit the First Rizal Monument, a unique tribute to the national hero. Nature lovers can trek to hidden gems like Malatap Falls and Mananap Falls,
-            offering refreshing escapes. Camarines Norte’s blend of adventure, tranquility, and culture makes it a must-visit for travelers seeking an authentic and unforgettable experience.
+          <p className="text-lg sm:text-xl md:text-1xl text-black">
+          The Bantayog Festival bursts to life in Camarines Norte, Philippines, with vibrant colors, rhythmic beats, and an undeniable spirit of pride and unity. Named after the iconic Bantayog Monument, the celebration honors the nation's heroes, particularly the first Rizal Monument in Daet. Streets transform into a spectacle of intricate costumes and spirited performers, weaving tales of heritage through dynamic dances. The aroma of local delicacies fills the air, while handcrafted goods showcase the artistry of the province. With cultural exhibits, lively parades, and heartfelt tributes, the festival immerses visitors in a celebration that is as enriching as it is unforgettable.
           </p>
         </div>
 
         {/* Image Section */}
         <div className="relative w-full lg:w-5/12 mt-4 lg:mt-0 m-10">
-          <img src="src/assets/temp.png" alt="Festival" className="w-full h-auto rounded-lg shadow-lg object-cover" />
+          <img src="src/assets/bantayog.jpg" alt="Festival" className="w-full h-auto rounded-lg shadow-lg object-cover" />
         </div>
       </div>
 
@@ -140,7 +136,7 @@ const HomePage: React.FC = () => {
         
         {/* Image Section */}
         <div className="relative w-full lg:w-5/12 mt-4 lg:mt-0 m-10">
-          <img src="src/assets/temp.png" alt="Festival" className="w-full h-auto rounded-lg shadow-lg object-cover" />
+          <img src="src/assets/monument.jpg" alt="monument" className="w-full h-auto rounded-lg shadow-lg object-cover" />
         </div>
         
         {/* Content Section */}
@@ -148,16 +144,14 @@ const HomePage: React.FC = () => {
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-left">
             First Jose Rizal Monument
           </h1>
-          <p className="text-lg sm:text-xl md:text-1xl text-gray-700">
+          <p className="text-lg sm:text-xl md:text-1xl text-black">
             Camarines Norte is a captivating destination offering pristine beaches, rich history,
             and natural beauty. Discover Calaguas Island, known for its powdery white sands and turquoise waters,
             perfect for relaxation or adventure. Surfers flock to Bagasbas Beach for its consistent waves. Dive into history at Paracale, the "Gold Town," 
             and visit the First Rizal Monument, a unique tribute to the national hero. Nature lovers can trek to hidden gems like Malatap Falls and Mananap Falls,
             offering refreshing escapes. Camarines Norte’s blend of adventure, tranquility, and culture makes it a must-visit for travelers seeking an authentic and unforgettable experience.
           </p>
-        </div>
-
-        
+        </div>        
       </div>
 
 

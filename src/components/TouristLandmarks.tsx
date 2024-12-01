@@ -32,7 +32,7 @@ const TouristLandmarks: React.FC = () => {
             {/* Left Arrow */}
             <button
               onClick={() => scrollCarousel("left")}
-              className="absolute left-0 z-50 bg-black bg-opacity-80 text-white p-3 rounded-full shadow hover:bg-opacity-100 transition"
+              className="absolute left-0 z-30 bg-black bg-opacity-80 text-white p-3 rounded-full shadow hover:bg-opacity-100 transition"
             >
               &#8249;
             </button>
@@ -63,7 +63,7 @@ const TouristLandmarks: React.FC = () => {
             {/* Right Arrow */}
             <button
               onClick={() => scrollCarousel("right")}
-              className="absolute right-4 z-70 bg-black bg-opacity-80 text-white p-3 rounded-full shadow hover:bg-opacity-100 transition"
+              className="absolute right-4 z-30 bg-black bg-opacity-80 text-white p-3 rounded-full shadow hover:bg-opacity-100 transition"
             >
               &#8250;
             </button>
