@@ -251,10 +251,8 @@ def fetch_email_by_default(user_id):
 def check_vendor_status(user_id):
     try:
         print(f"Received request to check vendor status for user_id: {user_id}")
-        
         vendor = Vendor.query.filter_by(user_id=user_id).first()
         print(f"Vendor query result: {vendor}")
-
         if not vendor:
             print("Vendor not found.")
             return jsonify({"message": "Vendor not found"}), 404
@@ -274,6 +272,124 @@ def check_vendor_status(user_id):
     except Exception as e:
         print(f"Error checking vendor status: {e}")
         return jsonify({"message": "An error occurred while checking the vendor status"}), 500
+
+
+@app.route('/fetchVendorId/<int:user_id>', methods=['GET', 'OPTIONS'])
+def fetch_vendor_id(user_id):
+    """
+    Fetch the vendor ID associated with the given user ID from the vendors table.
+    """
+    try:
+        print(f"Received request to fetch vendor ID for user_id: {user_id}")
+        # Query the Vendor table for the given user_id
+        vendor = Vendor.query.filter_by(user_id=user_id).first()
+        
+        if not vendor:
+            print("Vendor not found.")
+            return jsonify({"message": "Vendor not found"}), 404
+        
+        # Get the vendor ID and other relevant details if needed
+        vendor_id = vendor.ven_id  # Assuming ven_id is the primary key for the vendors table
+        print(f"Vendor ID: {vendor_id}")
+        
+        # Return the vendor ID
+        return jsonify({"vendor_id": vendor_id}), 200
+
+    except Exception as e:
+        print(f"Error fetching vendor ID: {e}")
+        return jsonify({"message": "An error occurred while fetching the vendor ID"}), 500
+    
+
+
+class Product(db.Model):
+    __tablename__ = 'products'  # Name of the table in the database
+
+    # Primary Key
+    prod_id = db.Column(db.Integer, primary_key=True)
+
+    # Foreign Key
+    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.ven_id'), nullable=False)
+
+    # Product Attributes
+    prod_name = db.Column(db.String(255), nullable=False)
+    prod_category = db.Column(db.String(255), nullable=False)
+    prod_descript = db.Column(db.Text, nullable=True)
+    prod_price = db.Column(db.Float, nullable=False)
+    prod_disc_price = db.Column(db.Float, nullable=True)
+    prod_status = db.Column(db.String(50), nullable=False, default="Pending")
+    prod_image_id = db.Column(db.String(255), nullable=True)
+
+
+    # Relationship with Vendor
+    vendor = db.relationship('Vendor', backref=db.backref('products', lazy=True))
+
+    def __init__(self, vendor_id, prod_name, prod_category, prod_descript, prod_price, prod_disc_price, prod_status="Pending", prod_image_id=None):
+        self.vendor_id = vendor_id
+        self.prod_name = prod_name
+        self.prod_category = prod_category
+        self.prod_descript = prod_descript
+        self.prod_price = prod_price
+        self.prod_disc_price = prod_disc_price
+        self.prod_status = prod_status
+        self.prod_image_id = prod_image_id
+
+    def to_dict(self):
+        return {
+            "prod_id": self.prod_id,
+            "vendor_id": self.vendor_id,
+            "prod_name": self.prod_name,
+            "prod_category": self.prod_category,
+            "prod_descript": self.prod_descript,
+            "prod_price": self.prod_price,
+            "prod_disc_price": self.prod_disc_price,
+            "prod_status": self.prod_status,
+            "prod_image_id": self.prod_image_id,
+
+        }
+
+@app.route('/addProduct', methods=['POST'])
+def add_product():
+    try:
+        data = request.json
+        print("Received data:", data)  # Log the incoming data for debugging
+        
+        # Extract data from the request
+        vendor_id = data.get('vendor_id')
+        prod_name = data.get('prod_name')
+        prod_category = data.get('prod_category')
+        prod_description = data.get('prod_descript')
+        prod_price = data.get('prod_price')
+        prod_disc_price = data.get('prod_disc_price')
+        prod_image_id = data.get('prod_image_id	', None)
+        prod_status = data.get('prod_status', 'Pending')
+
+        # Validate required fields
+        if not all([vendor_id, prod_name, prod_category, prod_price]):
+            return jsonify({"message": "Missing required fields"}), 400
+
+        # Create a new product
+        new_product = Product(
+            vendor_id=vendor_id,
+            prod_name=prod_name,
+            prod_category=prod_category,
+            prod_descript=prod_description,
+            prod_price=prod_price,
+            prod_disc_price=prod_disc_price,
+            prod_status=prod_status,
+            prod_image_id=prod_image_id,
+        )
+
+        db.session.add(new_product)
+        db.session.commit()
+
+        return jsonify({"message": "Product added successfully", "product_id": new_product.prod_id}), 201
+    except Exception as e:
+        print(f"Error adding product: {e}")
+        return jsonify({"message": f"An error occurred: {e}"}), 500
+
+
+
+
 
 
 with app.app_context():

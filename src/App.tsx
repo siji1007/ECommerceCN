@@ -11,9 +11,8 @@ import Clientdashboard from '../src/Client/ClientDashboard';
 import Business from './Client/BusinessPage/business';
 import ProductUpload from './Client/BusinessPage/productsAdd';
 import ProductList from './Client/BusinessPage/ProductLIst';
-import AdminDashboard from './Admin/adminDashboard';
+import AdminDashboard from './Admin/AdminDashboard';
 import Footer from './components/footer';
-import host_backend from '../src/host/host.txt';
 import Cookies from 'js-cookie';
 import host from "./host/host.txt?raw";
 
@@ -54,6 +53,7 @@ function App() {
         <Header />
         <Routes>
           <Route path='/' element={<HomePage/>}/>
+          <Route path='/admin' element={<AdminDashboard/>}/>
           <Route path='/shop' element={<Shop/>}/>
           <Route path='/vendor' element={<Vendors/>}/>
           <Route path='/about' element={<About/>}/>
