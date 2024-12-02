@@ -245,6 +245,35 @@ def fetch_email_by_default(user_id):
     except Exception as e:
         print(f"Error fetching email: {e}")
         return jsonify({"message": "An error occurred while fetching the email"}), 500
+    
+
+@app.route('/checkVendorStatus/<int:user_id>', methods=['GET', 'OPTIONS'])
+def check_vendor_status(user_id):
+    try:
+        print(f"Received request to check vendor status for user_id: {user_id}")
+        
+        vendor = Vendor.query.filter_by(user_id=user_id).first()
+        print(f"Vendor query result: {vendor}")
+
+        if not vendor:
+            print("Vendor not found.")
+            return jsonify({"message": "Vendor not found"}), 404
+
+        vendor_status = vendor.vendor_status
+        print(f"Vendor status: {vendor_status}")
+
+        if vendor_status == 'Pending':
+            return jsonify({"message": "Pending"}), 200
+        elif vendor_status == 'Verified':
+            return jsonify({"message": "Verified"}), 200
+        elif vendor_status == 'Rejected':
+            return jsonify({"message": "Rejected"}), 200
+        else:
+            return jsonify({"message": "Unknown vendor status"}), 200
+
+    except Exception as e:
+        print(f"Error checking vendor status: {e}")
+        return jsonify({"message": "An error occurred while checking the vendor status"}), 500
 
 
 with app.app_context():

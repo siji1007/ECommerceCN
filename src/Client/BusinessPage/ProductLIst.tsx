@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import profileImage from '../../assets/profiles/Profile.jpg';
+import axios from 'axios';
+import serverURL from '../../host/host.txt?raw';
 
 interface Product {
   id: number;
@@ -32,15 +34,54 @@ const ProductList: React.FC = () => {
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const [newComment, setNewComment] = useState<string>('');
   const [comments, setComments] = useState<Comment[]>([]);
-  const [isVerified, setIsVerified] = useState<boolean>(false);
+  const [vendorStatus, setVendorStatus] = useState<string>(''); // Store vendor status
+  const hosting = serverURL.trim();
+
+
+  let url = window.location.href;
+  let match = url.match(/id=(\d+)/);  // This will match 'id=2' or similar
+  
+  const id = match ? match[1] : null;
+  
+  if (!id) {
+      return <div>ID not found in the URL</div>;
+  }
 
   useEffect(() => {
-    // Check if the business status in localStorage is 'verified'
-    const businessStatus = localStorage.getItem('BusinessStatus');
-    if (businessStatus === 'verified') {
-      setIsVerified(true);
+    const fetchVendorStatus = async () => {
+        try {
+            // Send the GET request to the backend
+            const response = await fetch(`${hosting}/checkVendorStatus/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+              const vendorStatus = result.message;
+              setVendorStatus(vendorStatus);
+              console.log(`Vendor Status: ${vendorStatus}`);
+          
+             
+            } else {
+                // If the response is not OK, show the message from the server
+                alert(result.message || 'Failed to fetch vendor status');
+            }
+        } catch (error) {
+            // Handle any network or unexpected errors
+            console.error('Request failed', error);
+            alert('An error occurred while trying to fetch vendor status');
+        }
+    };
+
+    // Call the function inside useEffect
+    if (id) {
+        fetchVendorStatus();
     }
-  }, []);
+}, [id, hosting]);
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
@@ -66,14 +107,6 @@ const ProductList: React.FC = () => {
     }
   };
 
-  let url = window.location.href;
-  let match = url.match(/id=(\d+)/);  // This will match 'id=2' or similar
-  
-  const id = match ? match[1] : null;
-  
-  if (!id) {
-      return <div>ID not found in the URL</div>;
-  }
 
 
   const filteredProducts = products.filter(
@@ -82,10 +115,18 @@ const ProductList: React.FC = () => {
       product.title.toLowerCase().includes(searchQuery)
   );
 
-  if (!isVerified) {
+  if (vendorStatus === 'Pending') {
+    return (
+      <div className="p-4 text-center text-yellow-500">
+        <h1>Your request is pending...</h1>
+      </div>
+    );
+
+  }
+  if (vendorStatus === 'Rejected') {
     return (
       <div className="p-4 text-center text-red-500">
-        <h1>Error 404: Business Not Verified</h1>
+        <h1>Your request is rejected.</h1>
       </div>
     );
   }
