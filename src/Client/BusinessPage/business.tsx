@@ -265,7 +265,11 @@ const Business: React.FC = () => {
     {/* Submit Section */}
       {step === 2 && (
         formData.businessCategory === "Freelancer" ? (
-          <h1>Freelancer</h1>  // This will render if the businessCategory is "Freelancer"
+          <>
+          <h1>Freelancer</h1>  
+
+          
+          </>
         ) : (
           <h1>Business Owner</h1> // This will render if the businessCategory is not "Freelancer"
         )

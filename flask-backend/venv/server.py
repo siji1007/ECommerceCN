@@ -3,6 +3,8 @@ from flask_cors import CORS
 from connection import db, init_app
 import secrets
 from datetime import datetime
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
 
@@ -10,6 +12,8 @@ CORS(app, supports_credentials=True, origins=["*"])
 
 
 init_app(app)
+
+
 
 
 class SessionCookieUnauth(db.Model):
@@ -245,6 +249,285 @@ def fetch_email_by_default(user_id):
     except Exception as e:
         print(f"Error fetching email: {e}")
         return jsonify({"message": "An error occurred while fetching the email"}), 500
+    
+
+@app.route('/checkVendorStatus/<int:user_id>', methods=['GET', 'OPTIONS'])
+def check_vendor_status(user_id):
+    try:
+        print(f"Received request to check vendor status for user_id: {user_id}")
+        vendor = Vendor.query.filter_by(user_id=user_id).first()
+        print(f"Vendor query result: {vendor}")
+        
+        if not vendor:
+            print("Vendor not found.")
+            return jsonify({"message": "Vendor not found"}), 404
+
+        vendor_status = vendor.vendor_status
+        vendor_id = vendor.ven_id  # Retrieve the vendor_id
+        print(f"Vendor status: {vendor_status}, Vendor ID: {vendor_id}")
+
+        # Include vendor_id in the response
+        if vendor_status == 'Pending':
+            return jsonify({"message": "Pending", "vendor_id": vendor_id}), 200
+        elif vendor_status == 'Verified':
+            return jsonify({"message": "Verified", "vendor_id": vendor_id}), 200
+        elif vendor_status == 'Rejected':
+            return jsonify({"message": "Rejected", "vendor_id": vendor_id}), 200
+        else:
+            return jsonify({"message": "Unknown vendor status", "vendor_id": vendor_id}), 200
+
+    except Exception as e:
+        print(f"Error checking vendor status: {e}")
+        return jsonify({"message": "An error occurred while checking the vendor status"}), 500
+
+
+
+@app.route('/fetchVendorId/<int:user_id>', methods=['GET', 'OPTIONS'])
+def fetch_vendor_id(user_id):
+    """
+    Fetch the vendor ID associated with the given user ID from the vendors table.
+    """
+    try:
+        print(f"Received request to fetch vendor ID for user_id: {user_id}")
+        # Query the Vendor table for the given user_id
+        vendor = Vendor.query.filter_by(user_id=user_id).first()
+        
+        if not vendor:
+            print("Vendor not found.")
+            return jsonify({"message": "Vendor not found"}), 404
+        
+        # Get the vendor ID and other relevant details if needed
+        vendor_id = vendor.ven_id  # Assuming ven_id is the primary key for the vendors table
+        print(f"Vendor ID: {vendor_id}")
+        
+        # Return the vendor ID
+        return jsonify({"vendor_id": vendor_id}), 200
+
+    except Exception as e:
+        print(f"Error fetching vendor ID: {e}")
+        return jsonify({"message": "An error occurred while fetching the vendor ID"}), 500
+    
+
+
+class Product(db.Model):
+    __tablename__ = 'products'  # Name of the table in the database
+
+    # Primary Key
+    prod_id = db.Column(db.Integer, primary_key=True)
+
+    # Foreign Key
+    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.ven_id'), nullable=False)
+
+    # Product Attributes
+    prod_name = db.Column(db.String(255), nullable=False)
+    prod_category = db.Column(db.String(255), nullable=False)
+    prod_descript = db.Column(db.Text, nullable=True)
+    prod_price = db.Column(db.Float, nullable=False)
+    prod_stock = db.Column(db.Integer, nullable=False, default=0)
+    prod_disc_price = db.Column(db.Float, nullable=True)
+    prod_status = db.Column(db.String(50), nullable=False, default="Pending")
+    prod_image_id = db.Column(db.String(255), nullable=False)
+
+
+    # Relationship with Vendor
+    vendor = db.relationship('Vendor', backref=db.backref('products', lazy=True))
+
+    def __init__(self, vendor_id, prod_name, prod_category, prod_descript, prod_price, prod_stock, prod_disc_price, prod_status="Pending", prod_image_id=None):
+        self.vendor_id = vendor_id
+        self.prod_name = prod_name
+        self.prod_category = prod_category
+        self.prod_descript = prod_descript
+        self.prod_price = prod_price
+        self.prod_stock = prod_stock
+        self.prod_disc_price = prod_disc_price
+        self.prod_status = prod_status
+        self.prod_image_id = prod_image_id
+
+    def to_dict(self):
+        return {
+            "prod_id": self.prod_id,
+            "vendor_id": self.vendor_id,
+            "prod_name": self.prod_name,
+            "prod_category": self.prod_category,
+            "prod_descript": self.prod_descript,
+            "prod_price": self.prod_price,
+            "prod_disc_price": self.prod_disc_price,
+            "prod_status": self.prod_status,
+            "prod_image_id": self.prod_image_id,
+            "prod_stock": self.prod_stock,
+
+        }
+
+@app.route('/addProduct', methods=['POST'])
+def add_product():
+    try:
+        data = request.json
+        print("Received data:", data)  # Log the incoming data for debugging
+        
+        # Extract data from the request
+        vendor_id = data.get('vendor_id')
+        prod_name = data.get('prod_name')
+        prod_category = data.get('prod_category')
+        prod_description = data.get('prod_descript')
+        prod_price = data.get('prod_price')
+        prod_disc_price = data.get('prod_disc_price')
+        prod_image_id = data.get('prod_image_id')
+        prod_status = data.get('prod_status', 'Pending')
+        prod_stock = data.get('prod_stock')
+
+        # Validate required fields
+        if not all([vendor_id, prod_name, prod_category, prod_price]):
+            return jsonify({"message": "Missing required fields"}), 400
+
+        # Create a new product
+        new_product = Product(
+            vendor_id=vendor_id,
+            prod_name=prod_name,
+            prod_category=prod_category,
+            prod_descript=prod_description,
+            prod_price=prod_price,
+            prod_disc_price=prod_disc_price,
+            prod_status=prod_status,
+            prod_image_id=prod_image_id,
+            prod_stock= prod_stock,
+        )
+
+        db.session.add(new_product)
+        db.session.commit()
+
+        return jsonify({"message": "Product added successfully", "product_id": new_product.prod_id}), 201
+    except Exception as e:
+        print(f"Error adding product: {e}")
+        return jsonify({"message": f"An error occurred: {e}"}), 500
+
+
+
+# Folder where you want to store uploaded images
+UPLOAD_FOLDER = r'C:/Users/XtiaN//ECommerceCN/src/assets/product_images' 
+#                 C:\Users\XtiaN\ECommerceCN\src\assets\product_images
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+# Ensure the folder exists
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Check allowed extensions
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Route to upload image
+@app.route('/uploadProductImage', methods=['POST'])
+def upload_image():
+    if 'file' not in request.files:
+        return jsonify({'message': 'No file part'}), 400
+
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({'message': 'No selected file'}), 400
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+
+        # Return the URL to the image to be displayed in React
+        return jsonify({'imageUrl': f'http://192.168.1.8:5173/src/assets/product_images/{filename}'}), 200
+
+    return jsonify({'message': 'Invalid file format'}), 400
+
+# Route to serve the images
+@app.route('/assets/product_images/<filename>')
+def uploaded_file(filename):
+    # Serve the image from the directory
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/deleteProductImage/<filename>', methods=['DELETE'])
+def delete_image(filename):
+    try:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)  # Delete the file from server
+            return jsonify({"message": f"Image {filename} deleted successfully."}), 200
+        else:
+            return jsonify({"message": f"Image {filename} not found."}), 404
+    except Exception as e:
+        return jsonify({"message": f"Error deleting image: {str(e)}"}), 500
+
+
+
+@app.route('/FetchProducts/<int:vendor_id>', methods=['GET'])
+def get_products_by_vendor(vendor_id):
+    try:
+        # Fetch products based on vendor_id
+        products = Product.query.filter_by(vendor_id=vendor_id).all()
+        
+        if not products:
+            return jsonify({'message': 'No products found for this vendor.'}), 404
+        
+        # Serialize products
+        products_list = [
+            {
+                'prod_id': product.prod_id,
+                'vendor_id': product.vendor_id,
+                'prod_name': product.prod_name,
+                'prod_category': product.prod_category,
+                'prod_descript': product.prod_descript,
+                'prod_price': product.prod_price,
+                'prod_disc_price': product.prod_disc_price,
+                'prod_status': product.prod_status,
+                'prod_image_id': product.prod_image_id,
+                'prod_stock' : product.prod_stock,
+            }
+            for product in products
+        ]
+        print(products_list)
+        return jsonify({'products': products_list}), 200
+
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/FetchProducts', methods=['GET'])
+def get_all_products():
+    try:
+        # Fetch all products (no filtering by vendor_id)
+        products = Product.query.all()
+        
+        if not products:
+            return jsonify({'message': 'No products found.'}), 404
+        
+        # Serialize products
+        products_list = [
+            {
+                'prod_id': product.prod_id,
+                'vendor_id': product.vendor_id,
+                'prod_name': product.prod_name,
+                'prod_category': product.prod_category,
+                'prod_descript': product.prod_descript,
+                'prod_price': product.prod_price,
+                'prod_disc_price': product.prod_disc_price,
+                'prod_status': product.prod_status,
+                'prod_image_id': product.prod_image_id,
+                'prod_stock' : product.prod_stock,
+            }
+            for product in products
+        ]
+        print(products_list)
+        return jsonify({'products': products_list}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 with app.app_context():
