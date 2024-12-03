@@ -96,6 +96,9 @@ const ProductsAdd: React.FC = () => {
     const handleAddClick = async () => {
       const { prodName, prodCategory, prodStocks, description, price, discountPrice } = formData;
     
+      // Convert images array to a comma-separated string
+      const imageString = Array.isArray(images) ? images.join(',') : images;
+    
       // Prepare the product data
       const productData = {
         vendor_id: vendorID || null,
@@ -105,20 +108,18 @@ const ProductsAdd: React.FC = () => {
         prod_descript: description,
         prod_price: price,
         prod_disc_price: discountPrice,
-        prod_image_id: images.length,
-        images,  // Send image URLs
+        prod_image_id: imageString, // Send as a single string
       };
     
       try {
         const response = await axios.post(`${serverURL}/addProduct`, productData);
-        if (response.status === 200) {
+        if (response.status === 201) {
           alert('Product added successfully!');
           console.log('Server Response:', response.data);
         } else {
           alert('Failed to add product. Please try again.');
           console.error('Error Response:', response);
         }
-        alert(images);
       } catch (error) {
         alert('An error occurred while adding the product.');
         console.error('Error:', error);

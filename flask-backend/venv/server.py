@@ -326,7 +326,7 @@ class Product(db.Model):
     prod_stock = db.Column(db.Integer, nullable=False, default=0)
     prod_disc_price = db.Column(db.Float, nullable=True)
     prod_status = db.Column(db.String(50), nullable=False, default="Pending")
-    prod_image_id = db.Column(db.String(255), nullable=True)
+    prod_image_id = db.Column(db.String(255), nullable=False)
 
 
     # Relationship with Vendor
@@ -371,7 +371,7 @@ def add_product():
         prod_description = data.get('prod_descript')
         prod_price = data.get('prod_price')
         prod_disc_price = data.get('prod_disc_price')
-        prod_image_id = data.get('prod_image_id	', None)
+        prod_image_id = data.get('prod_image_id')
         prod_status = data.get('prod_status', 'Pending')
         prod_stock = data.get('prod_stock')
 
@@ -403,7 +403,9 @@ def add_product():
 
 
 # Folder where you want to store uploaded images
-UPLOAD_FOLDER = r'C:/Users/xTIaN/Documents/ECommerceCN/src/assets/product_images'
+UPLOAD_FOLDER = r'C:/Users/XtiaN//ECommerceCN/src/assets/product_images' 
+#                 C:\Users\XtiaN\ECommerceCN\src\assets\product_images
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Allowed file extensions
@@ -434,7 +436,7 @@ def upload_image():
         file.save(file_path)
 
         # Return the URL to the image to be displayed in React
-        return jsonify({'imageUrl': f'http://192.168.1.17:5173/src/assets/product_images/{filename}'}), 200
+        return jsonify({'imageUrl': f'http://192.168.1.8:5173/src/assets/product_images/{filename}'}), 200
 
     return jsonify({'message': 'Invalid file format'}), 400
 
