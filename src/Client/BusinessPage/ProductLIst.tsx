@@ -5,13 +5,21 @@ import axios from 'axios';
 import serverURL from '../../host/host.txt?raw';
 
 interface Product {
-  id: number;
-  title: string;
-  price: string;
-  rating: number;
-  category: string;
-  image: string;
+  prod_id: number;
+  vendor_id: number;
+  prod_name: string;
+  prod_category: string;
+  prod_descript: string;
+  prod_price: number;
+  prod_disc_price: number;
+  prod_status: string;
+  prod_image_id: string;
 }
+
+interface FetchProductsResponse {
+  products: Product[];
+}
+
 
 interface Comment {
   id: number;
@@ -19,15 +27,10 @@ interface Comment {
   text: string;
 }
 
-const products: Product[] = [
-  { id: 1, title: 'Kakanin', price: '$10', rating: 4.5, category: 'Electronics', image: 'https://images.pexels.com/photos/20787/pexels-photo.jpg?auto=compress&cs=tinysrgb&h=350' },
-  { id: 2, title: 'Product 2', price: '$20', rating: 4.0, category: 'Books', image: 'https://www.filipino-recipes-lutong-pinoy.com/images/xpichi-pichi-Filipino-kakanin-Recipe.jpg.pagespeed.ic.jMT7AVXNgg.webp' },
-  { id: 3, title: 'Product 3', price: '$30', rating: 5.0, category: 'Clothing', image: 'https://www.filipino-recipes-lutong-pinoy.com/images/xpichi-pichi-Filipino-kakanin-Recipe.jpg.pagespeed.ic.jMT7AVXNgg.webp' },
-  { id: 4, title: 'Product 4', price: '$40', rating: 3.5, category: 'Electronics', image: 'https://www.filipino-recipes-lutong-pinoy.com/images/xpichi-pichi-Filipino-kakanin-Recipe.jpg.pagespeed.ic.jMT7AVXNgg.webp' },
-  { id: 5, title: 'Product 5', price: '$50', rating: 4.8, category: 'Books', image: 'https://www.filipino-recipes-lutong-pinoy.com/images/xpichi-pichi-Filipino-kakanin-Recipe.jpg.pagespeed.ic.jMT7AVXNgg.webp0' },
-];
+
 
 const ProductList: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
@@ -36,6 +39,17 @@ const ProductList: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [vendorStatus, setVendorStatus] = useState<string>(''); // Store vendor status
   const hosting = serverURL.trim();
+  const [vendorId, setVendorId] = useState(null); // State to store vendorId
+  const [error, setError] = useState(null);
+
+
+  // Extract unique categories from the products array
+  const categories = [
+    'All', 
+    ...Array.from(new Set(products.map((product) => product.prod_category)))
+  ];
+
+
 
 
   let url = window.location.href;
@@ -61,11 +75,15 @@ const ProductList: React.FC = () => {
             const result = await response.json();
 
             if (response.ok) {
-              const vendorStatus = result.message;
-              setVendorStatus(vendorStatus);
-              console.log(`Vendor Status: ${vendorStatus}`);
-          
-             
+                const vendorStatus = result.message; // Extract vendor status
+                const vendorId = result.vendor_id; // Extract vendor ID
+
+                setVendorStatus(vendorStatus);
+                setVendorId(vendorId); // Set vendorId in state
+                console.log(`Vendor Status: ${vendorStatus}, Vendor ID: ${vendorId}`);
+
+                // Show the vendor status and vendor ID in an alert
+                alert(`Vendor Status: ${vendorStatus}\nVendor ID: ${vendorId}`);
             } else {
                 // If the response is not OK, show the message from the server
                 alert(result.message || 'Failed to fetch vendor status');
@@ -77,11 +95,45 @@ const ProductList: React.FC = () => {
         }
     };
 
-    // Call the function inside useEffect
-    if (id) {
-        fetchVendorStatus();
+    fetchVendorStatus();
+}, [hosting, id]);
+
+useEffect(() => {
+  const fetchProducts = async () => {
+    if (vendorId !== null) {
+      try {
+        const response = await axios.get<FetchProductsResponse>(`${hosting}/FetchProducts/${vendorId}`);
+        const validProducts = response.data.products.filter(
+          (product: Product) => product.prod_name && product.prod_category
+        );
+        setProducts(validProducts);
+
+        // Show products in an alert
+        const productDetails = validProducts
+          .map((product: Product) =>
+            `prod_id: ${product.prod_id}\n` +
+            `vendor_id: ${product.vendor_id}\n` +
+            `prod_name: ${product.prod_name}\n` +
+            `prod_category: ${product.prod_category}\n` +
+            `prod_descript: ${product.prod_descript}\n` +
+            `prod_price: ${product.prod_price}\n` +
+            `prod_disc_price: ${product.prod_disc_price}\n` +
+            `prod_status: ${product.prod_status}\n` +
+            `prod_image_id: ${product.prod_image_id}`
+          )
+          .join('\n\n');
+
+        alert(`Products:\n\n${productDetails}`);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+      }
     }
-}, [id, hosting]);
+  };
+
+  fetchProducts();
+}, [hosting, vendorId]);
+
+
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
@@ -111,9 +163,10 @@ const ProductList: React.FC = () => {
 
   const filteredProducts = products.filter(
     (product) =>
-      (selectedCategory === 'All' || product.category === selectedCategory) &&
-      product.title.toLowerCase().includes(searchQuery)
+      (selectedCategory === 'All' || product.prod_category === selectedCategory) &&
+      product.prod_name?.toLowerCase().includes(searchQuery)
   );
+  
 
   if (vendorStatus === 'Pending') {
     return (
@@ -140,10 +193,11 @@ const ProductList: React.FC = () => {
           onChange={handleCategoryChange}
           value={selectedCategory}
         >
-          <option value="All">All Categories</option>
-          <option value="Electronics">Electronics</option>
-          <option value="Books">Books</option>
-          <option value="Clothing">Clothing</option>
+        {categories.map((category, index) => (
+          <option key={index} value={category}>
+            {category}
+          </option>
+        ))}
         </select>
         <input
           type="text"
@@ -153,27 +207,32 @@ const ProductList: React.FC = () => {
         />
       </div>
 
-      {/* Product List */}
-      <div className="flex flex-wrap gap-4 ">
-        {filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            className="w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer"
-            onClick={() => setModalProduct(product)}
-          >
-            <img
-              src={product.image}
-              alt={product.title}
-              className="w-full h-32 object-cover rounded-md mb-2"
-            />
-            <h2 className="text-lg font-semibold">{product.title}</h2>
-            <div className="flex justify-between items-center mt-2">
-              <span className="text-green-600 font-bold">{product.price}</span>
-              <span className="text-yellow-500">{'⭐'.repeat(Math.round(product.rating))}</span>
-            </div>
-          </div>
-        ))}
+  {/* Product List */}
+<div className="flex flex-wrap gap-4">
+  {filteredProducts.length === 0 ? (
+    <h1 className="text-center w-full text-xl font-bold text-gray-600">
+      Your inventory is empty, try adding products.
+    </h1>
+  ) : (
+    filteredProducts.map((product) => (
+      <div
+        key={product.prod_id}
+        className="w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer"
+        onClick={() => setModalProduct(product)}
+      >
+        <img
+          src={product.prod_image_id}
+          alt={product.prod_name}
+          className="w-full h-32 object-cover rounded-md mb-2"
+        />
+        <h2 className="text-lg font-semibold">{product.prod_name}</h2>
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-green-600 font-bold">{product.prod_price}</span>
+        </div>
       </div>
+    ))
+  )}
+</div>
 
       {/* Modal */}
       {modalProduct && (
@@ -181,7 +240,7 @@ const ProductList: React.FC = () => {
           <div className={`bg-white rounded-lg p-6 w-96 transition-transform ${isMinimized ? 'scale-50' : 'scale-100'}`}>
             {/* Modal Header with Minimize and Close Buttons */}
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">{modalProduct.title}</h2>
+              <h2 className="text-xl font-bold">{modalProduct.prod_name}</h2>
               <div className="flex space-x-2">
                 <button
                   className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
@@ -198,12 +257,12 @@ const ProductList: React.FC = () => {
             {!isMinimized && (
               <>
                 <img
-                  src={modalProduct.image}
-                  alt={modalProduct.title}
+                  src={modalProduct.prod_image_id}
+                  alt={modalProduct.prod_name}
                   className="w-full h-48 object-cover rounded-md mb-4"
                 />
-                <p className="text-green-600 text-lg">{modalProduct.price}</p>
-                <p className="text-yellow-500">{'⭐'.repeat(Math.round(modalProduct.rating))}</p>
+                <p className="text-green-600 text-lg">{modalProduct.prod_price}</p>
+                {/* <p className="text-yellow-500">{'⭐'.repeat(Math.round(modalProduct.rating))}</p> */}
 
                 {/* Comment Section */}
                 <div className="mt-4">

@@ -253,25 +253,29 @@ def check_vendor_status(user_id):
         print(f"Received request to check vendor status for user_id: {user_id}")
         vendor = Vendor.query.filter_by(user_id=user_id).first()
         print(f"Vendor query result: {vendor}")
+        
         if not vendor:
             print("Vendor not found.")
             return jsonify({"message": "Vendor not found"}), 404
 
         vendor_status = vendor.vendor_status
-        print(f"Vendor status: {vendor_status}")
+        vendor_id = vendor.ven_id  # Retrieve the vendor_id
+        print(f"Vendor status: {vendor_status}, Vendor ID: {vendor_id}")
 
+        # Include vendor_id in the response
         if vendor_status == 'Pending':
-            return jsonify({"message": "Pending"}), 200
+            return jsonify({"message": "Pending", "vendor_id": vendor_id}), 200
         elif vendor_status == 'Verified':
-            return jsonify({"message": "Verified"}), 200
+            return jsonify({"message": "Verified", "vendor_id": vendor_id}), 200
         elif vendor_status == 'Rejected':
-            return jsonify({"message": "Rejected"}), 200
+            return jsonify({"message": "Rejected", "vendor_id": vendor_id}), 200
         else:
-            return jsonify({"message": "Unknown vendor status"}), 200
+            return jsonify({"message": "Unknown vendor status", "vendor_id": vendor_id}), 200
 
     except Exception as e:
         print(f"Error checking vendor status: {e}")
         return jsonify({"message": "An error occurred while checking the vendor status"}), 500
+
 
 
 @app.route('/fetchVendorId/<int:user_id>', methods=['GET', 'OPTIONS'])
@@ -387,6 +391,37 @@ def add_product():
         print(f"Error adding product: {e}")
         return jsonify({"message": f"An error occurred: {e}"}), 500
 
+
+@app.route('/FetchProducts/<int:vendor_id>', methods=['GET'])
+def get_products_by_vendor(vendor_id):
+    try:
+        # Fetch products based on vendor_id
+        products = Product.query.filter_by(vendor_id=vendor_id).all()
+        
+        if not products:
+            return jsonify({'message': 'No products found for this vendor.'}), 404
+        
+        # Serialize products
+        products_list = [
+            {
+                'prod_id': product.prod_id,
+                'vendor_id': product.vendor_id,
+                'prod_name': product.prod_name,
+                'prod_category': product.prod_category,
+                'prod_descript': product.prod_descript,
+                'prod_price': product.prod_price,
+                'prod_disc_price': product.prod_disc_price,
+                'prod_status': product.prod_status,
+                'prod_image_id': product.prod_image_id
+            }
+            for product in products
+        ]
+        print(products_list)
+        return jsonify({'products': products_list}), 200
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 
