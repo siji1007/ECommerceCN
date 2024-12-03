@@ -3,6 +3,8 @@ from flask_cors import CORS
 from connection import db, init_app
 import secrets
 from datetime import datetime
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
 
@@ -10,6 +12,8 @@ CORS(app, supports_credentials=True, origins=["*"])
 
 
 init_app(app)
+
+
 
 
 class SessionCookieUnauth(db.Model):
@@ -395,6 +399,63 @@ def add_product():
     except Exception as e:
         print(f"Error adding product: {e}")
         return jsonify({"message": f"An error occurred: {e}"}), 500
+
+
+
+# Folder where you want to store uploaded images
+UPLOAD_FOLDER = r'C:/Users/xTIaN/Documents/ECommerceCN/src/assets/product_images'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+# Ensure the folder exists
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Check allowed extensions
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Route to upload image
+@app.route('/uploadProductImage', methods=['POST'])
+def upload_image():
+    if 'file' not in request.files:
+        return jsonify({'message': 'No file part'}), 400
+
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({'message': 'No selected file'}), 400
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+
+        # Return the URL to the image to be displayed in React
+        return jsonify({'imageUrl': f'http://192.168.1.17:5173/src/assets/product_images/{filename}'}), 200
+
+    return jsonify({'message': 'Invalid file format'}), 400
+
+# Route to serve the images
+@app.route('/assets/product_images/<filename>')
+def uploaded_file(filename):
+    # Serve the image from the directory
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/deleteProductImage/<filename>', methods=['DELETE'])
+def delete_image(filename):
+    try:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)  # Delete the file from server
+            return jsonify({"message": f"Image {filename} deleted successfully."}), 200
+        else:
+            return jsonify({"message": f"Image {filename} not found."}), 404
+    except Exception as e:
+        return jsonify({"message": f"Error deleting image: {str(e)}"}), 500
+
 
 
 @app.route('/FetchProducts/<int:vendor_id>', methods=['GET'])

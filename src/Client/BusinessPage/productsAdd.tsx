@@ -15,21 +15,54 @@ const ProductsAdd: React.FC = () => {
       discountPrice: ''
     });
 
-    const handleImageUpload = (event) => {
-      const file = event.target.files[0];
+    const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files ? event.target.files[0] : null;
       if (file && images.length < 3) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImages((prevImages) => [...prevImages, reader.result]);
-        };
-        reader.readAsDataURL(file);
+        const formData = new FormData();
+        formData.append('file', file);
+      
+        // Upload the image file to the Flask server
+        axios.post(`${serverURL}/uploadProductImage`, formData)
+          .then((response) => {
+            if (response.status === 200) {
+              // Assuming server returns the image filename
+              setImages((prevImages) => [...prevImages, response.data.imageUrl]); // storing only the filename
+            } else {
+              alert('Failed to upload image. Please try again.');
+            }
+          })
+          .catch((error) => {
+            console.error('Error uploading image:', error);
+            alert('An error occurred while uploading the image.');
+          });
       }
     };
-  
-    const handleImageDelete = (index) => {
-      const newImages = images.filter((_, i) => i !== index);
-      setImages(newImages);
+
+    
+    const handleImageDelete = (index: number) => {
+      const imageToDelete = images[index]; // Get the image URL (not the full URL)
+      
+      // Extract just the filename from the image URL
+      const filename = imageToDelete.split('/').pop(); // Get the filename from the full URL
+    
+      // Send a DELETE request to Flask to delete the image from the server
+      axios.delete(serverURL + `/deleteProductImage/${filename}`)
+        .then((response) => {
+          if (response.status === 200) {
+            // Remove the image from the state if the server deletion is successful
+            const newImages = images.filter((_, i) => i !== index);
+            setImages(newImages);
+          } else {
+            alert('Failed to delete the image from the server.');
+          }
+        })
+        .catch((error) => {
+          console.error('Error deleting image:', error);
+          alert('An error occurred while deleting the image from the server.');
+        });
     };
+    
+    
 
 
     let url = window.location.href;
@@ -60,50 +93,38 @@ const ProductsAdd: React.FC = () => {
       setFormData((prevData) => ({ ...prevData, [name]: value }));
     };
   
-const handleAddClick = async () => {
-  const { prodName, prodCategory, prodStocks, description, price, discountPrice } = formData;
-  
-  // Prepare the product data
-  const productData = {
-    vendor_id: vendorID || null, // Use null if vendorID is not available
-    prod_name: prodName,
-    prod_category: prodCategory,
-    prod_stock: prodStocks,
-    prod_descript: description,
-    prod_price: price,
-    prod_disc_price: discountPrice,
-    prod_image_id : images.length,
-  };
-
-  try {
-    // Alert message to confirm what will be sent
-    const alertMessage = `
-      Vendor ID: ${productData.vendor_id || 'Not available'}
-      Product Name: ${prodName}
-      Product Category: ${prodCategory}
-      Product Stocks: ${prodStocks}
-      Description: ${description}
-      Price: ${price}
-      Discounted Price: ${discountPrice}
-      Uploaded Images: ${images.length} file(s)
-    `;
-    alert(alertMessage);
-
-    // Make the Axios POST request
-    const response = await axios.post(serverURL + '/addProduct', productData);
-
-    if (response.status === 200) {
-      alert('Product added successfully!');
-      console.log('Server Response:', response.data);
-    } else {
-      alert('Failed to add product. Please try again.');
-      console.error('Error Response:', response);
-    }
-  } catch (error) {
-    alert('An error occurred while adding the product.');
-    console.error('Error:', error);
-  }
-};
+    const handleAddClick = async () => {
+      const { prodName, prodCategory, prodStocks, description, price, discountPrice } = formData;
+    
+      // Prepare the product data
+      const productData = {
+        vendor_id: vendorID || null,
+        prod_name: prodName,
+        prod_category: prodCategory,
+        prod_stock: prodStocks,
+        prod_descript: description,
+        prod_price: price,
+        prod_disc_price: discountPrice,
+        prod_image_id: images.length,
+        images,  // Send image URLs
+      };
+    
+      try {
+        const response = await axios.post(`${serverURL}/addProduct`, productData);
+        if (response.status === 200) {
+          alert('Product added successfully!');
+          console.log('Server Response:', response.data);
+        } else {
+          alert('Failed to add product. Please try again.');
+          console.error('Error Response:', response);
+        }
+        alert(images);
+      } catch (error) {
+        alert('An error occurred while adding the product.');
+        console.error('Error:', error);
+      }
+    };
+    
 
   
   return (
@@ -151,32 +172,32 @@ const handleAddClick = async () => {
 
           {/* Display Uploaded Images */}
           <div className="flex justify-end border border-gray-100 p-2">
-            <div className="mt-4 flex justify-end space-x-2">
-              {images.map((image, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={image}
-                    alt={`Uploaded ${index}`}
-                    className="w-24 h-24 object-cover rounded-lg"
-                  />
-                  <button
-                    onClick={() => handleImageDelete(index)}
-                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
+    <div className="mt-4 flex justify-end space-x-2">
+      {images.map((image, index) => (
+        <div key={index} className="relative">
+          <img
+           src={`${image}`}  // The image path not url returned from Flask
+            alt={`Uploaded ${index}`}
+            className="w-24 h-24 object-cover rounded-lg"
+          />
+          <button
+            onClick={() => handleImageDelete(index)}
+            className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ))}
+    </div>
           </div>
         </div>
 
