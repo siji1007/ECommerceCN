@@ -1,5 +1,5 @@
 import Profile from '../../src/assets/profiles/Profile.jpg'
-import { FaEdit, FaCog, FaSave, FaBars  } from 'react-icons/fa';
+import { FaEdit, FaCog, FaSave, FaShoppingCart  } from 'react-icons/fa';
 import { useLocation, useNavigate, Link  } from 'react-router-dom';
 import { IoStorefrontSharp } from "react-icons/io5";
 import { AiFillProfile } from "react-icons/ai";
@@ -320,14 +320,17 @@ const ClientDashboard: React.FC = () =>{
             {/* Sidebar Section */}
             <div className="w-64 bg-white text-white flex flex-col items-center py-8 h-screen">
               <div className="flex flex-col items-center justify-center mb-8">
-                <img
-                    src={Profile}
-                    alt="Profile"
-                    className="w-24 h-24 rounded-full mb-4"
+              <img
+                  src={Profile}
+                  alt="Profile"
+                  className="w-24 h-24 rounded-full mb-4 border-4 border-green-500"
                 />
+
                 <h2 className="text-lg text-black font-semibold text-center">
-                    SiJi
+                {firstName +" "+ lastName}
                 </h2>
+                <p className='text-black text-sm'>{email}
+                </p>
                 {/* <h2 className="text-lg text-green-900 font-semibold text-center">
                     Verified
                 </h2> */}
@@ -344,6 +347,12 @@ const ClientDashboard: React.FC = () =>{
                             Personal Information
                         </button>
                     </Link>
+                    <button
+                            className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center"
+                        >
+                            <FaShoppingCart className="h-5 w-5 mr-2" />
+                            My Cart
+                        </button>
 
                     {/* Register your business button */}
                     <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center" onClick={toggleDropdown} >

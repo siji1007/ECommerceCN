@@ -319,6 +319,7 @@ class Product(db.Model):
     prod_category = db.Column(db.String(255), nullable=False)
     prod_descript = db.Column(db.Text, nullable=True)
     prod_price = db.Column(db.Float, nullable=False)
+    prod_stock = db.Column(db.Integer, nullable=False, default=0)
     prod_disc_price = db.Column(db.Float, nullable=True)
     prod_status = db.Column(db.String(50), nullable=False, default="Pending")
     prod_image_id = db.Column(db.String(255), nullable=True)
@@ -327,12 +328,13 @@ class Product(db.Model):
     # Relationship with Vendor
     vendor = db.relationship('Vendor', backref=db.backref('products', lazy=True))
 
-    def __init__(self, vendor_id, prod_name, prod_category, prod_descript, prod_price, prod_disc_price, prod_status="Pending", prod_image_id=None):
+    def __init__(self, vendor_id, prod_name, prod_category, prod_descript, prod_price, prod_stock, prod_disc_price, prod_status="Pending", prod_image_id=None):
         self.vendor_id = vendor_id
         self.prod_name = prod_name
         self.prod_category = prod_category
         self.prod_descript = prod_descript
         self.prod_price = prod_price
+        self.prod_stock = prod_stock
         self.prod_disc_price = prod_disc_price
         self.prod_status = prod_status
         self.prod_image_id = prod_image_id
@@ -348,6 +350,7 @@ class Product(db.Model):
             "prod_disc_price": self.prod_disc_price,
             "prod_status": self.prod_status,
             "prod_image_id": self.prod_image_id,
+            "prod_stock": self.prod_stock,
 
         }
 
@@ -366,6 +369,7 @@ def add_product():
         prod_disc_price = data.get('prod_disc_price')
         prod_image_id = data.get('prod_image_id	', None)
         prod_status = data.get('prod_status', 'Pending')
+        prod_stock = data.get('prod_stock')
 
         # Validate required fields
         if not all([vendor_id, prod_name, prod_category, prod_price]):
@@ -381,6 +385,7 @@ def add_product():
             prod_disc_price=prod_disc_price,
             prod_status=prod_status,
             prod_image_id=prod_image_id,
+            prod_stock= prod_stock,
         )
 
         db.session.add(new_product)
@@ -412,7 +417,8 @@ def get_products_by_vendor(vendor_id):
                 'prod_price': product.prod_price,
                 'prod_disc_price': product.prod_disc_price,
                 'prod_status': product.prod_status,
-                'prod_image_id': product.prod_image_id
+                'prod_image_id': product.prod_image_id,
+                'prod_stock' : product.prod_stock,
             }
             for product in products
         ]
@@ -445,7 +451,8 @@ def get_all_products():
                 'prod_price': product.prod_price,
                 'prod_disc_price': product.prod_disc_price,
                 'prod_status': product.prod_status,
-                'prod_image_id': product.prod_image_id
+                'prod_image_id': product.prod_image_id,
+                'prod_stock' : product.prod_stock,
             }
             for product in products
         ]

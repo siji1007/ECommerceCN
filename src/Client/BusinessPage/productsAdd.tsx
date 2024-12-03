@@ -68,7 +68,7 @@ const handleAddClick = async () => {
     vendor_id: vendorID || null, // Use null if vendorID is not available
     prod_name: prodName,
     prod_category: prodCategory,
-    prod_stocks: prodStocks,
+    prod_stock: prodStocks,
     prod_descript: description,
     prod_price: price,
     prod_disc_price: discountPrice,
