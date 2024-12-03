@@ -420,11 +420,44 @@ def get_products_by_vendor(vendor_id):
         return jsonify({'products': products_list}), 200
 
 
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/FetchProducts', methods=['GET'])
+def get_all_products():
+    try:
+        # Fetch all products (no filtering by vendor_id)
+        products = Product.query.all()
+        
+        if not products:
+            return jsonify({'message': 'No products found.'}), 404
+        
+        # Serialize products
+        products_list = [
+            {
+                'prod_id': product.prod_id,
+                'vendor_id': product.vendor_id,
+                'prod_name': product.prod_name,
+                'prod_category': product.prod_category,
+                'prod_descript': product.prod_descript,
+                'prod_price': product.prod_price,
+                'prod_disc_price': product.prod_disc_price,
+                'prod_status': product.prod_status,
+                'prod_image_id': product.prod_image_id
+            }
+            for product in products
+        ]
+        print(products_list)
+        return jsonify({'products': products_list}), 200
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 with app.app_context():
