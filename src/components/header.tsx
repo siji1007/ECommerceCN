@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/logoIcon.png';
 import { FaUser } from 'react-icons/fa';
 import ModalLogin from '../components/Modal_login';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import host from '../host/host.txt?raw';
+
 
 const Header: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -12,6 +13,7 @@ const Header: React.FC = () => {
     const [fullName, setFullName] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false); // State for dropdown visibility
     const navigate = useNavigate();
+    const serverUrl = host.trim();
 
     const location = useLocation(); // Get the current location
 
@@ -19,7 +21,6 @@ const Header: React.FC = () => {
     const toggleModal = () => setIsModalOpen(!isModalOpen);
 
     const isActive = (path: string) => location.pathname === path;
-    const profile = location.pathname ==='/clienprofife'
     const storeAuth = localStorage.getItem('Auth') || '';
 
     // useEffect to read from localStorage when the component mounts
@@ -33,11 +34,47 @@ const Header: React.FC = () => {
 
     // Logout function to clear the session and redirect to home page
     const handleLogout = () => {
-      localStorage.removeItem('userFullName');  // Remove userFullName from localStorage
-      setDropdownOpen(false);
-      setFullName('');  // Clear the state
-      navigate('/'); // Redirect to home page
+        // Clear user information from localStorage
+        localStorage.removeItem('userFullName');  // Remove userFullName from localStorage
+        localStorage.removeItem('Auth');  // Remove Auth from localStorage (if you store the user session here)
+    
+        // Optionally, send a request to the server to log out or invalidate the session
+        fetch(serverUrl + '/api/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',  // Ensure cookies are sent
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Logout successful');
+                setDropdownOpen(false);  // Close the dropdown or any other UI elements
+                setFullName('');  // Clear the state for fullName
+                navigate('');  // Redirect to login page
+            } else {
+                console.error('Logout failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error during logout:', error);
+            setDropdownOpen(false);
+            setFullName('');
+            navigate('/login');
+        });
     };
+    
+   
+    
+    
+    
+    
+    
+    
+
+    // useEffect to check session when the component mounts
+
 
     return (
         <>
@@ -123,7 +160,7 @@ const Header: React.FC = () => {
 
                     {/* Profile Icon */}
                     <div className="absolute bottom-8 right-8 text-4xl cursor-pointer">
-                        <Link onClick={toggleModal} className="text-white hover:text-gray-300">
+                        <Link onClick={toggleModal} className="text-white hover:text-gray-300" to={''}>
                             <FaUser />
                         </Link>
                     </div>

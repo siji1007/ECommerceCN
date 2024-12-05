@@ -20,25 +20,29 @@ import host from "./host/host.txt?raw";
 
 function App() {
   const serverHost = host.trim();
-  // useEffect(() => {
-  //   // Check if the unauthorized cookie exists
-  //   if (!Cookies.get('unauth_cookie')) {
-  //     const randomCookieValue = Math.random().toString(36).substr(2) + Date.now().toString(36);
-  //     Cookies.set('unauth_cookie', randomCookieValue, { expires: 7 });
+  useEffect(() => {
+    fetch(serverHost + '/api/get-current-session', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.session_cookie) {
+            console.log('Session cookie:', data.session_cookie);
+            console.log('Full name:', data.full_name);  // Display the full name
+            localStorage.setItem('userFullName', data.full_name);  // Store the full name in localStorage
+        } else {
+            localStorage.removeItem('userFullName');  // Remove userFullName if no session
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}, []);
 
-  //     // Send the cookie to the Flask server
-  //     fetch(serverHost + '/api/store-unauth-cookie', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({ unauth_cookie: randomCookieValue }),
-  //     })
-  //     .then(response => response.json())
-  //     .then(data => console.log(data.message))
-  //     .catch(error => console.error('Error:', error));
-  //   }
-  //  }, []);
+
+
     const [userId, setUserId] = useState<string | null>(null);
 
     useEffect(() => {

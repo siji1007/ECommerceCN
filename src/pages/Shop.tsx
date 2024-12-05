@@ -73,6 +73,10 @@ const ShopPage: React.FC = () => {
  const closeModal = () => { setModalOpen(false); setSelectedProduct(null); };
 
   const addToCart = (product: any) => { setCart([...cart, product]); closeModal(); };
+  function onBuyNow(): void {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <ErrorBoundary>
       <div className="flex flex-col h-auto pt-16 min-h-screen">
@@ -166,9 +170,15 @@ const ShopPage: React.FC = () => {
         </div>
         
         {/* Modal */}
-        <div className='w-full'> 
-          <ProductModal isOpen={modalOpen} product={selectedProduct!} onClose={closeModal} onAddToCart={addToCart} />
-        </div>
+        {modalOpen && (
+        <ProductModal 
+          isOpen={modalOpen} 
+          product={selectedProduct!} // Ensure selectedProduct is not null when passing it
+          onClose={closeModal} 
+          onAddToCart={addToCart} 
+          onBuyNow={onBuyNow}
+        />
+      )}
        
       </div>
     </ErrorBoundary>

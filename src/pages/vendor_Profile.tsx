@@ -135,7 +135,7 @@ const VendorProfile = () => {
   
         {/* Vendor Products */}
         <div className="mt-12">
-         
+          <h1>Products</h1>
         
           <div className="flex flex-wrap gap-4 m-10">
             {products.length === 0 ? (

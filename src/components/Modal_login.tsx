@@ -1,6 +1,9 @@
 import { FC, useState, FormEvent } from 'react';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import Cookies from 'js-cookie';
 import host_backend from '../host/host.txt?raw';
+import { useNavigate } from 'react-router-dom';
+
 
 
 interface ModalLoginProps {
@@ -8,7 +11,10 @@ interface ModalLoginProps {
     onClose: () => void;
 }
 
+
+
 const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
     const [firstName, setFirstName] = useState('');
@@ -54,30 +60,39 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
         };
 
         try {
-            // Send the login request to the backend
-            const response = await fetch( serverUrl + '/api/login', {
+            const response = await fetch(serverUrl + '/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data),
             });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert('LOGIN');
-                alert(`LOGIN successful! Welcome, ${result.user.full_name}`)
-                localStorage.setItem('userFullName', result.user.full_name);
-                localStorage.setItem('Auth', result.user.id)
-                window.location.reload(); 
-            } else {
-                alert(result.message || 'Invalid credentials');
+        
+            if (!response.ok) {
+                const errorResult = await response.json();
+                throw new Error(errorResult.message || 'Login failed');
             }
-        } catch (error) {
-            console.error('Request failed', error);
-            alert('An error occurred while trying to log in');
+        
+            const result = await response.json();
+            alert(`LOGIN successful! Welcome, ${result.user.full_name}`);
+            localStorage.setItem('userFullName', result.user.full_name);
+            localStorage.setItem('Auth', result.user.id);
+            Cookies.set('unauth_cookie', result.unauth_cookie, { expires: 7 });
+            
+        
+            // Navigate to another page
+            window.location.reload(); 
+        } catch (error: unknown) {
+        // TypeScript requires error to be cast to an instance of Error
+        if (error instanceof Error) {
+            console.error('Error during login:', error.message);
+            alert(error.message || 'An unexpected error occurred. Please try again.');
+        } else {
+            console.error('Unknown error occurred');
+            alert('An unexpected error occurred. Please try again.');
         }
+    }
+        
     };
     const handleSignUpSubmit = async (e) => {
         e.preventDefault(); // Prevent default form submission behavior

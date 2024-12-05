@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 from connection import db, init_app
 import secrets
@@ -30,13 +30,52 @@ class SessionCookieUnauth(db.Model):
 def store_unauth_cookie():
     data = request.json
     unauth_cookie = data.get('unauth_cookie')
+    user_id = session.get('user_id')  # Get the user ID from Flask session
 
-    if unauth_cookie:
-        new_cookie = SessionCookieUnauth(unauth_cookie=unauth_cookie)
-        db.session.add(new_cookie)
+    if unauth_cookie and user_id:
+        # Check if the cookie already exists
+        existing_cookie = SessionCookieUnauth.query.filter_by(user_id=user_id).first()
+        if existing_cookie:
+            existing_cookie.unauth_cookie = unauth_cookie
+        else:
+            new_cookie = SessionCookieUnauth(unauth_cookie=unauth_cookie, user_id=user_id)
+            db.session.add(new_cookie)
         db.session.commit()
         return jsonify({"message": "Cookie stored successfully"}), 201
     return jsonify({"message": "Invalid request"}), 400
+
+@app.before_request
+def check_cookie():
+    if 'unauth_cookie' in request.cookies:
+        cookie_value = request.cookies['unauth_cookie']
+        print(f"Received cookie: {cookie_value}")  # Debugging line
+        stored_cookie = SessionCookieUnauth.query.filter_by(unauth_cookie=cookie_value).first()
+        if not stored_cookie:
+            print("Session expired or invalid cookie")  # Debugging line
+            return jsonify({"message": "Session expired, please log in again"}), 401
+    else:
+        print("No unauth_cookie found in request")
+
+@app.route('/api/get-current-session', methods=['GET'])
+def get_current_session():
+    session_cookie = request.cookies.get('unauth_cookie')
+    if session_cookie:
+        session = SessionCookieUnauth.query.filter_by(unauth_cookie=session_cookie).first()
+        if session:
+            # Retrieve the user associated with the session using the user_id
+            user = User.query.filter_by(id=session.user_id).first()
+            if user:
+                # Concatenate first_name and last_name to create full_name
+                full_name = f"{user.first_name} {user.last_name}"
+                return jsonify({
+                    'session_cookie': session.unauth_cookie,
+                    'user_id': session.user_id,
+                    'full_name': full_name,  # Send full_name as part of the response
+                }), 200
+    return jsonify({'message': 'No active session found'}), 401  # Ensure it's a JSON response
+
+
+
 
 
 class User(db.Model):
@@ -174,6 +213,20 @@ def get_credentials():
         print(f"Error: {e}")
         return jsonify({"message": "Server error"}), 500
 
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    session_cookie = request.cookies.get('unauth_cookie')
+    if session_cookie:
+        session = SessionCookieUnauth.query.filter_by(unauth_cookie=session_cookie).first()
+        if session:
+            # Delete the session or mark it as invalid
+            db.session.delete(session)
+            db.session.commit()
+            response = jsonify({'success': True, 'message': 'Logged out successfully'})
+            response.delete_cookie('unauth_cookie')  # Remove the session cookie from the browser
+            return response
+    return jsonify({'success': False, 'message': 'No active session found'}), 401
 
 
 
