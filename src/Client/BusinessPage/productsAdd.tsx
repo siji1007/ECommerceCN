@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import hosting from '../../host/host.txt?raw';
+import reactHost from '../../host/ReactHost?raw';
 const ProductsAdd: React.FC = () => {
     const serverURL = hosting.trim();
+    const ReactHost = reactHost.trim();
     const [images, setImages] = useState([]);
     const [vendorID, setVendorID] = useState<string | null > (null); 
     const [formData, setFormData] = useState({
@@ -177,7 +179,7 @@ const ProductsAdd: React.FC = () => {
       {images.map((image, index) => (
         <div key={index} className="relative">
           <img
-           src={`${image}`}  // The image path not url returned from Flask
+           src={ReactHost + `${image}`}  // The image path not url returned from Flask
             alt={`Uploaded ${index}`}
             className="w-24 h-24 object-cover rounded-lg"
           />

@@ -14,6 +14,7 @@ import ProductList from './Client/BusinessPage/ProductLIst';
 import AdminDashboard from './Admin/AdminDashboard';
 import Footer from './components/footer';
 import Cookies from 'js-cookie';
+import VendorProfile from './pages/vendor_Profile';
 import host from "./host/host.txt?raw";
 
 
@@ -55,7 +56,10 @@ function App() {
           <Route path='/' element={<HomePage/>}/>
           <Route path='/admin' element={<AdminDashboard/>}/>
           <Route path='/shop' element={<Shop/>}/>
-          <Route path='/vendor' element={<Vendors/>}/>
+          <Route path='/vendor' element={<Vendors />}/>
+          <Route path='/vendor/vendor_profile' element={<VendorProfile />} />
+          {/* Nested route for /vendor/vendor_profile */}
+        
           <Route path='/about' element={<About/>}/>
           <Route path={`/clientprofile/id=${userId}`} element={<Clientdashboard />}>
             <Route path='business-form' element={<Business/>}/>

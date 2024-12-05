@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import profileImage from '../../assets/profiles/Profile.jpg';
 import axios from 'axios';
 import serverURL from '../../host/host.txt?raw';
+import ReactHost from '../../host/ReactHost?raw';
 
 interface Product {
   prod_id: number;
   vendor_id: number;
+  vendor_name:string;
   prod_name: string;
   prod_category: string;
   prod_descript: string;
@@ -39,8 +41,10 @@ const ProductList: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [vendorStatus, setVendorStatus] = useState<string>(''); // Store vendor status
   const hosting = serverURL.trim();
+  const reactHost = ReactHost.trim();
   const [vendorId, setVendorId] = useState(null); // State to store vendorId
   const [error, setError] = useState(null);
+  
 
 
   // Extract unique categories from the products array
@@ -113,6 +117,7 @@ useEffect(() => {
           .map((product: Product) =>
             `prod_id: ${product.prod_id}\n` +
             `vendor_id: ${product.vendor_id}\n` +
+            `vendor_name: ${product.vendor_name}\n` +
             `prod_name: ${product.prod_name}\n` +
             `prod_category: ${product.prod_category}\n` +
             `prod_descript: ${product.prod_descript}\n` +
@@ -221,7 +226,7 @@ useEffect(() => {
         onClick={() => setModalProduct(product)}
       >
         <img
-          src={product.prod_image_id}
+          src={ reactHost + product.prod_image_id}
           alt={product.prod_name}
           className="w-full h-32 object-cover rounded-md mb-2"
         />

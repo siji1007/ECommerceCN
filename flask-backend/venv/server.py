@@ -189,6 +189,84 @@ class Vendor(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     vendor_status = db.Column(db.String(50), default='Pending')
 
+@app.route('/api/fetchSpecificVendor', methods=['GET'])
+def fetch_specific_vendor():
+    # Get the vendor_id from the query string or request arguments
+    vendor_id = request.args.get('vendor_id', type=int)
+
+    if not vendor_id:
+        return jsonify({'message': 'Vendor ID is required'}), 400
+    
+    # Query the database for the specific vendor
+    vendor = Vendor.query.get(vendor_id)
+    
+    if not vendor:
+        return jsonify({'message': 'Vendor not found'}), 404
+    
+    # Return the vendor details in a JSON response
+    return jsonify({
+        'ven_id': vendor.ven_id,
+        'vendor_name': vendor.vendor_name,
+        'vendor_contact_number': vendor.vendor_contact_number,
+        'vendor_email': vendor.vendor_email,
+        'vendor_classification': vendor.vendor_classification,
+        'created_at': vendor.created_at,
+        'vendor_status': vendor.vendor_status
+    }), 200
+
+@app.route('/api/vendor/<int:vendor_id>', methods=['GET'])
+def get_vendor(vendor_id):
+    try:
+        vendor = Vendor.query.get(vendor_id)
+        if not vendor:
+            return jsonify({'message': 'Vendor not found'}), 404
+        return jsonify({
+            'ven_id': vendor.ven_id,
+            'vendor_name': vendor.vendor_name,
+            # 'image_url': vendor.image_url,  # Make sure image_url is available
+            'vendor_contact_number': vendor.vendor_contact_number,
+            'vendor_email': vendor.vendor_email,
+            'vendor_classification': vendor.vendor_classification,
+            'created_at': vendor.created_at,
+            'vendor_status': vendor.vendor_status
+        }), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+@app.route('/api/fetchVendors', methods=['GET'])
+def fetchvendors():
+    try:
+        # Query all vendors
+        vendors = Vendor.query.all()
+        
+        # Format the data as a list of dictionaries
+        vendor_list = []
+        for vendor in vendors:
+            vendor_data = {
+                "ven_id": vendor.ven_id,
+                "user_id": vendor.user_id,
+                "vendor_name": vendor.vendor_name,
+                "vendor_contact_number": vendor.vendor_contact_number,
+                "vendor_email": vendor.vendor_email,
+                "vendor_classification": vendor.vendor_classification,
+                "created_at": vendor.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                "vendor_status": vendor.vendor_status
+            }
+            vendor_list.append(vendor_data)
+        
+        # Return the JSON response
+        return jsonify(vendor_list), 200
+
+    except Exception as e:
+        # Handle exceptions and return error message
+        return jsonify({"error": str(e)}), 500
+
+
+
+
 @app.route('/submit-form-vendor/<int:user_id>', methods=['POST'])
 def submit_form(user_id):
     form_data = request.json  # Parse the JSON payload
@@ -347,6 +425,7 @@ class Product(db.Model):
         return {
             "prod_id": self.prod_id,
             "vendor_id": self.vendor_id,
+            "vendor_name": self.vendor.ven_name if self.vendor else None,
             "prod_name": self.prod_name,
             "prod_category": self.prod_category,
             "prod_descript": self.prod_descript,
@@ -436,7 +515,7 @@ def upload_image():
         file.save(file_path)
 
         # Return the URL to the image to be displayed in React
-        return jsonify({'imageUrl': f'http://192.168.1.8:5173/src/assets/product_images/{filename}'}), 200
+        return jsonify({'imageUrl': f'/src/assets/product_images/{filename}'}), 200
 
     return jsonify({'message': 'Invalid file format'}), 400
 
@@ -475,6 +554,7 @@ def get_products_by_vendor(vendor_id):
                 'prod_id': product.prod_id,
                 'vendor_id': product.vendor_id,
                 'prod_name': product.prod_name,
+                'vendor_name': product.vendor.vendor_name if product.vendor else None,
                 'prod_category': product.prod_category,
                 'prod_descript': product.prod_descript,
                 'prod_price': product.prod_price,
@@ -508,8 +588,9 @@ def get_all_products():
             {
                 'prod_id': product.prod_id,
                 'vendor_id': product.vendor_id,
-                'prod_name': product.prod_name,
+                'vendor_name': product.vendor.vendor_name if product.vendor else None,
                 'prod_category': product.prod_category,
+                'prod_name':product.prod_name,
                 'prod_descript': product.prod_descript,
                 'prod_price': product.prod_price,
                 'prod_disc_price': product.prod_disc_price,

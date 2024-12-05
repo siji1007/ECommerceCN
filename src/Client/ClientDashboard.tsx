@@ -285,7 +285,7 @@ const ClientDashboard: React.FC = () =>{
     // Fetch address using reverse geocoding API
     const fetchAddressFromCoordinates = (position) => {
         const { latitude, longitude } = position.coords;
-        const apiKey = "YOUR_GOOGLE_MAPS_API_KEY";  // Replace with your Google Maps API key
+        const apiKey = "AIzaSyDgCKNuxx-s5uQfSs0AiD62wFNmgpurtyQ";  // Replace with your Google Maps API key
         const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
 
         fetch(geocodeUrl)

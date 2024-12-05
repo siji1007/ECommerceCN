@@ -1,35 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { FaEye } from 'react-icons/fa';
+import host from "../host/host.txt?raw";
+import { useNavigate } from 'react-router-dom';
 
-const vendorPage: React.FC = () => {
-  // Dummy data for vendors
-  const vendors = [
-    { city: 'Daet', name: 'Vendor 1', contact: '123-456-7890', image: 'https://thumbs.dreamstime.com/z/asian-market-booth-vendor-buyers-isolated-white-background-indian-street-souk-kiosk-spices-local-outdoor-bazaar-vector-200378147.jpg?ct=jpeg' },
-    { city: 'Daet', name: 'Vendor 5', contact: '987-654-3210', image: 'https://thumbs.dreamstime.com/z/asian-market-booth-vendor-buyers-isolated-white-background-indian-street-souk-kiosk-spices-local-outdoor-bazaar-vector-200378147.jpg?ct=jpeg' },
-    { city: 'Daet', name: 'Vendor 6', contact: '987-654-3210', image: 'https://thumbs.dreamstime.com/z/asian-market-booth-vendor-buyers-isolated-white-background-indian-street-souk-kiosk-spices-local-outdoor-bazaar-vector-200378147.jpg?ct=jpeg' },
-    { city: 'Daet', name: 'Vendor 7', contact: '987-654-3210', image: 'https://thumbs.dreamstime.com/z/asian-market-booth-vendor-buyers-isolated-white-background-indian-street-souk-kiosk-spices-local-outdoor-bazaar-vector-200378147.jpg?ct=jpeg' },
-    { city: 'Bagasbas', name: 'Vendor 2', contact: '987-654-3210', image: 'https://thumbs.dreamstime.com/z/asian-market-booth-vendor-buyers-isolated-white-background-indian-street-souk-kiosk-spices-local-outdoor-bazaar-vector-200378147.jpg?ct=jpeg' },
-    { city: 'Bagasbas', name: 'Vendor 3', contact: '555-555-5555', image: 'https://thumbs.dreamstime.com/z/asian-market-booth-vendor-buyers-isolated-white-background-indian-street-souk-kiosk-spices-local-outdoor-bazaar-vector-200378147.jpg?ct=jpeg' },
-    { city: 'Bagasbas', name: 'Vendor 4', contact: '444-444-4444', image: 'https://thumbs.dreamstime.com/z/asian-market-booth-vendor-buyers-isolated-white-background-indian-street-souk-kiosk-spices-local-outdoor-bazaar-vector-200378147.jpg?ct=jpeg' },
-  ];
 
+const VendorPage: React.FC = () => {
+  const [vendors, setVendors] = useState<any[]>([]); // Stores all vendors
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCity, setFilterCity] = useState('');
+  const [filterClassification, setFilterClassification] = useState('');
+  const serverURL = host.trim();
 
-  const filteredVendors = vendors.filter(vendor => {
+  const navigate = useNavigate();
+
+  // Fetch vendors from the API
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const response = await axios.get(serverURL + '/api/fetchVendors');
+        setVendors(response.data);
+      } catch (error) {
+        console.error('Error fetching vendors:', error);
+      }
+    };
+
+    fetchVendors();
+  }, []);
+
+  // Filtered and grouped vendors
+  const filteredVendors = vendors.filter((vendor) => {
     return (
-      (vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) || vendor.contact.includes(searchTerm)) &&
-      (filterCity ? vendor.city === filterCity : true)
+      (vendor.vendor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vendor.vendor_contact_number.includes(searchTerm)) &&
+      (filterClassification ? vendor.vendor_classification === filterClassification : true)
     );
   });
 
-  // Group vendors by city
   const groupedVendors = filteredVendors.reduce((acc, vendor) => {
-    (acc[vendor.city] = acc[vendor.city] || []).push(vendor);
+    (acc[vendor.vendor_classification] = acc[vendor.vendor_classification] || []).push(vendor);
     return acc;
-  }, {});
+  }, {} as Record<string, any[]>);
+
+  const handleEyeClick = (vendor: any) => {
+    // Log the vendor object to see its structure
+    console.log(vendor);
+  
+    // Check if vendorId exists and then navigate
+    if (vendor && vendor.ven_id) {
+      navigate('/vendor/vendor_profile', { state: { vendorId: vendor.ven_id } });
+      // alert(vendor.ven_id); // Make sure you're using the correct property name
+    } else {
+      console.log('vendor.ven_id is undefined');
+      alert('Vendor ID not found');
+    }
+  };
+  
 
   return (
-    <div className="mt-20 relative h-screen">
+    <div className="flex flex-col h-auto pt-16 min-h-screen">
       {/* Search and Filter Section */}
       <div className="flex justify-end items-center p-4">
         <input
@@ -40,30 +68,57 @@ const vendorPage: React.FC = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <select
-          className="p-2 border border-gray-300 "
-          value={filterCity}
-          onChange={(e) => setFilterCity(e.target.value)}
+          className="p-2 border border-gray-300"
+          value={filterClassification}
+          onChange={(e) => setFilterClassification(e.target.value)}
         >
-          <option value="">Filter by City</option>
-          <option value="Daet">Bagasbas</option>
-          <option value="Bagasbas">Daet</option>
+          <option value="">Filter by Classification</option>
+          <option value="Freelancer">Freelancer</option>
+          <option value="Business Owner">Business Owner</option>
+          {/* Add more options as needed */}
         </select>
-        <button className="p-2 bg-green-900 text-white ">
-          <i className="fas fa-search"></i> {/* Search Icon */}
+        <button className="p-2 bg-green-900 text-white">
+          <i className="fas fa-search"></i>
         </button>
       </div>
 
       {/* Vendors Section */}
       <div className="mt-10">
-        {Object.keys(groupedVendors).map((city) => (
-          <section key={city} className="mb-8 border border-gray-200 p-4">
-            <h2 className="text-xl font-semibold mb-4">{city}</h2>
+        {Object.keys(groupedVendors).map((classification) => (
+          <section key={classification} className="mb-8 border border-gray-200 p-4">
+            <h2 className="text-xl font-semibold mb-4">{classification}</h2>
             <div className="flex space-x-4 overflow-x-auto">
-              {groupedVendors[city].map((vendor) => (
-                <div key={vendor.name} className="card w-48 bg-white border border-gray-300 rounded-lg p-4 shadow-md">
-                  <img src={vendor.image} alt={vendor.name} className="w-full h-32 object-cover rounded-lg mb-2" />
-                  <h3 className="font-medium">{vendor.name}</h3>
-                  <p className="text-sm text-gray-500">{vendor.contact}</p>
+              {groupedVendors[classification].map((vendor) => (
+                <div
+                  key={vendor.ven_id}
+                  className="relative w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer group transform transition-transform duration-300 hover:scale-105"
+                >
+                  {/* Vendor Image */}
+                  <div className="relative">
+                    <img
+                      src={'src/assets/image.png'} // You can replace with vendor image URL
+                      alt={vendor.vendor_name}
+                      className="w-full h-32 object-cover rounded-md mb-2 border"
+                    />
+                  </div>
+                  
+                  {/* Eye Icon Button */}
+                  
+                  <button
+                    onClick={() => handleEyeClick(vendor)} // Pass vendor as an argument
+                    className="mt-2 text-white rounded-lg px-4 items-center justify-center py-2 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex"
+                  >
+                    <FaEye className="text-black h-5 w-5 mr-2" />
+                  </button>
+         
+                  {/* Vendor Name */}
+                  <h3 className="text-lg font-medium">{vendor.vendor_name}</h3>
+         
+                  {/* Contact Number */}
+                  <p className="text-sm text-gray-500 flex items-center">
+                    <i className="fas fa-phone-alt text-green-600 mr-2"></i>
+                    {vendor.vendor_contact_number}
+                  </p>
                 </div>
               ))}
             </div>
@@ -77,4 +132,4 @@ const vendorPage: React.FC = () => {
   );
 };
 
-export default vendorPage;
+export default VendorPage;

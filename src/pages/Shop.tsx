@@ -11,6 +11,7 @@ import host from '../host/host.txt?raw';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { FaBookmark, FaShoppingCart } from 'react-icons/fa';
 import ProductModal from '../components/productModal'; 
+import ReactHost from '../host/ReactHost?raw';
 
 const images = [
   "src/assets/slide1.jpg",
@@ -30,6 +31,7 @@ const ShopPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState<boolean>(false); 
   const [cart, setCart] = useState<any[]>([]); 
   const serverURL = host.trim();
+  const reactHost = ReactHost.trim();
 
 
   useEffect(() => {
@@ -63,8 +65,11 @@ const ShopPage: React.FC = () => {
   
   const handleCategoryChange = (category: string) => { setSelectedCategory(category); if (category === "All") { setFilteredProducts(products); } else { const filteredByCategory = products.filter( (product) => product.prod_category === category ); setFilteredProducts(filteredByCategory); } };
  
-  const openModal = (product: any) => { setSelectedProduct(product); setModalOpen(true); };
-
+  const openModal = (product: any) => {
+    setSelectedProduct(product);
+    setModalOpen(true);
+     // Force re-render
+  };
  const closeModal = () => { setModalOpen(false); setSelectedProduct(null); };
 
   const addToCart = (product: any) => { setCart([...cart, product]); closeModal(); };
@@ -116,46 +121,46 @@ const ShopPage: React.FC = () => {
             <h2>No available products. Try adding some!</h2>
           ) : (
             <div className="flex flex-wrap gap-4">
-  {filteredProducts.map((product: any) => (
-    <div
-      key={product.prod_id}
-      className="relative w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer group transform transition-transform duration-300 hover:scale-105"
-      onClick={() => openModal(product)} // Open modal on click
-    >
-      {/* Bookmark/Star icon in the top right */}
-      <div className="absolute top-2 right-2">
-        <FaBookmark className="text-gray-600 hover:text-green-800 cursor-pointer" />
-      </div>
+              {filteredProducts.map((product: any) => (
+                <div
+                  key={product.prod_id}
+                  className="relative w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer group transform transition-transform duration-300 hover:scale-105"
+                  onClick={() => openModal(product)} // Open modal on click
+                >
+                  {/* Bookmark/Star icon in the top right */}
+                  <div className="absolute top-2 right-2">
+                    <FaBookmark className="text-gray-600 hover:text-green-800 cursor-pointer" />
+                  </div>
 
-      <img
-        src={product.prod_image_id}
-        alt={product.prod_name}
-        className="w-full h-32 object-cover rounded-md mb-2 border"
-      />
-      <h2 className="text-lg font-semibold">{product.prod_name}</h2>
+                  <img
+                    src={reactHost+product.prod_image_id}
+                    alt={product.prod_name}
+                    className="w-full h-32 object-cover rounded-md mb-2 border"
+                  />
+                  <h2 className="text-lg font-semibold">{product.prod_name}</h2>
 
-      {/* Add to Cart Button (hidden initially, shows on hover) */}
-        <button
-        
-          className="mt-2  text-white rounded-lg px-4 items-center justify-center py-2 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex"
-        >
-          <FaShoppingCart className="text-black h-5 w-5 mr-2" />
-        </button>
+                  {/* Add to Cart Button (hidden initially, shows on hover) */}
+                    <button
+                        onClick={() => openModal(product)}
+                      className="mt-2  text-white rounded-lg px-4 items-center justify-center py-2 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex"
+                    >
+                      <FaShoppingCart className="text-black h-5 w-5 mr-2" />
+                    </button>
 
-      <div className="flex justify-between items-center mt-2">
-        <span className="text-green-600 font-bold">{"₱ " + product.prod_price}</span>
-        <p className="text-yellow-500">
-          {'⭐'.repeat(Math.round(2))} {/* Star rating */}
-        </p>
-      </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-green-600 font-bold">{"₱ " + product.prod_price}</span>
+                    <p className="text-yellow-500">
+                      {'⭐'.repeat(Math.round(2))} {/* Star rating */}
+                    </p>
+                  </div>
 
-      {/* Product Description (hidden initially, shows on hover) */}
-      <p className="text-gray-700 mt-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        {product.prod_descript}
-      </p>
-    </div>
-  ))}
-</div>
+                  {/* Product Description (hidden initially, shows on hover) */}
+                  <p className="text-gray-700 mt-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    {product.prod_descript}
+                  </p>
+                </div>
+              ))}
+            </div>
 
           )}
         </div>
