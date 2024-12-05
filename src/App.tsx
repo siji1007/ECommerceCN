@@ -68,6 +68,7 @@ function App() {
             
           
           </Route>
+          <Route path='/admin' element={<AdminDashboard/> /* Temporary */}/>  
           <Route path='*' element={<Error404/>}/>
         </Routes>
         <Footer />
