@@ -56,25 +56,45 @@ def check_cookie():
     else:
         print("No unauth_cookie found in request")
 
+from flask import Flask, request, jsonify, make_response
+
+
+
 @app.route('/api/get-current-session', methods=['GET'])
 def get_current_session():
     session_cookie = request.cookies.get('unauth_cookie')
+    
     if session_cookie:
         session = SessionCookieUnauth.query.filter_by(unauth_cookie=session_cookie).first()
         if session:
-            # Retrieve the user associated with the session using the user_id
             user = User.query.filter_by(id=session.user_id).first()
             if user:
-                # Concatenate first_name and last_name to create full_name
                 full_name = f"{user.first_name} {user.last_name}"
                 return jsonify({
                     'session_cookie': session.unauth_cookie,
                     'user_id': session.user_id,
-                    'full_name': full_name,  # Send full_name as part of the response
+                    'full_name': full_name,
                 }), 200
-    return jsonify({'message': 'No active session found'}), 401  # Ensure it's a JSON response
+
+    # Delete the unauth_cookie if the session is invalid or missing
+    response = make_response(jsonify({'message': 'No active session found'}), 401)
+    response.delete_cookie('unauth_cookie', path='/')  # Specify the path
+    return response
 
 
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    session_cookie = request.cookies.get('unauth_cookie')
+    if session_cookie:
+        session = SessionCookieUnauth.query.filter_by(unauth_cookie=session_cookie).first()
+        if session:
+            # Delete the session or mark it as invalid
+            db.session.delete(session)
+            db.session.commit()
+            response = jsonify({'success': True, 'message': 'Logged out successfully'})
+            response.delete_cookie('unauth_cookie')  # Remove the session cookie from the browser
+            return response
+    return jsonify({'success': False, 'message': 'No active session found'}), 401
 
 
 
@@ -214,19 +234,7 @@ def get_credentials():
         return jsonify({"message": "Server error"}), 500
 
 
-@app.route('/api/logout', methods=['POST'])
-def logout():
-    session_cookie = request.cookies.get('unauth_cookie')
-    if session_cookie:
-        session = SessionCookieUnauth.query.filter_by(unauth_cookie=session_cookie).first()
-        if session:
-            # Delete the session or mark it as invalid
-            db.session.delete(session)
-            db.session.commit()
-            response = jsonify({'success': True, 'message': 'Logged out successfully'})
-            response.delete_cookie('unauth_cookie')  # Remove the session cookie from the browser
-            return response
-    return jsonify({'success': False, 'message': 'No active session found'}), 401
+
 
 
 

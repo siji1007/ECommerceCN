@@ -52,7 +52,7 @@ const Header: React.FC = () => {
                 console.log('Logout successful');
                 setDropdownOpen(false);  // Close the dropdown or any other UI elements
                 setFullName('');  // Clear the state for fullName
-                navigate('');  // Redirect to login page
+                setIsModalOpen(true);
             } else {
                 console.error('Logout failed');
             }
@@ -61,21 +61,10 @@ const Header: React.FC = () => {
             console.error('Error during logout:', error);
             setDropdownOpen(false);
             setFullName('');
-            navigate('/login');
+            setIsModalOpen(true);
         });
     };
     
-   
-    
-    
-    
-    
-    
-    
-
-    // useEffect to check session when the component mounts
-
-
     return (
         <>
             <nav className="fixed z-40 w-full h-19 bg-gradient-to-r from-white to-green-900 flex justify-between items-center px-4 text-white">
@@ -92,7 +81,7 @@ const Header: React.FC = () => {
                 {/* Desktop Links */}
                 <ul className="hidden md:flex justify-center space-x-6 mr-8">
                     <li><Link to="/" className={`relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full ${isActive('/') ? 'after:w-full after:bg-white' : ''}`} > Home </Link></li>
-                    <li><Link to="/shop" className={`relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full ${isActive('/shop') ? 'after:w-full after:bg-white' : ''}`} > Shop </Link></li>
+                    <li><Link to="/shop" className={`relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full ${isActive('/shop') || isActive('/shop/cart')? 'after:w-full after:bg-white' : ''}`} > Shop </Link></li>
                     <li><Link to="/vendor" className={`relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full ${isActive('/vendor') || isActive('/vendor/vendor_profile') ? 'after:w-full after:bg-white' : ''}`} > Vendor </Link></li>
                     <li><Link to="/about" className={`relative after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-[-4px] after:w-0 after:h-[2px] after:bg-white after:transition-all after:duration-300 hover:after:w-full ${isActive('/about') ? 'after:w-full after:bg-white' : ''}`} > About </Link></li>
                     <li className="font-bold"> 

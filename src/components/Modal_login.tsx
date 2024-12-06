@@ -11,8 +11,6 @@ interface ModalLoginProps {
     onClose: () => void;
 }
 
-
-
 const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);

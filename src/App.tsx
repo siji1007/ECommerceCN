@@ -15,6 +15,7 @@ import AdminDashboard from './Admin/AdminDashboard';
 import Footer from './components/footer';
 import Cookies from 'js-cookie';
 import VendorProfile from './pages/vendor_Profile';
+import Cartpage from './components/CartSideBar';
 import host from "./host/host.txt?raw";
 
 
@@ -36,8 +37,10 @@ function App() {
             localStorage.setItem('userFullName', data.full_name);  // Store the full name in localStorage
         } else {
             localStorage.removeItem('userFullName');  // Remove userFullName if no session
+           // Remove userFullName from localStorage
+            localStorage.removeItem('Auth');
         }
-    })
+    }) 
     .catch(error => console.error('Error:', error));
 }, []);
 
@@ -60,6 +63,7 @@ function App() {
           <Route path='/' element={<HomePage/>}/>
           <Route path='/admin' element={<AdminDashboard/>}/>
           <Route path='/shop' element={<Shop/>}/>
+          <Route path='/shop/cart' element={<Cartpage />} />
           <Route path='/vendor' element={<Vendors />}/>
           <Route path='/vendor/vendor_profile' element={<VendorProfile />} />
           {/* Nested route for /vendor/vendor_profile */}

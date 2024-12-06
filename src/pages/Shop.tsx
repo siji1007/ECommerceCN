@@ -1,9 +1,8 @@
 // TODO: 
-//   -display product image
 //   -sort product alphabetically
 //   -add section for top 10 product most buy 
 //   -add section for advertisement 
-//   -cart button 
+//   -cart button  function
 
 import React, { useEffect, useState } from 'react';
 import ImageSlider from "../components/slider";
