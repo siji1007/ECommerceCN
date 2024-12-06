@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/logoIcon.png';
 import { FaUser } from 'react-icons/fa';
-import ModalLogin from '../components/Modal_login';
 import axios from 'axios';
 import host from '../host/host.txt?raw';
 
@@ -52,7 +51,7 @@ const Header: React.FC = () => {
                 console.log('Logout successful');
                 setDropdownOpen(false);  // Close the dropdown or any other UI elements
                 setFullName('');  // Clear the state for fullName
-                setIsModalOpen(true);
+                navigate('/login')
             } else {
                 console.error('Logout failed');
             }
@@ -105,7 +104,7 @@ const Header: React.FC = () => {
                                 <div className="ml-2">Profile</div>
                             </div>
                         ) : (
-                            <Link to="#" onClick={toggleModal} className="flex items-center space-x-2">
+                            <Link to="/login" onClick={toggleModal} className="flex items-center space-x-2">
                                 <FaUser />
                                 <span>{fullName}</span>
                             </Link>
@@ -149,14 +148,14 @@ const Header: React.FC = () => {
 
                     {/* Profile Icon */}
                     <div className="absolute bottom-8 right-8 text-4xl cursor-pointer">
-                        <Link onClick={toggleModal} className="text-white hover:text-gray-300" to={''}>
+                        <Link onClick={toggleModal} className="text-white hover:text-gray-300" to={'/login'}>
                             <FaUser />
                         </Link>
                     </div>
                 </div>
             </nav>
 
-            <ModalLogin isOpen={isModalOpen} onClose={toggleModal} />
+           
         </>
     );
 };

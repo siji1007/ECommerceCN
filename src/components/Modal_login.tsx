@@ -1,17 +1,11 @@
-import { FC, useState, FormEvent } from 'react';
+import React, {FC,  useState } from 'react';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Cookies from 'js-cookie';
 import host_backend from '../host/host.txt?raw';
 import { useNavigate } from 'react-router-dom';
 
 
-
-interface ModalLoginProps {
-    isOpen: boolean;
-    onClose: () => void;
-}
-
-const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
+const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
@@ -25,7 +19,7 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
     const [password, setPassword] = useState('');
     const serverUrl = host_backend.trim();
 
-    if (!isOpen) return null;
+
 
     const handleTogglePassword = () => {
         setShowPassword(!showPassword);
@@ -76,6 +70,7 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
             localStorage.setItem('userFullName', result.user.full_name);
             localStorage.setItem('Auth', result.user.id);
             Cookies.set('unauth_cookie', result.unauth_cookie, { expires: 7 });
+            navigate('/')
             
         
             // Navigate to another page
@@ -131,14 +126,8 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
     
     
     return (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-8 rounded-md w-1/2 relative ">
-                <button
-                    onClick={onClose}
-                    className="absolute top-2 right-2 text-gray-600 text-xl"
-                >
-                    ×
-                </button>
+        <div className="flex flex-col h-auto pt-16 min-h-screen items-center justify-center">
+            <div className="bg-white p-8 rounded-md w-1/2 relative border">
                 <h2 className="flex text-xl font-bold mb-4 justify-center items-center">
                     {isSignUp ? "Sign Up" : "Login"}
                 </h2>
@@ -279,4 +268,4 @@ const ModalLogin: FC<ModalLoginProps> = ({ isOpen, onClose }) => {
     );
 };
 
-export default ModalLogin;
+export default LoginPage;
