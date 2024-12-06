@@ -4,6 +4,8 @@ import profileImage from '../../assets/profiles/Profile.jpg';
 import axios from 'axios';
 import serverURL from '../../host/host.txt?raw';
 import ReactHost from '../../host/ReactHost?raw';
+import { Line, Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
 interface Product {
   prod_id: number;
@@ -28,6 +30,8 @@ interface Comment {
   author: string;
   text: string;
 }
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
 
 
@@ -54,6 +58,46 @@ const ProductList: React.FC = () => {
   ];
 
 
+
+
+  const monthlySalesData = [1200, 1500, 1800, 1300, 1700, 1600, 2000, 2100, 1800, 2500, 2300, 2400];
+  
+  // Sample product sales data
+  const topProductsData = [
+    { prod_name: 'Product A', prod_sales: 5000 },
+    { prod_name: 'Product B', prod_sales: 4500 },
+    { prod_name: 'Product C', prod_sales: 4000 },
+    { prod_name: 'Product D', prod_sales: 3500 },
+    { prod_name: 'Product E', prod_sales: 3000 },
+  ];
+
+  const lineChartData = {
+    labels: [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ],
+    datasets: [
+      {
+        label: 'Monthly Sales',
+        data: monthlySalesData,
+        fill: false,
+        borderColor: '#4CAF50',
+        tension: 0.1,
+      },
+    ],
+  };
+
+  const barChartData = {
+    labels: topProductsData.map(product => product.prod_name),
+    datasets: [
+      {
+        label: 'Top Products by Sales',
+        data: topProductsData.map(product => product.prod_sales),
+        backgroundColor: '#FF6347',
+        borderColor: '#FF6347',
+        borderWidth: 1,
+      },
+    ],
+  };
 
 
   let url = window.location.href;
@@ -212,6 +256,20 @@ useEffect(() => {
         />
       </div>
 
+      <div className="flex flex-col lg:flex-row w-full overflow-x-auto mb-2 gap-2 items-center justify-center">
+        <div className="mb-6 w-full lg:w-1/2"> {/* For mobile, it's full width, for larger screens it's 50% width */}
+          <h2 className="text-xl font-semibold mb-4">Monthly Sales</h2>
+          <Line data={lineChartData} />
+        </div>
+
+        {/* Bar Chart for Top Products Sales */}
+        <div className="mb-6 w-full lg:w-1/2"> {/* For mobile, it's full width, for larger screens it's 50% width */}
+          <h2 className="text-xl font-semibold mb-4">Top Products by Sales</h2>
+          <Bar data={barChartData} />
+        </div>
+      </div>
+
+
   {/* Product List */}
 <div className="flex flex-wrap gap-4">
   {filteredProducts.length === 0 ? (
@@ -225,6 +283,8 @@ useEffect(() => {
         className="w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer"
         onClick={() => setModalProduct(product)}
       >
+
+        
         <img
           src={ reactHost + product.prod_image_id}
           alt={product.prod_name}
