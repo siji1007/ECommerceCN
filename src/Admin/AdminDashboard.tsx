@@ -1,4 +1,5 @@
-import Profile from '../../src/assets/profiles/Profile.jpg'
+import Profile from '../../src/assets/profiles/Profile.jpg';
+import { FaUsersCog } from "react-icons/fa";
 import { FaCog } from 'react-icons/fa';
 
 const AdminDashboard: React.FC = () =>{
@@ -28,6 +29,7 @@ const AdminDashboard: React.FC = () =>{
             <div className="w-full p-2  flex flex-col h-full mb-10">
                
                 <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded flex items-center">
+                <FaUsersCog className="h-5 w-5 mr-2" />
                 User Management
                 </button>
 
