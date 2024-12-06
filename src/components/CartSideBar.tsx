@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Product from '../assets/product_images/kakanin.png';
 const CartPage: React.FC = () => {
     const [cartItems, setCartItems] = useState<Product[]>([
@@ -21,13 +22,15 @@ const CartPage: React.FC = () => {
         totalPrice: 600,
       },
     ]);
+
+    const navigate = useNavigate();
   
     const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set()); // Track selected products
     const [selectAll, setSelectAll] = useState(false); // Track if "select all" is checked
     const selectedProductsCount = selectedProducts.size; // Updated to use selectedProducts set
   
     const handleCheckout = () => {
-      alert("Proceed to checkout");
+      navigate('/shop/buy-payment')
     };
   
     const handleIncreaseQuantity = (id: number) => {

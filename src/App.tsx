@@ -16,6 +16,8 @@ import Footer from './components/footer';
 import Cookies from 'js-cookie';
 import VendorProfile from './pages/vendor_Profile';
 import Cartpage from './components/CartSideBar';
+import Settings from './Client/Settings';
+import Payment from './pages/BuyPayment';
 import host from "./host/host.txt?raw";
 
 
@@ -64,12 +66,15 @@ function App() {
           <Route path='/admin' element={<AdminDashboard/>}/>
           <Route path='/shop' element={<Shop/>}/>
           <Route path='/shop/cart' element={<Cartpage />} />
+          <Route path='/shop/buy-payment' element={<Payment />} />
           <Route path='/vendor' element={<Vendors />}/>
           <Route path='/vendor/vendor_profile' element={<VendorProfile />} />
           {/* Nested route for /vendor/vendor_profile */}
         
           <Route path='/about' element={<About/>}/>
           <Route path={`/clientprofile/id=${userId}`} element={<Clientdashboard />}>
+            <Route path='shop-cart' element={<Cartpage/>}/>
+            <Route path='settings' element={<Settings/>}/>
             <Route path='business-form' element={<Business/>}/>
             <Route path='product-list' element={<ProductList/>}/>
             <Route path='products-add' element={<ProductUpload/>}/>
