@@ -98,6 +98,68 @@ def logout():
 
 
 
+class Admin(db.Model):
+    __tablename__ = 'admin'
+    admin_id = db.Column(db.Integer, primary_key=True)
+    admin_fname = db.Column(db.String(255))  # First name of the admin
+    admin_lname = db.Column(db.String(255))  # Last name of the admin
+    admin_bmonth = db.Column(db.String(50))  # Birth month
+    admin_bday = db.Column(db.Integer)  # Birth day
+    admin_byear = db.Column(db.Integer)  # Birth year
+    admin_email = db.Column(db.String(100), unique=True, nullable=False)  # Email (unique)
+    admin_password = db.Column(db.String(255))  # Password (hashed)
+
+    def __init__(self, admin_fname, admin_lname, admin_bmonth, admin_bday, admin_byear, admin_email, admin_password):
+        self.admin_fname = admin_fname
+        self.admin_lname = admin_lname
+        self.admin_bmonth = admin_bmonth
+        self.admin_bday = admin_bday
+        self.admin_byear = admin_byear
+        self.admin_email = admin_email
+        self.admin_password = admin_password  # Make sure to hash the password before storing it!
+
+    def __repr__(self):
+        return f"<Admin {self.admin_fname} {self.admin_lname} ({self.admin_email})>"
+    
+@app.route('/api/admin/login', methods=['POST'])
+def admin_login():
+    data = request.get_json()
+    email = data['emailOrMobile']
+    password = data['password']
+    
+    # Query the database for the admin with the given email
+    admin = Admin.query.filter_by(admin_email=email).first()
+
+    if admin and admin.admin_password == password:  # Directly compare passwords (no hashing)
+        return jsonify({
+            'message': 'Login successful',
+            'admin': {
+                'admin_id': admin.admin_id,
+                'admin_fname': admin.admin_fname,
+                'admin_lname': admin.admin_lname
+            }
+        }), 200
+    else:
+        return jsonify({'message': 'Invalid email or password'}), 401
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)

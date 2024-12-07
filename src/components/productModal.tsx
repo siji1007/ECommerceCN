@@ -59,7 +59,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, product, onClose, o
         } else if (response.status === 401) {
             // No active session, prompt login
             alert('Please log in to continue.');
-            setIsModalOpen(true); // Open the login modal
+            navigate('/login');
+            // Open the login modal
         } else {
             throw new Error('Unexpected error while checking session.');
         }

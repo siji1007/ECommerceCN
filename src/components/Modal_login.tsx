@@ -3,11 +3,14 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Cookies from 'js-cookie';
 import host_backend from '../host/host.txt?raw';
 import { useNavigate } from 'react-router-dom';
+import AdminButton from '../assets/profiles/admin.png'
+import CustomerButton from '../assets/profiles/buyer.png';
 
 
 const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
+    const [selectedAccountType, setSelectedAccountType] = useState<"User" | "Admin">("User");
     const [isSignUp, setIsSignUp] = useState(false);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -42,67 +45,114 @@ const LoginPage: React.FC = () => {
         setPassword('');
     };
 
-    const handleLoginSubmit = async (e) => {
+    const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Prepare the data to be sent to the Flask API
-        const data = {
-            emailOrMobile,
-            password
-        };
-
-        try {
-            const response = await fetch(serverUrl + '/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-        
-            if (!response.ok) {
-                const errorResult = await response.json();
-                throw new Error(errorResult.message || 'Login failed');
-            }
-        
-            const result = await response.json();
-            alert(`LOGIN successful! Welcome, ${result.user.full_name}`);
-            localStorage.setItem('userFullName', result.user.full_name);
-            localStorage.setItem('Auth', result.user.id);
-            Cookies.set('unauth_cookie', result.unauth_cookie, { expires: 7 });
-            navigate('/')
+    
+        // Admin Login Logic
+        if (selectedAccountType === "Admin") {
+            try {
+                const data = { emailOrMobile, password };
             
-        
-            // Navigate to another page
-            window.location.reload(); 
-        } catch (error: unknown) {
-        // TypeScript requires error to be cast to an instance of Error
-        if (error instanceof Error) {
-            console.error('Error during login:', error.message);
-            alert(error.message || 'An unexpected error occurred. Please try again.');
-        } else {
-            console.error('Unknown error occurred');
-            alert('An unexpected error occurred. Please try again.');
+                const response = await fetch(serverUrl + '/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data), // Send email and password in the request body
+                });
+            
+                if (response.status === 200) {
+                    const result = await response.json(); // Parse the JSON response
+                    alert('Login successful');
+                    console.log(result);
+                    
+                    // Assuming result contains admin_id, save it to localStorage
+                    localStorage.setItem('adminID', result.admin.admin_id); // Store adminID in localStorage
+                    
+                    // You can also store other details like full name if necessary
+                    localStorage.setItem('adminName', result.admin.admin_fname + " " + result.admin.admin_lname); 
+                    const adminID = result.admin.admin_id;
+                    // Navigate to the admin page
+                    navigate(`/admin/id_admin=${adminID}`);
+
+                } else {
+                    const errorResult = await response.json();
+                    alert(errorResult.message || "Login failed");
+                }
+            } catch (error) {
+                if (error instanceof Error) {
+                    console.error("Error during login:", error.message);
+                    alert(error.message || "An unexpected error occurred. Please try again.");
+                } else {
+                    console.error("Unknown error occurred");
+                    alert("An unexpected error occurred. Please try again.");
+                }
+            }
         }
-    }
-        
-    };
-    const handleSignUpSubmit = async (e) => {
-        e.preventDefault(); // Prevent default form submission behavior
+            
     
-        // Create the data object to be sent to the Flask server
+        // Customer Login Logic
+        if (selectedAccountType === "User") {
+            const data = {
+                emailOrMobile,
+                password,
+            };
+    
+            try {
+                const response = await fetch(serverUrl + "/api/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data), // Send emailOrMobile and password in the request body
+                });
+    
+                if (!response.ok) {
+                    const errorResult = await response.json();
+                    throw new Error(errorResult.message || "Login failed");
+                }
+    
+                const result = await response.json();
+                alert(`LOGIN successful! Welcome, ${result.user.full_name}`);
+                localStorage.setItem("userFullName", result.user.full_name);
+                localStorage.setItem("Auth", result.user.id);
+                Cookies.set("unauth_cookie", result.unauth_cookie, { expires: 7 });
+                navigate("/"); // Redirect to customer dashboard
+                window.location.reload();
+            } catch (error) {
+                if (error instanceof Error) {
+                    console.error("Error during login:", error.message);
+                    alert(error.message || "An unexpected error occurred. Please try again.");
+                } else {
+                    console.error("Unknown error occurred");
+                    alert("An unexpected error occurred. Please try again.");
+                }
+            }
+        }
+    };
+    
+    
+    const handleSignUpSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+    
+        if (selectedAccountType === "Admin") {
+            alert("Admin sign-up is not supported!");
+            return;
+        }
+    
+        // Customer Sign-Up Logic
         const data = {
-            first_name: firstName,      // Send first name
-            last_name: lastName,        // Send last name
-            birth_month: month,         // Send birth month
-            birth_day: day,             // Send birth day
-            birth_year: year,           // Send birth year
-            email_or_mobile: emailOrMobile,  // Send email or mobile
-            password: password,         // Send password
+            first_name: firstName,
+            last_name: lastName,
+            birth_month: month,
+            birth_day: day,
+            birth_year: year,
+            email_or_mobile: emailOrMobile,
+            password: password,
         };
     
         try {
-            const response = await fetch( serverUrl + "/api/register", {
+            const response = await fetch(serverUrl + "/api/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -113,159 +163,162 @@ const LoginPage: React.FC = () => {
             const result = await response.json();
             if (response.ok) {
                 console.log("User registered successfully:", result);
-             
-                // Optionally redirect or show success message
+                alert("Sign-up successful! Please log in.");
+                toggleForm(); // Switch to login form
             } else {
                 console.error("Error registering user:", result.message);
-                // Show error message
+                alert(result.message || "An error occurred during sign-up.");
             }
         } catch (error) {
             console.error("Request failed", error);
+            alert("An error occurred during sign-up. Please try again.");
         }
     };
     
     
     return (
-        <div className="flex flex-col h-auto pt-16 min-h-screen items-center justify-center">
-            <div className="bg-white p-8 rounded-md w-1/2 relative border">
-                <h2 className="flex text-xl font-bold mb-4 justify-center items-center">
-                    {isSignUp ? "Sign Up" : "Login"}
+        <div className="flex flex-col h-auto pt-8 min-h-screen items-center justify-center px-4 sm:px-8">
+            <h1 className="mb-2 text-lg sm:text-xl mt-20 pt-10 sm:mt-0">Choose Account Type</h1>{/* Add a margin to separate the header */}
+            {/* Account Type Selection */}
+            <div className="flex flex-wrap gap-4 sm:gap-8 mb-8 justify-center">
+                <div
+                    onClick={() => setSelectedAccountType("User")}
+                    className={`relative cursor-pointer border rounded-lg p-4 shadow-lg w-32 sm:w-40 lg:w-40 lg:h-40 ${
+                        selectedAccountType === "User" ? "border-green-800 shadow-[0_4px_6px_0_rgba(34,197,94,0.5)]" : "border-gray-300"
+                    }`}
+                >
+                    {selectedAccountType === "User" && (
+                        <div className="absolute top-2 left-2 flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white" className="w-4 h-4 sm:w-6 sm:h-6" > <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /> </svg>
+                        </div>
+                    )}
+                    <img
+                        src={CustomerButton}
+                        alt="Customer"
+                        className="w-full h-24 sm:h-32 object-contain mx-auto"
+                    />
+                    <h3 className="text-center text-xs sm:text-sm lg:text-lg font-semibold mt-2 sm:mt-4">
+                        User
+                    </h3>
+                </div>
+
+                {!isSignUp && (
+                    <div
+                        onClick={() => setSelectedAccountType("Admin")}
+                        className={`relative cursor-pointer border rounded-lg p-4 shadow-lg w-32 sm:w-40 lg:w-40 lg:h-40 ${
+                            selectedAccountType === "Admin" ? "border-green-800 shadow-[0_4px_6px_0_rgba(34,197,94,0.5)]" : "border-gray-300"
+                        }`}
+                    >
+                        {selectedAccountType === "Admin" && (
+                            <div className="absolute top-2 left-2 flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white" className="w-4 h-4 sm:w-6 sm:h-6" > <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /> </svg>
+                            </div>
+                        )}
+                        <img
+                            src={AdminButton}
+                            alt="Admin"
+                            className="w-full h-24 sm:h-32 object-contain mx-auto"
+                        />
+                        <h3 className="text-center text-xs sm:text-sm lg:text-lg font-semibold mt-2 sm:mt-4">
+                            Admin
+                        </h3>
+                    </div>
+                    )}
+            </div>
+
+    
+            {/* Login/SignUp Form */}
+            <div className="bg-white p-6 sm:p-8 rounded-md w-full max-w-md relative border">
+                <h2 className="text-lg sm:text-xl font-bold mb-4 text-center">
+                    {isSignUp 
+                        ? `Sign Up as ${selectedAccountType}` 
+                        : `Login as ${selectedAccountType}`}
                 </h2>
+
                 {isSignUp ? (
                     <form onSubmit={handleSignUpSubmit}>
                         {/* Full Name Section */}
-                        <div className="mb-4 flex gap-4">
-                            <div className="w-1/2">
-                                <label htmlFor="firstName" className="block text-sm font-semibold"> First Name </label>
-                                <input type="text" id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your first name" required />  
+                        <div className="mb-4 flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1">
+                                <label htmlFor="firstName" className="block text-sm font-semibold">First Name</label>
+                                <input type="text" id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your first name" required />
                             </div>
-                            <div className="w-1/2">
-                                <label htmlFor="lastName" className="block text-sm font-semibold">
-                                    Last Name
-                                </label>
-                                <input type="text" id="lastName" value={lastName}onChange={(e) => setLastName(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your last name" required
-                                />
+                            <div className="flex-1">
+                                <label htmlFor="lastName" className="block text-sm font-semibold">Last Name</label>
+                                <input type="text" id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your last name" required />
                             </div>
                         </div>
                         {/* Birthdate Section */}
                         <div className="mb-4">
-
-                        <label htmlFor="month" className="block text-sm font-semibold mt-2" style={{ whiteSpace: "nowrap" }} >
-                            Birthdate
-                        </label>
-                        <div className="flex flex-1 gap-4">
-                            <div className="flex-1">
-                                <select id="month" value={month} onChange={(e) => setMonth(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-md w-full" required> <option value="">Month</option> <option value="January">January</option> <option value="February">February</option> {/* Continue with all months */} </select>
-                            </div>
-                            <div className="flex-1">
-                                <select id="day" value={day} onChange={(e) => setDay(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-md w-full" required >
+                            <label htmlFor="month" className="block text-sm font-semibold">Birthdate</label>
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <select id="month" value={month} onChange={(e) => setMonth(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-md flex-1" required>
+                                    <option value="">Month</option>
+                                    <option value="January">January</option>
+                                    {/* Continue with other months */}
+                                </select>
+                                <select id="day" value={day} onChange={(e) => setDay(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-md flex-1" required>
                                     <option value="">Day</option>
                                     {Array.from({ length: 31 }, (_, i) => (
-                                        <option key={i + 1} value={i + 1}>
-                                            {i + 1}
-                                        </option>
+                                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                    ))}
+                                </select>
+                                <select id="year" value={year} onChange={(e) => setYear(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-md flex-1" required>
+                                    <option value="">Year</option>
+                                    {Array.from({ length: 100 }, (_, i) => (
+                                        <option key={i} value={new Date().getFullYear() - i}>{new Date().getFullYear() - i}</option>
                                     ))}
                                 </select>
                             </div>
-                            <div className="flex-1">
-                                <select id="year" value={year} onChange={(e) => setYear(e.target.value)}
-                                    className="px-4 py-2 border border-gray-300 rounded-md w-full"
-                                    required
-                                >
-                                    <option value="">Year</option>
-                                    {Array.from({ length: 100 }, (_, i) => (
-                                        <option key={i} value={new Date().getFullYear() - i}>
-                                            {new Date().getFullYear() - i}
-                                        </option>
-                                    ))}
-                                    </select>
-                                </div>
-                            </div>
                         </div>
-
-                        {/* Email or Mobile Number Section */}
+                        {/* Email and Password */}
                         <div className="mb-4">
-                            <label htmlFor="emailOrMobile" className="block text-sm font-semibold">
-                                Email or Mobile Number
-                            </label>
+                            <label htmlFor="emailOrMobile" className="block text-sm font-semibold">Email or Mobile Number</label>
                             <input type="text" id="emailOrMobile" value={emailOrMobile} onChange={(e) => setEmailOrMobile(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your email or mobile number" required />
                         </div>
-                        {/* Password Section */}
                         <div className="mb-4">
-                            <label htmlFor="password" className="block text-sm font-semibold">
-                                New Password
-                            </label>
+                            <label htmlFor="password" className="block text-sm font-semibold">Password</label>
                             <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Create a password" required />
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full bg-green-800 text-white py-2 rounded-md"
-                        >
-                            Sign Up
-                        </button>
+                        <button type="submit" className="w-full bg-green-800 text-white py-2 rounded-md">Sign Up</button>
                     </form>
                 ) : (
                     <form onSubmit={handleLoginSubmit}>
                         <div className="mb-4">
-                            <label htmlFor="emailOrMobile" className="block text-sm font-semibold">
-                                Email or Mobile Number
-                            </label>
+                            <label htmlFor="emailOrMobile" className="block text-sm font-semibold">Email or Mobile Number</label>
                             <input type="text" id="emailOrMobile" value={emailOrMobile} onChange={(e) => setEmailOrMobile(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Enter your email or mobile number" required />
                         </div>
                         <div className="mb-4 relative">
-                                <label htmlFor="password" className="block text-sm font-semibold">
-                                    Password
-                                </label>
-                                <div className="relative"> {/* Wrap the input and button */}
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        id="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md pr-10"  // Add pr-10 for padding to the right
-                                        placeholder="Enter your password"
-                                        required
-                                    />
-                                    {/* Eye icon button to toggle password visibility */}
-                                    <button
-                                        className="absolute inset-y-0 right-2 flex items-center justify-center text-gray-600"
-                                        type="button"
-                                        onClick={handleTogglePassword}
-                                    >
-                                        {/* Displaying the correct icon */}
-                                        {showPassword ? <FaEye size={20} /> : <FaEyeSlash size={20} />}
-                                    </button>
-                                </div>
+                            <label htmlFor="password" className="block text-sm font-semibold">Password</label>
+                            <div className="relative">
+                                <input type={showPassword ? "text" : "password"} id="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md pr-10" placeholder="Enter your password" required />
+                                <button type="button" onClick={handleTogglePassword} className="absolute inset-y-0 right-2 text-gray-600">
+                                    {showPassword ? <FaEye size={20} /> : <FaEyeSlash size={20} />}
+                                </button>
                             </div>
-                        <button
-                            type="submit"
-                            className="w-full bg-green-800 text-white py-2 rounded-md"
-                        >
-                            Login
-                        </button>
+                        </div>
+                        <button type="submit" className="w-full bg-green-800 text-white py-2 rounded-md">Login</button>
                     </form>
                 )}
                 <div className="mt-4 text-center">
                     {isSignUp ? (
                         <p className="text-sm">
-                            Already have an account?{' '}
-                            <span className="text-blue-600 cursor-pointer" onClick={toggleForm} > Login </span>
+                            Already have an account?{" "}
+                            <span className="text-blue-600 cursor-pointer" onClick={toggleForm}>Login</span>
                         </p>
                     ) : (
-                        <p className="text-sm">
-                            Don't have an account?{' '}
-                            <span
-                                className="text-blue-600 cursor-pointer"
-                                onClick={toggleForm}
-                            >
-                                Sign Up
-                            </span>
+                            <p className="text-sm">
+                            {selectedAccountType !== "Admin" && (
+                                <> Don't have an account?{" "} <span className="text-blue-600 cursor-pointer" onClick={toggleForm}>Sign Up</span> </>
+                            )}
                         </p>
+                    
                     )}
                 </div>
             </div>
         </div>
     );
+    
 };
 
 export default LoginPage;
