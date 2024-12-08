@@ -57,7 +57,7 @@ const VendorPage: React.FC = () => {
   
 
   return (
-    <div className="flex flex-col h-auto pt-16 min-h-screen">
+    <div className="flex flex-col h-auto pt-10 min-h-screen">
       {/* Search and Filter Section */}
       <div className="flex justify-end items-center p-4">
         <input

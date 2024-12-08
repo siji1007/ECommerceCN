@@ -38,37 +38,80 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, product, onClose, o
   const handleRating = (star: number) => setRating(star);
 
   // Handle Buy Now action
-  const handleBuyNow = async (product: any, quantity: number): Promise<void> => {
-    try {
-        // Fetch current session from the server
-        const response = await fetch(severURL + '/api/get-current-session', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include', // Include cookies for authentication
-        });
+  // Handle Buy Now action
+const handleBuyNow = async (product: any, quantity: number): Promise<void> => {
+  try {
+      // Fetch current session from the server
+      const response = await fetch(severURL + '/api/get-current-session', {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          credentials: 'include', // Include cookies for authentication
+      });
 
-        if (response.ok) {
-            const data = await response.json();
-            if (data.session_cookie) {
-                // Session exists, proceed with the purchase
-                alert(`Buying ${quantity} of ${product.prod_name}`);
-                navigate('/shop/cart');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.session_cookie && data.user_id) {
+            // Session exists, display alert with product details
+            const userId = data.user_id;
+            const alertMessage = `
+                User ID: ${userId}\n
+                Product ID: ${product.prod_id}\n
+                Product Name: ${product.prod_name}\n
+                Product Classification: ${product.prod_category}\n
+                Quantity: ${quantity}\n
+                Total Price: ₱ ${(product.prod_price - product.prod_disc_price) * quantity}
+            `;
+            alert(alertMessage);
+    
+            // Add the product to the cart in the database via API
+            try {
+                const addToCartResponse = await fetch(severURL + '/api/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        cart_id: null, // Auto-generated if applicable
+                        us_id: userId,
+                        product_id: product.prod_id,
+                        product_name: product.prod_name,
+                        product_classification: product.prod_category,
+                        product_quantity: quantity,
+                        total_price: (product.prod_price - product.prod_disc_price) * quantity,
+                        date_added: new Date().toISOString(),
+                    }),
+                });
+    
+                if (addToCartResponse.ok) {
+                    alert('Product successfully added to the cart! Navigating to your cart...');
+                    // Navigate to the cart page
+                    navigate(`/shop/cart/id=${userId}`);
+                } else {
+                    const errorData = await addToCartResponse.json();
+                    alert(`Failed to add product to cart: ${errorData.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error while adding product to cart:', error);
+                alert('An error occurred while adding the product to your cart.');
             }
-        } else if (response.status === 401) {
-            // No active session, prompt login
-            alert('Please log in to continue.');
-            navigate('/login');
-            // Open the login modal
-        } else {
-            throw new Error('Unexpected error while checking session.');
         }
-    } catch (error) {
-        console.error('Error checking session:', error);
-        alert('An error occurred. Please try again later.');
-    }
+    
+    
+      } else if (response.status === 401) {
+          // No active session, prompt login
+          alert('Please log in to continue.');
+          navigate('/login');
+      } else {
+          throw new Error('Unexpected error while checking session.');
+      }
+  } catch (error) {
+      console.error('Error checking session:', error);
+      alert('An error occurred. Please try again later.');
+  }
 };
+
 
 
   if (!isOpen) return null; // Don't render if modal is closed

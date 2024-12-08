@@ -101,13 +101,13 @@ def logout():
 class Admin(db.Model):
     __tablename__ = 'admin'
     admin_id = db.Column(db.Integer, primary_key=True)
-    admin_fname = db.Column(db.String(255))  # First name of the admin
-    admin_lname = db.Column(db.String(255))  # Last name of the admin
-    admin_bmonth = db.Column(db.String(50))  # Birth month
-    admin_bday = db.Column(db.Integer)  # Birth day
-    admin_byear = db.Column(db.Integer)  # Birth year
-    admin_email = db.Column(db.String(100), unique=True, nullable=False)  # Email (unique)
-    admin_password = db.Column(db.String(255))  # Password (hashed)
+    admin_fname = db.Column(db.String(255))  
+    admin_lname = db.Column(db.String(255))  
+    admin_bmonth = db.Column(db.String(50)) 
+    admin_bday = db.Column(db.Integer)  
+    admin_byear = db.Column(db.Integer)  
+    admin_email = db.Column(db.String(100), unique=True, nullable=False)  
+    admin_password = db.Column(db.String(255))  
 
     def __init__(self, admin_fname, admin_lname, admin_bmonth, admin_bday, admin_byear, admin_email, admin_password):
         self.admin_fname = admin_fname
@@ -116,7 +116,7 @@ class Admin(db.Model):
         self.admin_bday = admin_bday
         self.admin_byear = admin_byear
         self.admin_email = admin_email
-        self.admin_password = admin_password  # Make sure to hash the password before storing it!
+        self.admin_password = admin_password  
 
     def __repr__(self):
         return f"<Admin {self.admin_fname} {self.admin_lname} ({self.admin_email})>"
@@ -127,10 +127,10 @@ def admin_login():
     email = data['emailOrMobile']
     password = data['password']
     
-    # Query the database for the admin with the given email
+   
     admin = Admin.query.filter_by(admin_email=email).first()
 
-    if admin and admin.admin_password == password:  # Directly compare passwords (no hashing)
+    if admin and admin.admin_password == password:  
         return jsonify({
             'message': 'Login successful',
             'admin': {
@@ -154,12 +154,19 @@ def admin_login():
 
 
 
+PROFILE_IMAGES_FOLDER = r"C:\Users\XtiaN\ECommerceCN\src\assets\profiles"
 
+# Ensure the directory exists, create it if it doesn't
+if not os.path.exists(PROFILE_IMAGES_FOLDER):
+    os.makedirs(PROFILE_IMAGES_FOLDER)
 
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
-
+# Define the User model (already provided in your case)
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -171,8 +178,9 @@ class User(db.Model):
     gender = db.Column(db.String(10))
     email_or_mobile = db.Column(db.String(255), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
+    user_image = db.Column(db.String(255))
 
-    def __init__(self, first_name, last_name, birth_month, birth_day, birth_year, gender, email_or_mobile, password):
+    def __init__(self, first_name, last_name, birth_month, birth_day, birth_year, gender, email_or_mobile, password, user_image):
         self.first_name = first_name
         self.last_name = last_name
         self.birth_month = birth_month
@@ -181,6 +189,50 @@ class User(db.Model):
         self.gender = gender
         self.email_or_mobile = email_or_mobile
         self.password = password
+        self.user_image = user_image
+
+@app.route('/uploadProfileImage', methods=['POST'])
+def upload_profile_image():
+    if 'file' not in request.files:
+        return jsonify({'message': 'No file part'}), 400
+
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({'message': 'No selected file'}), 400
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(PROFILE_IMAGES_FOLDER, filename)
+        file.save(file_path)
+
+        # Get the URL of the uploaded image
+        image_url = f'/src/assets/profiles/{filename}'
+
+        # Get the user_id from the request
+        user_id = request.form.get('user_id')
+
+        if user_id:
+            # Query the user from the database based on the user_id
+            user = User.query.get(user_id)
+            if user:
+                # Update the user's image URL in the database
+                user.user_image = image_url  # Save the URL in the user_image column
+                db.session.commit()  # Commit the changes to the database
+
+                return jsonify({'message': 'Image uploaded and user image URL updated', 'imageUrl': image_url}), 200
+            else:
+                return jsonify({'message': 'User not found'}), 404
+        else:
+            return jsonify({'message': 'User ID not provided'}), 400
+
+    return jsonify({'message': 'Invalid file format'}), 400
+
+
+
+
+
+
 
 # Register route
 @app.route('/api/register', methods=['POST'])
@@ -288,7 +340,8 @@ def get_credentials():
             "gender":user.gender,
             "birthmonth":user.birth_month,
             "birthday":user.birth_day,
-            "birthyear":user.birth_year
+            "birthyear":user.birth_year,
+            "user_image":user.user_image,
         }), 200
 
     except Exception as e:
@@ -510,55 +563,6 @@ def fetch_vendor_id(user_id):
     
 
 
-class Product(db.Model):
-    __tablename__ = 'products'  # Name of the table in the database
-
-    # Primary Key
-    prod_id = db.Column(db.Integer, primary_key=True)
-
-    # Foreign Key
-    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.ven_id'), nullable=False)
-
-    # Product Attributes
-    prod_name = db.Column(db.String(255), nullable=False)
-    prod_category = db.Column(db.String(255), nullable=False)
-    prod_descript = db.Column(db.Text, nullable=True)
-    prod_price = db.Column(db.Float, nullable=False)
-    prod_stock = db.Column(db.Integer, nullable=False, default=0)
-    prod_disc_price = db.Column(db.Float, nullable=True)
-    prod_status = db.Column(db.String(50), nullable=False, default="Pending")
-    prod_image_id = db.Column(db.String(255), nullable=False)
-
-
-    # Relationship with Vendor
-    vendor = db.relationship('Vendor', backref=db.backref('products', lazy=True))
-
-    def __init__(self, vendor_id, prod_name, prod_category, prod_descript, prod_price, prod_stock, prod_disc_price, prod_status="Pending", prod_image_id=None):
-        self.vendor_id = vendor_id
-        self.prod_name = prod_name
-        self.prod_category = prod_category
-        self.prod_descript = prod_descript
-        self.prod_price = prod_price
-        self.prod_stock = prod_stock
-        self.prod_disc_price = prod_disc_price
-        self.prod_status = prod_status
-        self.prod_image_id = prod_image_id
-
-    def to_dict(self):
-        return {
-            "prod_id": self.prod_id,
-            "vendor_id": self.vendor_id,
-            "vendor_name": self.vendor.ven_name if self.vendor else None,
-            "prod_name": self.prod_name,
-            "prod_category": self.prod_category,
-            "prod_descript": self.prod_descript,
-            "prod_price": self.prod_price,
-            "prod_disc_price": self.prod_disc_price,
-            "prod_status": self.prod_status,
-            "prod_image_id": self.prod_image_id,
-            "prod_stock": self.prod_stock,
-
-        }
 
 @app.route('/addProduct', methods=['POST'])
 def add_product():
@@ -732,6 +736,148 @@ def get_all_products():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+
+
+
+
+class Product(db.Model):
+    __tablename__ = 'products'  # Name of the table in the database
+
+    # Primary Key
+    prod_id = db.Column(db.Integer, primary_key=True)
+
+    # Foreign Key
+    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.ven_id'), nullable=False)
+
+    # Product Attributes
+    prod_name = db.Column(db.String(255), nullable=False)
+    prod_category = db.Column(db.String(255), nullable=False)
+    prod_descript = db.Column(db.Text, nullable=True)
+    prod_price = db.Column(db.Float, nullable=False)
+    prod_stock = db.Column(db.Integer, nullable=False, default=0)
+    prod_disc_price = db.Column(db.Float, nullable=True)
+    prod_status = db.Column(db.String(50), nullable=False, default="Pending")
+    prod_image_id = db.Column(db.String(255), nullable=False)
+
+
+    # Relationship with Vendor
+    vendor = db.relationship('Vendor', backref=db.backref('products', lazy=True))
+
+    def __init__(self, vendor_id, prod_name, prod_category, prod_descript, prod_price, prod_stock, prod_disc_price, prod_status="Pending", prod_image_id=None):
+        self.vendor_id = vendor_id
+        self.prod_name = prod_name
+        self.prod_category = prod_category
+        self.prod_descript = prod_descript
+        self.prod_price = prod_price
+        self.prod_stock = prod_stock
+        self.prod_disc_price = prod_disc_price
+        self.prod_status = prod_status
+        self.prod_image_id = prod_image_id
+
+    def to_dict(self):
+        return {
+            "prod_id": self.prod_id,
+            "vendor_id": self.vendor_id,
+            "vendor_name": self.vendor.ven_name if self.vendor else None,
+            "prod_name": self.prod_name,
+            "prod_category": self.prod_category,
+            "prod_descript": self.prod_descript,
+            "prod_price": self.prod_price,
+            "prod_disc_price": self.prod_disc_price,
+            "prod_status": self.prod_status,
+            "prod_image_id": self.prod_image_id,
+            "prod_stock": self.prod_stock,
+
+        }
+
+
+
+
+class Cart(db.Model):
+    cart_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    us_id = db.Column(db.Integer, nullable=False)
+    product_id = db.Column(db.Integer, nullable=False)
+    product_name = db.Column(db.String(255), nullable=False)
+    product_classification = db.Column(db.String(255), nullable=True)
+    product_quantity = db.Column(db.Integer, nullable=False)
+    total_price = db.Column(db.Float, nullable=False)
+    date_added = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+
+    
+@app.route('/api/cart/<int:us_id>', methods=['GET'])
+def fetch_user_cart(us_id):
+    try:
+        # Query to fetch cart items for the specific user ID, along with product details (including the image)
+        cart_items = db.session.query(Cart, Product).join(Product, Cart.product_id == Product.prod_id).filter(Cart.us_id == us_id).all()
+
+        # Check if the user has items in the cart
+        if not cart_items:
+            return jsonify({'message': 'No cart items found for this user'}), 404
+
+        # Serialize the cart items into a list of dictionaries, including the product image
+        cart_data = [
+            {
+                'cart_id': item.Cart.cart_id,
+                'product_id': item.Cart.product_id,
+                'product_name': item.Cart.product_name,
+                'product_classification': item.Cart.product_classification,
+                'product_quantity': item.Cart.product_quantity,
+                "unit_price": item.Product.prod_price,
+                'total_price': item.Cart.total_price,
+                'date_added': item.Cart.date_added.strftime('%Y-%m-%d %H:%M:%S'),
+                'product_image': item.Product.prod_image_id,  # Add the product image ID here
+            }
+            for item in cart_items
+        ]
+
+        return jsonify({'message': 'Cart items fetched successfully', 'cart_items': cart_data}), 200
+
+    except Exception as e:
+        return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
+
+
+
+@app.route('/api/cart/add', methods=['POST'])
+def add_to_cart():
+    try:
+        data = request.get_json()
+
+        # Extracting data from the request
+        us_id = data.get('us_id')
+        product_id = data.get('product_id')
+        product_name = data.get('product_name')
+        product_classification = data.get('product_classification')
+        product_quantity = data.get('product_quantity')
+        total_price = data.get('total_price')
+
+        # Validate required fields
+        if not all([us_id, product_id, product_name, product_quantity, total_price]):
+            return jsonify({'message': 'Missing required fields'}), 400
+
+        # Create a new cart record
+        new_cart = Cart(
+            us_id=us_id,
+            product_id=product_id,
+            product_name=product_name,
+            product_classification=product_classification,
+            product_quantity=product_quantity,
+            total_price=total_price
+        )
+
+        # Add and commit to the database
+        db.session.add(new_cart)
+        db.session.commit()
+
+        return jsonify({'message': 'Product added to cart successfully!'}), 201
+
+    except Exception as e:
+        return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
+    
+
 
 
 with app.app_context():

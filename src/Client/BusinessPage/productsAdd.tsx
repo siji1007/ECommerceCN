@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import hosting from '../../host/host.txt?raw';
-import reactHost from '../../host/ReactHost?raw';
+import reactHost from '../../host/ReactHost.txt?raw';
 const ProductsAdd: React.FC = () => {
     const serverURL = hosting.trim();
     const ReactHost = reactHost.trim();
@@ -45,7 +45,7 @@ const ProductsAdd: React.FC = () => {
       const imageToDelete = images[index]; // Get the image URL (not the full URL)
       
       // Extract just the filename from the image URL
-      const filename = imageToDelete.split('/').pop(); // Get the filename from the full URL
+      const filename = imageToDelete.split('/').pop(); 
     
       // Send a DELETE request to Flask to delete the image from the server
       axios.delete(serverURL + `/deleteProductImage/${filename}`)

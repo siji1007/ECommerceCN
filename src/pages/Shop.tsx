@@ -10,7 +10,7 @@ import host from '../host/host.txt?raw';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { FaBookmark, FaShoppingCart } from 'react-icons/fa';
 import ProductModal from '../components/productModal'; 
-import ReactHost from '../host/ReactHost?raw';
+import ReactHost from '../host/ReactHost.txt?raw';
 
 const images = [
   "src/assets/slide1.jpg",
@@ -78,7 +78,7 @@ const ShopPage: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col h-auto pt-16 min-h-screen">
+      <div className="flex flex-col h-auto  min-h-screen">
         <div>
           <ImageSlider images={images} autoSlideInterval={1500} />
         </div>

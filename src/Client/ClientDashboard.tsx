@@ -3,7 +3,7 @@ import { FaEdit, FaCog, FaSave, FaShoppingCart  } from 'react-icons/fa';
 import { useLocation, useNavigate, Link  } from 'react-router-dom';
 import { IoStorefrontSharp } from "react-icons/io5";
 import { AiFillProfile } from "react-icons/ai";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MdArrowForward } from 'react-icons/md';
 import Business from './BusinessPage/business';
 import ProductList from './BusinessPage/ProductLIst';
@@ -11,6 +11,7 @@ import ProductAdd from './BusinessPage/productsAdd';
 import MyCartPage from '../components/CartSideBar';
 import Settings from './Settings';
 import host_backend from '../host/host.txt?raw';
+import host_frontend from '../host/ReactHost.txt?raw';
 import axios from 'axios';
 
 const ClientDashboard: React.FC = () =>{
@@ -24,6 +25,7 @@ const ClientDashboard: React.FC = () =>{
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [user, setUser] = useState<{ first_name: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [profile, setProfile] =  useState<string>('');
     const [isBusinessForm, setIsBusinessForm] = useState(false);
     const [isProductList, setIsProductList] = useState(false);
     const [isProductAdd, setIsProductAdd] = useState(false);
@@ -34,6 +36,10 @@ const ClientDashboard: React.FC = () =>{
     const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false); 
     const [isEditingAddress,setIsEditingAddress] = useState(false);
     const serverUrl = host_backend.trim();
+    const frontendUrl = host_frontend.trim();
+    const [image, setImage] = useState<string | null>(null);
+    const [uploading, setUploading] = useState<boolean>(false); 
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 
 
@@ -59,106 +65,140 @@ const ClientDashboard: React.FC = () =>{
         });
         const [mapUrl, setMapUrl] = useState('');
       
-        useEffect(() => {
-          // Get the current location of the user when component mounts
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(handlePositionSuccess, handlePositionError);
-          }
-        }, []);
-      
-        const handlePositionSuccess = (position) => {
-          const { latitude, longitude } = position.coords;
-      
-          // Update the location state with latitude and longitude
-          setLocation({ latitude, longitude });
-      
-          // Call reverse geocoding to get address details
-          fetchAddressDetails(latitude, longitude);
-      
-          // Update the map iframe URL
-          updateMapWithLocation(latitude, longitude);
-        };
-      
-        const handlePositionError = (error) => {
-          console.error("Error fetching location", error);
-        };
-      
-        const fetchAddressDetails = async (latitude, longitude) => {
-            const apiKey = "AIzaSyDgCKNuxx-s5uQfSs0AiD62wFNmgpurtyQ"; // Your Google API key
-            const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
-            
-            try {
-              const response = await fetch(url);
-              const data = await response.json();
-              
-              console.log('API Response:', data); // Log the entire response for debugging
-              
-              if (data.status === "OK" && data.results.length > 0) {
-                const addressComponents = data.results[0].address_components;
-                
-                // Extract address components safely
-                const address = {
-                  province: addressComponents.find(component => component.types.includes("administrative_area_level_1"))?.long_name || 'Not Available',
-                  city: addressComponents.find(component => component.types.includes("locality"))?.long_name || 'Not Available',
-                  barangay: addressComponents.find(component => component.types.includes("sublocality_level_1"))?.long_name || 'Not Available',
-                  postalCode: addressComponents.find(component => component.types.includes("postal_code"))?.long_name || 'Not Available',
-                  street: addressComponents.find(component => component.types.includes("route"))?.long_name || 'Not Available',
-                };
-                
-                setAddressDetails(address);
-                alert(`Province: ${address.province}\nCity: ${address.city}\nBarangay: ${address.barangay}`);
-              } else {
-                // Handle failure to get results
-                alert("Failed to retrieve address details");
-              }
-            } catch (error) {
-              console.error("Error fetching address details", error);
-              alert("Error fetching address details");
-            }
-          };
+  
           
       
-        const updateMapWithLocation = (latitude, longitude) => {
-          const mapUrl = `https://www.google.com/maps/embed/v1/view?key=AIzaSyDgCKNuxx-s5uQfSs0AiD62wFNmgpurtyQ&center=${latitude},${longitude}&zoom=17`;
-          setMapUrl(mapUrl);
-        };  
-    
+      
         useEffect(() => {
-            const userId = id;  // The user ID you want to query for
-    
-            // Send the GET request with the id query parameter
-            fetch(serverUrl + `/api/get-credentials?id=${userId}`, {
-                method: 'GET',
+          const userId = id;  // The user ID you want to query for
+      
+          // Send the GET request with the id query parameter
+          fetch(serverUrl + `/api/get-credentials?id=${userId}`, {
+            method: 'GET',
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error('User not found or server error');
+              }
+              return response.json();
             })
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error('User not found or server error');
-                    }
-                    return response.json();
-                })
-                .then((data) => {
-                    setUser(data);
-                    {
-                        setFirstName(data.first_name);
-                        setLastName(data.last_name);
-                        setEmail(data.email);
-                        setGender(data.gender);
-                        setBirthmonth(data.birthmonth);
-                        setBirthday(data.birthday);
-                        setBirthyear(data.birthyear);
-                        
+            .then((data) => {
+              setUser(data);
+              // Set user details from the fetched data
+              setFirstName(data.first_name);
+              setLastName(data.last_name);
+              setEmail(data.email);
+              setGender(data.gender);
+              setBirthmonth(data.birthmonth);
+              setBirthday(data.birthday);
+              setBirthyear(data.birthyear);
+              setImage(data.user_image);  // Set the current profile image
+            })
+            .catch((error) => {
+              setUser(error.message);
+              console.error('Error:', error);
+            });
+        }, [id]); // Runs when `id` changes or component mounts
+      
+        // Handle the change when the user selects a file
+        const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            alert(`Image selected: ${file.name}`);
+      
+            // Get the user_id (you might want to retrieve this from your app's state or context)
+            const userId = id;  // Replace with the actual user ID
+      
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('user_id', userId.toString());  // Append user_id to FormData
+      
+            setUploading(true);
+      
+            try {
+              const response = await axios.post(serverUrl + '/uploadProfileImage', formData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
+              });
+      
+              const imageUrl = response.data.imageUrl;
+              setImage(imageUrl);  // Update image state with the URL from the server
+              alert(`Profile image uploaded: ${imageUrl}`);
+            } catch (error) {
+              console.error('Error uploading image:', error);
+              alert('Error uploading image');
+            } finally {
+              setUploading(false);  // Reset uploading state
+            }
+          }
+        };
+      
+        // Handle the drag event (for drag-and-drop)
+        const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+          e.preventDefault();
+          const file = e.dataTransfer.files[0];
+          if (file) {
+            alert(`Image uploaded: ${file.name}`);
+      
+            // Create a FormData object to send the file to the server
+            const formData = new FormData();
+            formData.append('file', file);
+      
+            setUploading(true);  // Set uploading state to true
+      
+            try {
+              const response = await axios.post(serverUrl + '/uploadProfileImage', formData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
+              });
+      
+              // Set the image URL returned from the server
+              const imageUrl = response.data.imageUrl;
+              setImage(imageUrl);  // Update image state with the URL returned from Flask
+      
+              alert(`Profile image uploaded: ${imageUrl}`);
+            } catch (error) {
+              console.error('Error uploading image:', error);
+              alert('Error uploading image');
+            } finally {
+              setUploading(false);  // Reset uploading state
+            }
+          }
+        };
+      
+        // Handle the drag over event (for drag-and-drop)
+        const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+          e.preventDefault();
+        };
+      
+        // Trigger the file input dialog
+        const handleSelectImage = () => {
+          if (fileInputRef.current) {
+            console.log('File input ref is accessible, triggering click');
+            fileInputRef.current.value = ''; // Reset the file input value
+            fileInputRef.current.click(); // Trigger the file input click event
+          } else {
+            console.error('File input ref is not accessible');
+          }
+        };
+      
+        // Remove the image
+        const handleRemoveImage = () => {
+          setImage(null);  // Reset the image state
+        };
+      
 
-                        
-                
 
-                    }
-                    setError('');
-                })
-                .catch((error) => {
-                    setUser(error.message);
-                    console.error('Error:', error);
-                });
-        }, []);
+
+
+
+
+
+
+
+
 
     const navigateToProductList = () => {
         navigate(`/clientprofile/id=${id}/product-list`);
@@ -215,7 +255,16 @@ const ClientDashboard: React.FC = () =>{
 
     }, [location]); 
   
+    
    
+
+
+
+
+
+
+
+
     const toggleDropdown = () => {
       setIsDropdownOpen((prev) => !prev);
     };
@@ -259,87 +308,22 @@ const ClientDashboard: React.FC = () =>{
     };
 
 
-    const [image, setImage] = useState(null);
-
-    const handleDrop = (event) => {
-        event.preventDefault();
-        const file = event.dataTransfer.files[0];
-        if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = () => setImage(reader.result);
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const handleDragOver = (event) => {
-        event.preventDefault();
-    };
-
-    const handleFileInputChange = (event) => {
-        const file = event.target.files[0];
-        if (file && file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = () => setImage(reader.result);
-            reader.readAsDataURL(file);
-        }
-    };
-
-
-
-    // Get current location and fill in the address fields
-    const getCurrentLocation = () => {
-        if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(fetchAddressFromCoordinates, handleLocationError);
-        } else {
-        alert("Geolocation is not supported by this browser.");
-        }
-    };
-
-    // Fetch address using reverse geocoding API
-    const fetchAddressFromCoordinates = (position) => {
-        const { latitude, longitude } = position.coords;
-        const apiKey = "AIzaSyDgCKNuxx-s5uQfSs0AiD62wFNmgpurtyQ";  // Replace with your Google Maps API key
-        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
-
-        fetch(geocodeUrl)
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.results.length > 0) {
-            const addressComponents = data.results[0].address_components;
-            setStreetName(addressComponents.find(component => component.types.includes('route'))?.long_name || '');
-            setBarangay(addressComponents.find(component => component.types.includes('sublocality_level_1'))?.long_name || '');
-            setCity(addressComponents.find(component => component.types.includes('locality'))?.long_name || '');
-            setProvince(addressComponents.find(component => component.types.includes('administrative_area_level_1'))?.long_name || '');
-            setPostalCode(addressComponents.find(component => component.types.includes('postal_code'))?.long_name || '');
-            } else {
-            alert("Address not found.");
-            }
-        })
-        .catch((error) => {
-            console.error("Error fetching address:", error);
-            alert("Unable to fetch address.");
-        });
-    };
-
-    // Handle geolocation errors
-    const handleLocationError = (error) => {
-        alert("Error getting location: " + error.message);
-    };
-            
-
+ 
 
     return (
    
        
-        <div className="flex mt-9"> {/* main div of clientDashboard*/}
+        <div className="flex "> {/* main div of clientDashboard*/}
             {/* Sidebar Section */}
             <div className="w-64 bg-white text-white flex flex-col items-center py-8 h-screen border-r">
               <div className="flex flex-col items-center justify-center mb-8 ">
               <img
-                  src={Profile}
-                  alt="Profile"
-                  className="w-24 h-24 rounded-full mb-4 border-4 border-green-500"
-                />
+                src={image ? frontendUrl + image : Profile}
+                alt="Profile"
+                className="w-24 h-24 rounded-full mb-4 border-4 border-green-500 object-cover"
+              />
+
+
 
                 <h2 className="text-lg text-black font-semibold text-center">
                 {firstName +" "+ lastName}
@@ -422,11 +406,11 @@ const ClientDashboard: React.FC = () =>{
                 <ProductList />
                 ) : isProductAdd ? (
                 <ProductAdd/>
-              ) : isMyCart ? (
+                ) : isMyCart ? (
                 <MyCartPage/>
-              ) : isSettings ? (
+                ) : isSettings ? (
                 <Settings/>
-              ):(
+                ):(
                     <>
                         <section className="mb-6 shadow p-4 bg-white rounded relative">{/* Client Information Section */}
                         {/* Edit Button */}
@@ -477,10 +461,6 @@ const ClientDashboard: React.FC = () =>{
                         </div>
 
 
-                        
-                        
-                     
-                      {/* Birthdate */}
                       <div className="flex w-full items-start justify-between space-x-4 mt-3">
                         {/* Left Side: Dropdown Section */}
                         <div className="flex-1">
@@ -519,35 +499,53 @@ const ClientDashboard: React.FC = () =>{
                         </div>
 
                         {/* Right Side: Image Upload Section */}
-                        <div
-                            className="w-64 h-64 border-2 m-4 border-dashed border-gray-300 rounded-lg overflow-hidden flex items-center justify-center bg-gray-100"
-                            onDrop={handleDrop}
-                            onDragOver={handleDragOver}
-                        >
+                        <div className='flex flex-col justify-center items-center'>
+                          <div className="relative w-64 h-64 border-2 m-4 border-dashed border-gray-300 rounded-lg overflow-hidden flex flex-col items-center justify-center bg-gray-100" 
+                              onDrop={handleDrop} 
+                              onDragOver={handleDragOver} 
+                          >
                             {image ? (
+                              <div className="relative w-full h-full">
                                 <img src={image} alt="Uploaded" className="w-full h-full object-cover" />
+                                <button
+                                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+                                  onClick={handleRemoveImage}
+                                >
+                                  &minus;
+                                </button>
+                              </div>
                             ) : (
-                                <div className="text-center">
-                                    <label
-                                        htmlFor="fileInput"
-                                        className="cursor-pointer text-blue-500 underline"
-                                    >
-                                        Click to upload
-                                    </label>
-                                    <p className="text-gray-500">or drag an image here</p>
-                                    <input
-                                        type="file"
-                                        id="fileInput"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={handleFileInputChange}
-                                    />
-                                </div>
+                              <div className="text-center">
+                                <label
+                                  htmlFor="fileInput"
+                                  className="cursor-pointer text-blue-500 underline"
+                                >
+                                  Click to upload
+                                </label>
+                                <p className="text-gray-500">or drag an image here for your profile picture</p>
+                                <input
+                                  type="file"
+                                  id="fileInput"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={handleFileInputChange}
+                                  ref={fileInputRef}
+                                />
+                              </div>
                             )}
+                          </div>
+                          <button
+                            className=" py-2 px-4  text-gray-500 border rounded-lg hover:bg-green-800 hover:text-white"
+                            onClick={handleSelectImage}
+                          >
+                            Select Image
+                          </button>
                         </div>
-                      </div>
+                    </div>
+
 
                         </section>
+
                         <section className="mb-6 shadow p-4 bg-white rounded relative">
                           {/* Edit Button */}
                           <button
@@ -602,12 +600,17 @@ const ClientDashboard: React.FC = () =>{
                           <button type="button" className="text-white bg-blue-500 hover:bg-blue-700 py-2 px-4 rounded" onClick={() => { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(handlePositionSuccess, handlePositionError); } }} > Get Current Location </button>
 
                           {/* Map */}
-                          <div>
-                            <label className="block text-sm font-medium mb-2">Map</label>
-                            <div className="h-64 border border-gray-300 rounded">
-                              {/* Display the dynamic iframe with the updated map URL */}
-                              <iframe title="Map" className="w-full h-full rounded" src={mapUrl} loading="lazy" ></iframe>
-                            </div>
+                       
+                      <label className="block text-sm font-medium mb-2">Map</label>
+                          <div className="h-64 border border-gray-300 rounded">
+                          {/* Placeholder for map */}
+                            <iframe
+                                title="Map"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3151.8354345093066!2d144.9556513156555!3d-37.81732397975164!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6ad642af0f11fd81%3A0xff55c0f59bdfe98a!2sMelbourne%20VIC%2C%20Australia!5e0!3m2!1sen!2sph!4v1619941075868!5m2!1sen!2sph"
+                                className="w-full h-full rounded"
+                                allowFullScreen=""
+                                loading="lazy"
+                            />
                           </div>
                         </section>
                     </>
@@ -619,22 +622,5 @@ const ClientDashboard: React.FC = () =>{
 
 export default ClientDashboard;
 
-function setStreetName(arg0: any) {
-  throw new Error('Function not implemented.');
-}
-function setBarangay(arg0: any) {
-  throw new Error('Function not implemented.');
-}
 
-function setCity(arg0: any) {
-  throw new Error('Function not implemented.');
-}
-
-function setProvince(arg0: any) {
-  throw new Error('Function not implemented.');
-}
-
-function setPostalCode(arg0: any) {
-  throw new Error('Function not implemented.');
-}
 

@@ -16,9 +16,7 @@ import AdminDashboard from './Admin/AdminDashboard';
 import CustomerManagement from './Admin/sidebarPages/consumerManagement';
 import VendorManagement from './Admin/sidebarPages/vendorManagement';
 import AdminSettins from './Admin/sidebarPages/adminSettings';
-
-
-
+import Maptest from './pages/Maptest';
 import Footer from './components/footer';
 import VendorProfile from './pages/vendor_Profile';
 import Cartpage from './components/CartSideBar';
@@ -65,42 +63,43 @@ function App() {
     setAdminID(storedAdminID);
   }, [adminID]);
 
-  // If adminID is available, redirect to the admin page with admin_id in the URL
-
-
   return (
     <Router>
       <Header />
-      <Routes>
-        <Route path='/' element={<HomePage />} />
-        <Route path='/login' element={<LoginPage />} />
-        
-        {/* Admin Dashboard with admin ID */}
-        <Route path={`/admin/id_admin=${adminID}`} element={<AdminDashboard />}>
-        <Route path='customer-management' element={<CustomerManagement />} />
-        <Route path ='vendor-management' element={<VendorManagement/>}/>
-        <Route path ='settings' element={<AdminSettins/>}/>
-        </Route>
+      <div className="pt-10">
+        <Routes>
+          <Route path='/' element={<HomePage />} />
+          <Route path='/map' element={<Maptest />} />
+          <Route path='/login' element={<LoginPage />} />
+          
+          {/* Admin Dashboard with admin ID */}
+          <Route path={`/admin/id_admin=${adminID}`} element={<AdminDashboard />}>
+            <Route path='customer-management' element={<CustomerManagement />} />
+            <Route path='vendor-management' element={<VendorManagement />} />
+            <Route path='settings' element={<AdminSettins />} />
+          </Route>
 
-        <Route path='/shop' element={<Shop />} />
-        <Route path='/shop/cart' element={<Cartpage />} />
-        <Route path='/shop/buy-payment' element={<Payment />} />
+          <Route path='/shop' element={<Shop />} />
+          <Route path={`/shop/cart/id=${userId}`} element={<Cartpage />} />
+          <Route path='/shop/buy-payment' element={<Payment />} />
 
-        <Route path='/vendor' element={<Vendors />} />
-        <Route path='/vendor/vendor_profile' element={<VendorProfile />} />
+          <Route path='/vendor' element={<Vendors />} />
+          <Route path='/vendor/vendor_profile' element={<VendorProfile />} />
 
-        <Route path='/about' element={<About />} />
+          <Route path='/about' element={<About />} />
 
-        {/* Client Routes with userId */}
-        <Route path={`/clientprofile/id=${userId}`} element={<Clientdashboard />}>
-          <Route path='shop-cart' element={<Cartpage />} />
-          <Route path='settings' element={<Settings />} />
-          <Route path='business-form' element={<Business />} />
-          <Route path='product-list' element={<ProductList />} />
-          <Route path='products-add' element={<ProductUpload />} />
-        </Route>
-        <Route path='*' element={<Error404 />} />
-      </Routes>
+          {/* Client Routes with userId */}
+          <Route path={`/clientprofile/id=${userId}`} element={<Clientdashboard />}>
+            <Route path='shop-cart' element={<Cartpage />} />
+            <Route path='settings' element={<Settings />} />
+            <Route path='business-form' element={<Business />} />
+            <Route path='product-list' element={<ProductList />} />
+            <Route path='products-add' element={<ProductUpload />} />
+          </Route>
+          
+          <Route path='*' element={<Error404 />} />
+        </Routes>
+      </div>
       <Footer />
     </Router>
   );

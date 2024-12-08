@@ -1,166 +1,225 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Product from '../assets/product_images/kakanin.png';
-const CartPage: React.FC = () => {
-    const [cartItems, setCartItems] = useState<Product[]>([
-      {
-        id: 1,
-        image: Product,
-        title: 'Product 1',
-        category: 'food',
-        unitPrice: 500,
-        quantity: 1,
-        totalPrice: 500,
-      },
-      {
-        id: 2,
-        image: Product,
-        title: 'Product 2',
-        category: 'food',
-        unitPrice: 300,
-        quantity: 2,
-        totalPrice: 600,
-      },
-    ]);
+import ProductPlaceholder from '../assets/product_images/kakanin.png'; // Placeholder image
+import host from '../host/host.txt?raw';
+import NoProductImage from '../assets/OtherImages/product-not-available-icon-vector-21743888-removebg-preview.png'
 
-    const navigate = useNavigate();
-  
-    const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set()); // Track selected products
-    const [selectAll, setSelectAll] = useState(false); // Track if "select all" is checked
-    const selectedProductsCount = selectedProducts.size; // Updated to use selectedProducts set
-  
-    const handleCheckout = () => {
-      navigate('/shop/buy-payment')
-    };
-  
-    const handleIncreaseQuantity = (id: number) => {
-      setCartItems((prevItems) =>
-        prevItems.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                quantity: item.quantity + 1,
-                totalPrice: (item.quantity + 1) * item.unitPrice,
-              }
-            : item
-        )
-      );
-    };
-  
-    const handleDecreaseQuantity = (id: number) => {
-      setCartItems((prevItems) =>
-        prevItems.map((item) =>
-          item.id === id && item.quantity > 1
-            ? {
-                ...item,
-                quantity: item.quantity - 1,
-                totalPrice: (item.quantity - 1) * item.unitPrice,
-              }
-            : item
-        )
-      );
-    };
-  
-    const handleDeleteItem = (id: number) => {
-      setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
-      setSelectedProducts((prevSelected) => {
-        const newSelected = new Set(prevSelected);
-        newSelected.delete(id);
-        return newSelected;
-      });
-    };
-  
-    const handleSelectProduct = (id: number) => {
-      const newSelected = new Set(selectedProducts);
-      if (newSelected.has(id)) {
-        newSelected.delete(id);
+interface Product {
+  id: number;
+  image: string;
+  title: string;
+  category: string;
+  unitPrice: number;
+  quantity: number;
+  totalPrice: number;
+}
+
+const CartPage: React.FC = () => {
+  const [cartItems, setCartItems] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const serverURl = host.trim();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+
+    // Fetch logged-in user ID from local storage
+    const userId = localStorage.getItem('Auth');
+    if (userId) {
+      fetchCartData(parseInt(userId));
+    } else {
+      alert('User not logged in!');
+      navigate('/login'); // Redirect to login if no user ID
+    }
+  }, []);
+
+  const fetchCartData = async (userId: number) => {
+    try {
+      const response = await fetch(serverURl + `/api/cart/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Transform API response into Product format
+        const formattedData = data.cart_items.map((item: any) => ({
+          id: item.cart_id,
+          image: item.product_image || ProductPlaceholder,
+          title: item.product_name,
+          category: item.product_classification,
+          unitPrice: item.unit_price,
+          quantity: item.product_quantity,
+          totalPrice: item.total_price,
+        }));
+        setCartItems(formattedData);
+        
       } else {
-        newSelected.add(id);
+        alert('Failed to fetch cart data');
       }
-      setSelectedProducts(newSelected);
-    };
-  
-    const handleSelectAll = () => {
-      if (selectAll) {
-        setSelectedProducts(new Set());
-      } else {
-        setSelectedProducts(new Set(cartItems.map((item) => item.id)));
+    } catch (error) {
+      console.error('Error fetching cart data:', error);
+      alert('An error occurred while fetching cart data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckout = () => {
+    navigate('/shop/buy-payment');
+  };
+
+  const handleIncreaseQuantity = (id: number) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+              totalPrice: (item.quantity + 1) * item.unitPrice,
+            }
+          : item
+      )
+    );
+  };
+
+  const handleDecreaseQuantity = (id: number) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === id && item.quantity > 1
+          ? {
+              ...item,
+              quantity: item.quantity - 1,
+              totalPrice: (item.quantity - 1) * item.unitPrice,
+            }
+          : item
+      )
+    );
+  };
+
+  const handleDeleteItem = (id: number) => {
+    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    setSelectedProducts((prevSelected) => {
+      const newSelected = new Set(prevSelected);
+      newSelected.delete(id);
+      return newSelected;
+    });
+  };
+
+  const handleSelectProduct = (id: number) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedProducts(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(cartItems.map((item) => item.id)));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const calculateTotalPrice = () => {
+    return cartItems.reduce((total, product) => {
+      if (selectedProducts.has(product.id)) {
+        return total + product.totalPrice;
       }
-      setSelectAll(!selectAll);
-    };
-  
-    return (
-      <div className="flex flex-col h-auto w-full min-h-screen px-4">
-        <h1 className="text-xl font-bold mb-6">Customer Cart</h1>
-  
-        <div className="grid grid-cols-5 gap-4 mb-4 w-full">
-          <div className="font-semibold">
-            <input
-              type="checkbox"
-              checked={selectAll}
-              onChange={handleSelectAll}
-              className="mr-2"
-            />
-            Product
-          </div>
-          <div className="font-semibold text-center">Unit Price</div>
-          <div className="font-semibold text-center">Quantity</div>
-          <div className="font-semibold text-center">Total Price</div>
-          <div className="font-semibold text-center">Actions</div>
+      return total;
+    }, 0);
+  };
+
+  if (loading) {
+    return <div>Loading your cart...</div>;
+  }
+
+  const totalPrice = calculateTotalPrice();
+
+  return (
+    <div className="flex flex-col h-auto w-full min-h-screen px-4 pt-8">
+      {cartItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center text-center text-gray-500 mt-8">
+          <img src={NoProductImage} alt="No product found" className="w-1/2 h-1/2 object-contain" />
+          <p>No available products in your cart.</p>
         </div>
-  
-        {cartItems.map((product) => (
-          <div key={product.id} className="grid grid-cols-5 gap-4 w-full items-center mb-4 border-b pb-4">
-            <div className="flex items-center">
+      ) : (
+        <>
+          <div className="grid grid-cols-5 gap-4 mb-4 w-full">
+            <div className="font-semibold">
               <input
                 type="checkbox"
-                checked={selectedProducts.has(product.id)}
-                onChange={() => handleSelectProduct(product.id)}
+                checked={selectAll}
+                onChange={handleSelectAll}
                 className="mr-2"
               />
-              <img src={product.image} alt={product.title} className="w-16 h-16 object-cover" />
-              <div className="ml-4">
-                <h1 className="text-lg font-semibold">{product.title}</h1>
-                <p className="text-sm text-gray-500">{product.category}</p>
+              Product
+            </div>
+            <div className="font-semibold text-center">Unit Price</div>
+            <div className="font-semibold text-center">Quantity</div>
+            <div className="font-semibold text-center">Total Price</div>
+            <div className="font-semibold text-center">Actions</div>
+          </div>
+
+          {cartItems.map((product) => (
+            <div key={product.id} className="grid grid-cols-5 gap-4 w-full items-center mb-4 border-b pb-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedProducts.has(product.id)}
+                  onChange={() => handleSelectProduct(product.id)}
+                  className="mr-2"
+                />
+                <img src={product.image} alt={product.title} className="w-16 h-16 object-cover" />
+                <div className="ml-4">
+                  <h1 className="text-lg font-semibold">{product.title}</h1>
+                  <p className="text-sm text-gray-500">{product.category}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center">
+                {product.unitPrice ? `₱ ${product.unitPrice.toFixed(2)}` : 'Price not available'}
+              </div>
+
+              <div className="flex items-center justify-center">
+                <button
+                  className="px-2 py-1 bg-gray-200 rounded-l"
+                  onClick={() => handleDecreaseQuantity(product.id)}
+                >
+                  -
+                </button>
+                <span className="mx-2">{product.quantity}</span>
+                <button
+                  className="px-2 py-1 bg-gray-200 rounded-r"
+                  onClick={() => handleIncreaseQuantity(product.id)}
+                >
+                  +
+                </button>
+              </div>
+
+              <div className="flex items-center justify-center">{`₱ ${product.totalPrice.toFixed(2)}`}</div>
+
+              <div className="flex items-center justify-center">
+                <button
+                  className="px-4 py-2 bg-red-600 text-white rounded"
+                  onClick={() => handleDeleteItem(product.id)}
+                >
+                  Delete
+                </button>
               </div>
             </div>
-  
-            <div className="flex items-center justify-center">{`₱ ${product.unitPrice.toFixed(2)}`}</div>
-  
-            <div className="flex items-center justify-center">
-              <button
-                className="px-2 py-1 bg-gray-200 rounded-l"
-                onClick={() => handleDecreaseQuantity(product.id)}
-              >
-                -
-              </button>
-              <span className="mx-2">{product.quantity}</span>
-              <button
-                className="px-2 py-1 bg-gray-200 rounded-r"
-                onClick={() => handleIncreaseQuantity(product.id)}
-              >
-                +
-              </button>
-            </div>
-  
-            <div className="flex items-center justify-center">{`₱ ${product.totalPrice.toFixed(2)}`}</div>
-  
-            <div className="flex items-center justify-center">
-              <button
-                className="px-4 py-2 bg-red-600 text-white rounded"
-                onClick={() => handleDeleteItem(product.id)}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-  
+          ))}
+        </>
+      )}
 
-        {/* checkout information */}
+      {cartItems.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-gray-800 text-white py-4 px-6 flex justify-between items-center">
           <div>
-            <span>{selectedProductsCount} Selected Product(s)</span>
+            <span>{selectedProducts.size} Selected Product(s)</span>
+          </div>
+          <div>
+            <span className='text-2xl'>Total: ₱ {totalPrice.toFixed(2)}</span>
           </div>
           <button
             className="bg-green-600 py-2 px-6 rounded text-white"
@@ -169,9 +228,9 @@ const CartPage: React.FC = () => {
             Checkout
           </button>
         </div>
-      </div>
-    );
-  };
-  
-  export default CartPage;
-  
+      )}
+    </div>
+  );
+};
+
+export default CartPage;

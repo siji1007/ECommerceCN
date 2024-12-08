@@ -64,6 +64,10 @@ const Header: React.FC = () => {
         });
     };
     
+const navigateCart = () => {
+    navigate(`/shop/cart/id=${storeAuth}`)
+};
+
     return (
         <>
             <nav className="fixed z-40 w-full h-19 bg-gradient-to-r from-white to-green-900 flex justify-between items-center px-4 text-white">
@@ -120,7 +124,9 @@ const Header: React.FC = () => {
                             >
                                 My Profile
                             </Link>
-                                <button  className="block w-full text-left px-4 py-2 hover:bg-gray-200">Cart</button>
+                       
+                                <button  className="block w-full text-left px-4 py-2 hover:bg-gray-200" onClick={navigateCart}>Cart</button>
+                        
                                 <button onClick={handleLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-200">Logout</button>
                             </div>
                         )}
