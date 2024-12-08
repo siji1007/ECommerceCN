@@ -2,11 +2,13 @@ import React, { useState, useEffect  } from 'react';
 import { FaEdit } from 'react-icons/fa';
 import axios from 'axios';
 import hosting from "../../host/host.txt?raw";
+import { useNavigate } from 'react-router-dom';
 
 const Business: React.FC = () => {
   const serverHost = hosting.trim();
   const [step, setStep] = useState(1); // To track which section to display
   const [isEditing, setIsEditing] = useState(false); 
+  const navigate = useNavigate();
 
 
   let url = window.location.href;
@@ -108,6 +110,7 @@ const Business: React.FC = () => {
     image_src:'',
   });
 
+
   const handleNext = async (e) => {
     e.preventDefault();
     
@@ -125,7 +128,10 @@ const Business: React.FC = () => {
       // Proceed to step 2 after validation
       setStep(2);
     } else if (step === 2) {
+      setStep(3);
       // At Step 2, handle the file upload and proceed to Step 3
+      
+    } else if (step === 3) {
       const formDataToSend = new FormData();
       
       // Append form data (including the image_src that was updated after file upload)
@@ -140,15 +146,13 @@ const Business: React.FC = () => {
         });
         console.log(response.data.message); // Log success message
         alert('Form data sent to server!');
-        localStorage.setItem('BusinessStatus', 'verified');
-        setStep(3); // Proceed to step 3 after successful upload
+        navigate(`/clientprofile/id=${id}/product-list`);
+      
+        // Proceed to step 3 after successful upload
       } catch (error) {
         console.error('Error submitting form:', error);
         alert('Failed to submit form.');
       }
-    } else if (step === 3) {
-      // Handle form submission at step 3 (if needed)
-      alert('Form submitted successfully!');
     }
   };
   

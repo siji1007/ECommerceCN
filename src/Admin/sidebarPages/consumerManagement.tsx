@@ -1,16 +1,25 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import profile from "/src/assets/profiles/Profile.jpg"; // Make sure this path is correct
+import host from "../../host/host.txt?raw";
 
 const ConsumerManagement: React.FC = () => {
-    const users = [
-        { id: 1, fullName: "Mila Kunis", created: "Male", status: "Inactive", email: "mila@kunis.com", role: "Admin" },
-        { id: 2, fullName: "George Clooney", created: "Male", status: "Active", email: "marlon@brando.com", role: "Member" },
-        { id: 4, fullName: "Emma Watson", created: "Male", status: "Pending", email: "humphrey@bogart.com", role: "Registered" },
-        { id: 3, fullName: "Ryan Gosling", created: "Male", status: "Banned", email: "jack@nicholson.com", role: "Registered" },
-        { id: 5, fullName: "Tom Hardy", created: "Female", status: "Active", email: "tom@hardy.com", role: "Admin" },
-        { id: 6, fullName: "Chris Hemsworth", created: "Female", status: "Inactive", email: "chris@hemsworth.com", role: "Member" },
-        { id: 7, fullName: "Scarlett Johansson", created: "Male", status: "Active", email: "scarlett@johansson.com", role: "Registered" },
-        { id: 8, fullName: "Robert Downey Jr.", created: "Female", status: "Pending", email: "robert@downey.com", role: "Admin" },
-    ];
+    const [users, setUsers] = useState<any[]>([]);  // State to hold the user data
+    const serverURL = host.trim();
+
+    // Fetch users data from the Flask API on component mount
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const response = await fetch(serverURL + "/api/users");  // Adjust the API endpoint if needed
+                const data = await response.json();
+                setUsers(data);  // Set the user data to state
+            } catch (error) {
+                console.error("Error fetching users:", error);
+            }
+        };
+
+        fetchUsers();  // Call the fetch function
+    }, []);  // Empty dependency array means this runs once when the component mounts
 
     const handleDeleteAccount = (id: number) => {
         alert(`Account with ID ${id} deleted`);
@@ -43,14 +52,18 @@ const ConsumerManagement: React.FC = () => {
                             <tr key={user.id} className="odd:bg-white even:bg-gray-50">
                                 <td className="p-3 border border-gray-200">
                                     <div className="flex items-center">
-                                        <div className="w-10 h-10 rounded-full bg-gray-300 mr-3"></div>
+                                        <img
+                                            className="w-10 h-10 rounded-full bg-gray-300 mr-3"
+                                            src={user.user_img || profile}  // Use user image if available
+                                            alt={user.fullName}
+                                        />
                                         <div>
                                             <div className="font-semibold">{user.fullName}</div>
                                             <small className="text-gray-500">{user.role}</small>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="p-3 border border-gray-200">{user.created}</td>
+                                <td className="p-3 border border-gray-200">{user.Gender}</td>
                                 <td className="p-3 border border-gray-200">
                                     <span
                                         className={`px-3 py-1 rounded-full text-white ${
@@ -74,7 +87,6 @@ const ConsumerManagement: React.FC = () => {
                                     >
                                         View
                                     </button>
-                                  
                                     <button
                                         onClick={() => handleDeleteAccount(user.id)}
                                         className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"

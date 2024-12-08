@@ -170,6 +170,30 @@ class User(db.Model):
         self.user_image = user_image
 
 
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    # Query all users from the database
+    users = User.query.all()
+    
+    # Format the result to match the data structure needed by React
+    users_data = [
+        {
+            "id": user.id,
+            "user_img": user.user_image,
+            "fullName": f"{user.first_name} {user.last_name}",
+            "Gender": user.gender,
+            "status": "Active",  # Customize based on your business logic
+            "email": user.email_or_mobile,
+            "role": "Member",  # Customize based on roles logic
+        }
+        for user in users
+    ]
+    
+    return jsonify(users_data)
+
+
+
+
 
 
 
@@ -224,10 +248,6 @@ def upload_profile_image():
             return jsonify({'message': 'User ID not provided'}), 400
 
     return jsonify({'message': 'Invalid file format'}), 400
-
-
-
-
 
 
 class Vendor(db.Model):
