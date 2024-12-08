@@ -9,17 +9,6 @@ const Business: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false); 
 
 
-  const [formData, setFormData] = useState({
-    businessName: '',
-    businessCategory: '',
-    businessEmail: '',
-    businessContact: '',
-    province: '',
-    city: '',
-    barangay: '',
-    postalCode: '',
-  });
-
   let url = window.location.href;
   let match = url.match(/id=(\d+)/);  // This will match 'id=2' or similar
   
@@ -62,21 +51,110 @@ const Business: React.FC = () => {
   //     localStorage.setItem('BusinessStatus', 'verified');
   //   }
   // };
-  
-  const handleNext = async (e) => {
-    if (step === 1) {
-      setStep(2); // Proceed to the next step
-      e.preventDefault();
-      alert(`Selected business category: ${formData.businessCategory}`);
 
-    } else if (step === 2) {
-      setStep(3); // Proceed to review step
-    } else {
-      alert('Form Submitted!');
-      localStorage.setItem('BusinessStatus', 'verified');
+  const [imageName, setImageName] = useState(null);
+  const [imageSrc, setImageSrc] = useState(null);
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setImageName(file.name); // Set the image file name
+      const reader = new FileReader();
+      
+      // Create a FormData object to send the file to the server
+      const formData = new FormData();
+      formData.append('file', file);  // Append the file to FormData
+      
+      // Read the file as DataURL for previewing (optional)
+      reader.onload = (e) => {
+        setImageSrc(e.target.result); 
+      };
+      reader.readAsDataURL(file);
+      
+      try {
+        // Send the file to the server and capture the response (with the document_url)
+        const response = await axios.post(serverHost + '/UploadDocument', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        
+        // Once the file is uploaded, update formData with the document URL
+        if (response.data.document_url) {
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            image_src: response.data.document_url, // Update image_src with the uploaded image URL
+          }));
+        }
+        
+        alert(`Image uploaded: ${file.name}`);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        alert('Failed to upload image.');
+      }
     }
   };
+  
+  
+  
 
+  const [formData, setFormData] = useState({
+    businessName: '',
+    businessCategory: '',
+    businessEmail: '',
+    businessContact: '',
+    province: '',
+    city: '',
+    barangay: '',
+    postalCode: '',
+    image_src:'',
+  });
+
+  const handleNext = async (e) => {
+    e.preventDefault();
+    
+    if (step === 1) {
+      // Validate the form data before moving to the next step (except image_src)
+      const isFormValid = Object.entries(formData)
+        .filter(([key]) => key !== 'image_src') // Exclude image_src from validation
+        .every(([key, value]) => value.trim() !== '');
+    
+      if (!isFormValid) {
+        alert('Please fill in all required fields.');
+        return; // Stop if validation fails
+      }
+    
+      // Proceed to step 2 after validation
+      setStep(2);
+    } else if (step === 2) {
+      // At Step 2, handle the file upload and proceed to Step 3
+      const formDataToSend = new FormData();
+      
+      // Append form data (including the image_src that was updated after file upload)
+      Object.entries(formData).forEach(([key, value]) => {
+        formDataToSend.append(key, value);
+      });
+      
+      try {
+        const userId = id;
+        const response = await axios.post(`${serverHost}/submit-form-vendor/${userId}`, formDataToSend, {
+          headers: { 'Content-Type': 'multipart/form-data' }, // Set content type for file upload
+        });
+        console.log(response.data.message); // Log success message
+        alert('Form data sent to server!');
+        localStorage.setItem('BusinessStatus', 'verified');
+        setStep(3); // Proceed to step 3 after successful upload
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        alert('Failed to submit form.');
+      }
+    } else if (step === 3) {
+      // Handle form submission at step 3 (if needed)
+      alert('Form submitted successfully!');
+    }
+  };
+  
+  
+    
+  
 
   const handleBack = () => {
     if (step === 2) {
@@ -85,13 +163,11 @@ const Business: React.FC = () => {
       setStep(2); // Go back to the address section
     }
   };
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
+  
 
   const handleToggleEdit = () => {
     if (isEditing) {
@@ -120,9 +196,14 @@ const Business: React.FC = () => {
       console.error("Invalid userId:", id);
     }
   }, [id]);
+
+
+  
+
+
   
   return (
-    <div className="p-6">
+    <div className="p-2">
 
       {/* Shop Information Section */}
       {step === 1 && (
@@ -264,15 +345,53 @@ const Business: React.FC = () => {
 
     {/* Submit Section */}
       {step === 2 && (
-        formData.businessCategory === "Freelancer" ? (
-          <>
-          <h1>Freelancer</h1>  
+         <div className="flex flex-col h-auto p-4">
+         <h1 className="text-xl font-bold mb-4">
+           {formData.businessCategory === "Freelancer"
+             ? "Upload your document image as FREELANCER"
+             : "Upload your document image as BUSINESS OWNER"}
+         </h1>
+         <ul className="list-disc list-inside text-gray-500 mb-4">
+           {formData.businessCategory === "Freelancer" ? (
+             <li>Take a picture of yourself holding your valid ID</li>
+           ) : (
+             <li>Upload a scanned copy of your business permit</li>
+           )}
+           <p className="text-gray-400 text-sm mt-2">
+             This is for verification purposes, and we assure that all private
+             information is secured.
+           </p>
+         </ul>
+   
+         <section className="w-full justify-center items-center flex">
+           <div className="w-full max-w-md bg-white shadow-md rounded-lg p-6">
+             <h2 className="text-lg font-semibold mb-4 text-center">Upload Image</h2>
+             <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4 rounded-md">
+               <p className="text-gray-500 mb-2">Drag & Drop or Click to Upload</p>
+               <input
+                 type="file"
+                 className="hidden"
+                 id="file-upload"
+                 accept="image/*"
+                 onChange={handleImageUpload}
+               />
+               <label
+                 htmlFor="file-upload"
+                 className="cursor-pointer bg-green-800 text-white px-4 py-2 rounded hover:bg-blue-600"
+               >
+                 Choose File
+               </label>
+             </div>
+             {imageSrc && (
+                <div className="mt-4">
+                  <img src={imageSrc} alt={imageName} className="w-full h-auto rounded" />
+                </div>
+              )}
 
-          
-          </>
-        ) : (
-          <h1>Business Owner</h1> // This will render if the businessCategory is not "Freelancer"
-        )
+           </div>
+         </section>
+       </div>
+  
       )}
 
 

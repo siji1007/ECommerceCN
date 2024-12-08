@@ -144,28 +144,6 @@ def admin_login():
 
 
 
-
-
-
-
-
-
-
-
-
-
-PROFILE_IMAGES_FOLDER = r"C:\Users\XtiaN\ECommerceCN\src\assets\profiles"
-
-# Ensure the directory exists, create it if it doesn't
-if not os.path.exists(PROFILE_IMAGES_FOLDER):
-    os.makedirs(PROFILE_IMAGES_FOLDER)
-
-# Allowed file extensions
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 # Define the User model (already provided in your case)
 class User(db.Model):
     __tablename__ = 'users'
@@ -190,6 +168,25 @@ class User(db.Model):
         self.email_or_mobile = email_or_mobile
         self.password = password
         self.user_image = user_image
+
+
+
+
+
+
+PROFILE_IMAGES_FOLDER = r"C:\Users\XtiaN\ECommerceCN\src\assets\profiles"
+
+# Ensure the directory exists, create it if it doesn't
+if not os.path.exists(PROFILE_IMAGES_FOLDER):
+    os.makedirs(PROFILE_IMAGES_FOLDER)
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 
 @app.route('/uploadProfileImage', methods=['POST'])
 def upload_profile_image():
@@ -233,8 +230,142 @@ def upload_profile_image():
 
 
 
+class Vendor(db.Model):
+    __tablename__ = 'vendors'
+    ven_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer)  # Assuming you have a user_id, modify as needed
+    vendor_name = db.Column(db.String(255))
+    vendor_contact_number = db.Column(db.String(50))
+    vendor_email = db.Column(db.String(100))
+    vendor_classification = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    vendor_status = db.Column(db.String(50), default='Pending')
+    document_img_src = db.Column(db.String(255))
 
-# Register route
+
+VENDOR_DOCUMENTS_FOLDER = r"C:\Users\XtiaN\ECommerceCN\src\assets\documentsImages"
+
+# Ensure the directory exists, create it if it doesn't
+if not os.path.exists(VENDOR_DOCUMENTS_FOLDER):
+    os.makedirs(VENDOR_DOCUMENTS_FOLDER)
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'docx'}
+
+# Function to validate file type
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+
+
+global_document_url = None
+
+def handle_image_upload(file):
+    global global_document_url
+    """
+    Handles the image upload and saves it with the original filename.
+    """
+    document_url = None  # Default value
+    
+    if file and allowed_file(file.filename):
+        # Sanitize the filename to avoid issues with special characters
+        filename = secure_filename(file.filename)
+        
+        # Define the path where the file will be saved
+        file_path = os.path.join(VENDOR_DOCUMENTS_FOLDER, filename)
+        
+        # Save the file to the desired path
+        try:
+            file.save(file_path)
+            print(f"File saved at: {file_path}")  # Prints the full file path
+
+            # Assuming you're returning a relative URL for front-end access
+            document_url = f'/src/assets/documentsImages/{filename}'
+            global_document_url = document_url
+            print("This is the image url: ", document_url)
+
+        except Exception as e:
+            print(f"Error saving file: {e}")
+
+    return document_url  # Return None if file is invalid or error occurs
+
+
+# Image upload route
+@app.route('/UploadDocument', methods=['POST'])
+def UploadDocument():
+   
+    # Check if the post request has the file part
+    if 'file' not in request.files:
+        return jsonify({"message": "No file part"}), 400
+    
+    file = request.files['file']
+    
+    # If no file is selected, return an error
+    if file.filename == '':
+        return jsonify({"message": "No selected file"}), 400
+    
+    # Call the function to handle file upload
+    document_url = handle_image_upload(file)
+    
+    if document_url:
+        return jsonify({"message": "File uploaded successfully", "document_url": document_url}), 200
+    
+    return jsonify({"message": "File type not allowed"}), 400
+
+# Form submission route for vendor data
+@app.route('/submit-form-vendor/<int:user_id>', methods=['POST'])
+def submit_form(user_id):
+    form_data = request.form  # Parse form data
+    print("Received form data:", form_data)
+
+    if not user_id:
+        return jsonify({"message": "User ID is required!"}), 400
+
+    # Fetch user email as default for businessEmail if not provided
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return jsonify({"message": "User not found!"}), 404
+
+    business_email = form_data.get('businessEmail', user.email_or_mobile)
+
+    existing_vendor = Vendor.query.filter_by(vendor_email=business_email).first()
+    if existing_vendor:
+        return jsonify({"message": "Email already exists. Please use a different email address."}), 400
+
+    # Check if file is included in the form request
+   
+
+    # Create a new vendor instance with form data and the uploaded document URL
+    new_vendor = Vendor(
+        user_id=user_id,  # Use the user_id from the URL
+        vendor_name=form_data['businessName'],
+        vendor_contact_number=form_data['businessContact'],
+        vendor_email=form_data['businessEmail'],
+        vendor_classification=form_data['businessCategory'],
+        created_at=datetime.utcnow(),
+        vendor_status='Pending',
+        document_img_src=global_document_url  # Use the document URL obtained from the upload
+    )
+
+    # Add the new vendor to the session and commit to the database
+    try:
+        db.session.add(new_vendor)
+        db.session.commit()
+        return jsonify({"message": "Form data submitted and vendor added successfully!"}), 200
+    except Exception as e:
+        db.session.rollback()  # Rollback in case of error
+        print(f"Error inserting data: {e}")
+        return jsonify({"message": "An error occurred while submitting the form!"}), 500
+
+
+
+    
+
+
+
+
+
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -253,6 +384,9 @@ def register():
     email_or_mobile = data['email_or_mobile']
     password = data['password']
 
+    # Set user_image to None (will be saved as NULL in the database)
+    user_image = None
+
     # Create a new user object
     user = User(
         first_name=first_name,
@@ -262,7 +396,8 @@ def register():
         birth_year=birth_year,
         gender=gender,
         email_or_mobile=email_or_mobile,
-        password=password
+        password=password,
+        user_image=user_image
     )
 
     # Add the user to the database
@@ -273,6 +408,7 @@ def register():
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': f'Error: {str(e)}'}), 500
+
 
 
 
@@ -354,16 +490,7 @@ def get_credentials():
 
 
 # Define the Vendor model based on the table structure
-class Vendor(db.Model):
-    __tablename__ = 'vendors'
-    ven_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer)  # Assuming you have a user_id, modify as needed
-    vendor_name = db.Column(db.String(255))
-    vendor_contact_number = db.Column(db.String(50))
-    vendor_email = db.Column(db.String(100))
-    vendor_classification = db.Column(db.String(100))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    vendor_status = db.Column(db.String(50), default='Pending')
+
 
 @app.route('/api/fetchSpecificVendor', methods=['GET'])
 def fetch_specific_vendor():
@@ -441,48 +568,6 @@ def fetchvendors():
         return jsonify({"error": str(e)}), 500
 
 
-
-
-@app.route('/submit-form-vendor/<int:user_id>', methods=['POST'])
-def submit_form(user_id):
-    form_data = request.json  # Parse the JSON payload
-    print("Received form data:", form_data)  # Print to console
-    
-    if not user_id:
-        return jsonify({"message": "User ID is required!"}), 400
-
-    # Fetch user email as default for businessEmail if not provided
-    user = User.query.filter_by(id=user_id).first()
-    if not user:
-        return jsonify({"message": "User not found!"}), 404
-
-    business_email = form_data.get('businessEmail', user.email_or_mobile)
-
-    existing_vendor = Vendor.query.filter_by(vendor_email=business_email).first()
-    if existing_vendor:
-        return jsonify({"message": "Email already exists. Please use a different email address."}), 400
-
-    # Create a new vendor instance with form data
-    new_vendor = Vendor(
-        user_id=user_id,  # Use the user_id from the URL
-        vendor_name=form_data['businessName'],
-        vendor_contact_number=form_data['businessContact'],
-        vendor_email=form_data['businessEmail'],
-        vendor_classification=form_data['businessCategory'],
-        created_at=datetime.utcnow(),
-        vendor_status='Pending'
-    )
-
-    # Add the new vendor to the session and commit to the database
-    try:
-        db.session.add(new_vendor)
-        db.session.commit()
-        return jsonify({"message": "Form data submitted and vendor added successfully!"}), 200
-    except Exception as e:
-        db.session.rollback()  # Rollback in case of error
-        print(f"Error inserting data: {e}")
-        return jsonify({"message": "An error occurred while submitting the form!"}), 500
-    
 
 @app.route('/fetchEmail/<int:user_id>', methods=['GET'])
 def fetch_email_by_default(user_id):

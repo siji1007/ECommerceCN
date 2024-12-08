@@ -44,7 +44,7 @@ const AdminDashboard: React.FC = () => {
   }, [isCustomerActive]);
 
   return (
-    <div className="flex mt-16">
+    <div className="flex ">
       {/* Sidebar Section */}
       <div className="w-64 bg-white text-white flex flex-col items-center py-8 h-screen border">
         <div className="flex flex-col items-center justify-center mb-8 border-b w-full">
