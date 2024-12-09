@@ -221,8 +221,8 @@ const handleBuyNow = async (product: any, quantity: number): Promise<void> => {
             </div>
 
             {/* Comments and Reviews Section */}
-            <div className="mt-auto h-full w-full flex flex-col">
-              {/* Tabs */}
+            {/* <div className="mt-auto h-full w-full flex flex-col">
+             
               <div className="flex justify-between">
                 <button onClick={() => setActiveTab('comments')} className={`w-1/2 py-2 ${activeTab === 'comments' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`} >
                   Comments
@@ -230,10 +230,10 @@ const handleBuyNow = async (product: any, quantity: number): Promise<void> => {
                 <button onClick={() => setActiveTab('reviews')} className={`w-1/2 py-2 ${activeTab === 'reviews' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`} >
                   Reviews
                 </button>
-              </div>
+              </div> */}
 
               {/* Content Section */}
-              <div className="flex-grow flex flex-col justify-end">
+              {/* <div className="flex-grow flex flex-col justify-end">
                 {activeTab === 'comments' && (
                   <div className="overflow-y-auto max-h-72">
                     <input type="text" value={comment} onChange={handleCommentChange} placeholder="Leave a comment..." className="border p-2 w-full" />
@@ -257,8 +257,8 @@ const handleBuyNow = async (product: any, quantity: number): Promise<void> => {
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
+              </div> */}
+            {/* </div> */}
           </div>
         </div>
       </div>

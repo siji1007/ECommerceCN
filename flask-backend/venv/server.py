@@ -5,6 +5,7 @@ import secrets
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
+import time
 
 app = Flask(__name__)
 
@@ -262,6 +263,29 @@ class Vendor(db.Model):
     vendor_status = db.Column(db.String(50), default='Pending')
     document_img_src = db.Column(db.String(255))
 
+@app.route('/api/updateVendorStatus', methods=['POST'])
+def update_vendor_status():
+    try:
+        data = request.json
+        ven_id = data.get('ven_id')
+        new_status = data.get('vendor_status')
+
+        if not ven_id or not new_status:
+            return jsonify({'error': 'Missing ven_id or vendor_status'}), 400
+
+        # Find the vendor by ID
+        vendor = Vendor.query.filter_by(ven_id=ven_id).first()
+        if not vendor:
+            return jsonify({'error': 'Vendor not found'}), 404
+
+        # Update the status
+        vendor.vendor_status = new_status
+        db.session.commit()
+
+        return jsonify({'message': 'Vendor status updated successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 VENDOR_DOCUMENTS_FOLDER = r"C:\Users\XtiaN\ECommerceCN\src\assets\documentsImages"
 
@@ -377,13 +401,6 @@ def submit_form(user_id):
         db.session.rollback()  # Rollback in case of error
         print(f"Error inserting data: {e}")
         return jsonify({"message": "An error occurred while submitting the form!"}), 500
-
-
-
-    
-
-
-
 
 
 @app.route('/api/register', methods=['POST'])
@@ -557,6 +574,23 @@ def get_vendor(vendor_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/api/vendorDetails/<int:id>', methods=['GET'])
+def get_vendor_details(id):
+    vendor = Vendor.query.get(id)
+    if not vendor:
+        return jsonify({"error": "Vendor not found"}), 404
+
+    return jsonify({
+        "ven_id": vendor.ven_id,
+        "vendor_name": vendor.vendor_name,
+        "vendor_contact_number": vendor.vendor_contact_number,
+        "vendor_email": vendor.vendor_email,
+        "vendor_classification": vendor.vendor_classification,
+        "created_at": vendor.created_at,
+        "vendor_status": vendor.vendor_status,
+        "document_img_src": vendor.document_img_src,
+    })
 
 
 @app.route('/api/fetchVendors', methods=['GET'])
@@ -912,6 +946,34 @@ class Cart(db.Model):
 
 
 
+
+@app.route('/delete-cart-item/<int:cart_id>', methods=['DELETE'])
+def delete_cart_item(cart_id):
+    start_time = time.time()
+
+    # ORM query
+    cart_item = Cart.query.filter_by(cart_id=cart_id).first()
+    if not cart_item:
+        return jsonify({'error': 'Cart item not found'}), 404
+
+    db.session.delete(cart_item)
+    db.session.commit()
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+    return jsonify({'message': 'Cart item deleted successfully', 'execution_time': execution_time}), 200
+
+
+
+
+
+
+
+
+
+
+
+
     
 @app.route('/api/cart/<int:us_id>', methods=['GET'])
 def fetch_user_cart(us_id):
@@ -943,7 +1005,6 @@ def fetch_user_cart(us_id):
 
     except Exception as e:
         return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
-
 
 
 @app.route('/api/cart/add', methods=['POST'])
@@ -984,6 +1045,37 @@ def add_to_cart():
     
 
 
+
+class Transaction(db.Model):
+    transaction_id = db.Column(db.Integer, primary_key=True)
+    u_ID = db.Column(db.Integer, nullable=False)  # FK to users table
+    p_ID = db.Column(db.Integer, nullable=False)  # FK to products table
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(db.Float, nullable=False)
+    subtotal = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(50), default='processing')  # 'processing' or 'processed'
+
+@app.route('/api/create_transaction', methods=['POST'])
+def create_transaction():
+    data = request.get_json()  # Get the data from the request body
+
+    # Loop through the selected products to insert them into the transaction table
+    for product in data['selectedProductDetails']:
+        new_transaction = Transaction(
+            u_ID=data['userId'],  # User ID passed from front end
+            p_ID=product['id'],  # Product ID
+            quantity=product['quantity'],
+            unit_price=product['unitPrice'],
+            subtotal=product['subtotal'],
+            status='processing'  # Status can be 'processing' or 'processed'
+        )
+
+        db.session.add(new_transaction)
+
+    db.session.commit()  # Commit the transaction to the database
+
+    return jsonify({"message": "Transaction created successfully!"}), 201
 
 with app.app_context():
     db.create_all()

@@ -60,7 +60,7 @@ const VendorProfile = () => {
     }
   
     return (
-      <div className="flex flex-col h-auto pt-16 min-h-screen">
+      <div className="flex flex-col h-auto pt-5 min-h-screen">
         {/* Vendor Image */}
         <div className="relative mb-6">
   {/* Back Icon */}

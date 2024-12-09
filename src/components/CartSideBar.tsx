@@ -63,8 +63,43 @@ const CartPage: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    navigate('/shop/buy-payment');
+    // Create a list of selected products to display in the alert
+    const selectedProductDetails = cartItems
+      .filter((product) => selectedProducts.has(product.id))
+      .map((product) => ({
+        id: product.id,
+        image: product.image,
+        name: product.title,
+        unitPrice: product.unitPrice,
+        subtotal: product.totalPrice,
+        quantity: product.quantity,
+      }));
+  
+    if (selectedProductDetails.length > 0) {
+      // Build the message to be shown in the alert
+      let message = 'Your Order:\n\n';
+      selectedProductDetails.forEach((product) => {
+        // Include product.id and format the message
+        message += `Product ID: ${product.id} - ${product.name} - ₱ ${product.unitPrice.toFixed(2)} x ${product.quantity} = ₱ ${product.subtotal.toFixed(2)}\n`;
+      });
+  
+      // Calculate total price of selected products
+      const orderTotal = selectedProductDetails.reduce((total, product) => total + product.subtotal, 0);
+  
+      message += `\nOrder Total: ₱ ${orderTotal.toFixed(2)}`;
+  
+      // Show alert with the order details
+      alert(message);
+  
+      // Proceed to the next page (for example, the payment page) with product details
+      navigate('/shop/buy-payment', {
+        state: { selectedProductDetails },
+      });
+    } else {
+      alert('No products selected for checkout.');
+    }
   };
+  
 
   const handleIncreaseQuantity = (id: number) => {
     setCartItems((prevItems) =>
@@ -94,16 +129,35 @@ const CartPage: React.FC = () => {
     );
   };
 
-  const handleDeleteItem = (id: number) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
-    setSelectedProducts((prevSelected) => {
-      const newSelected = new Set(prevSelected);
-      newSelected.delete(id);
-      return newSelected;
-    });
+  const handleDeleteItem = async (id: number) => {
+    try {
+      const response = await fetch(serverURl + `/delete-cart-item/${id}`, {
+        method: 'DELETE',
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error deleting item:', errorData.error);
+        return;
+      }
+  
+      // Update frontend state after successful deletion
+      setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+      setSelectedProducts((prevSelected) => {
+        const newSelected = new Set(prevSelected);
+        newSelected.delete(id);
+        return newSelected;
+      });
+  
+      console.log('Cart item deleted successfully');
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
   };
+  
 
   const handleSelectProduct = (id: number) => {
+    console.log('Selecting product with ID:', id);
     const newSelected = new Set(selectedProducts);
     if (newSelected.has(id)) {
       newSelected.delete(id);
@@ -138,7 +192,7 @@ const CartPage: React.FC = () => {
   const totalPrice = calculateTotalPrice();
 
   return (
-    <div className="flex flex-col h-auto w-full min-h-screen px-4 pt-8">
+    <div className="flex flex-col h-auto w-full min-h-screen pt-8">
       {cartItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center text-gray-500 mt-8">
           <img src={NoProductImage} alt="No product found" className="w-1/2 h-1/2 object-contain" />
@@ -146,7 +200,8 @@ const CartPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-5 gap-4 mb-4 w-full">
+          <h1 className='text-2xl font-semibold p-2'>My Cart</h1>
+          <div className="grid grid-cols-5 gap-4 mb-4 w-full m-2">
             <div className="font-semibold">
               <input
                 type="checkbox"
@@ -163,7 +218,7 @@ const CartPage: React.FC = () => {
           </div>
 
           {cartItems.map((product) => (
-            <div key={product.id} className="grid grid-cols-5 gap-4 w-full items-center mb-4 border-b pb-4">
+            <div key={product.id} className="grid grid-cols-5 gap-4 w-full items-center mb-4 border-b pb-4 m-2">
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -208,13 +263,16 @@ const CartPage: React.FC = () => {
                   Delete
                 </button>
               </div>
+              <h1>Show vendor name here</h1>
             </div>
+            
           ))}
         </>
       )}
 
-      {cartItems.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-800 text-white py-4 px-6 flex justify-between items-center">
+      {/* bottom price information */}
+      {cartItems.length > 0 && (  
+        <div className="sticky  bottom-0 left-0 right-0 bg-gray-800 text-white py-4 px-6 flex justify-between items-center">
           <div>
             <span>{selectedProducts.size} Selected Product(s)</span>
           </div>

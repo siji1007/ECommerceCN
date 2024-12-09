@@ -5,6 +5,7 @@ import { IoStorefrontSharp } from "react-icons/io5";
 import { AiFillProfile } from "react-icons/ai";
 import { useState, useEffect, useRef } from 'react';
 import { MdArrowForward } from 'react-icons/md';
+import { LiaHistorySolid } from "react-icons/lia";
 import Business from './BusinessPage/business';
 import ProductList from './BusinessPage/ProductLIst';
 import ProductAdd from './BusinessPage/productsAdd';
@@ -323,8 +324,6 @@ const ClientDashboard: React.FC = () =>{
                 className="w-24 h-24 rounded-full mb-4 border-4 border-green-500 object-cover"
               />
 
-
-
                 <h2 className="text-lg text-black font-semibold text-center">
                 {firstName +" "+ lastName}
                 </h2>
@@ -354,7 +353,14 @@ const ClientDashboard: React.FC = () =>{
                               <FaShoppingCart className="h-5 w-5 mr-2" />
                               My Cart
                           </button>
-                        </Link>
+                    </Link>
+
+                    <button
+                             className="w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center text-black"
+                               > 
+                              <LiaHistorySolid className="h-5 w-5 mr-2" />
+                              My History
+                          </button>
 
                     {/* Register your business button */}
                     <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center" onClick={toggleDropdown} >

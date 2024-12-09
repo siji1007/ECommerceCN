@@ -53,7 +53,7 @@ const ConsumerManagement: React.FC = () => {
                                 <td className="p-3 border border-gray-200">
                                     <div className="flex items-center">
                                         <img
-                                            className="w-10 h-10 rounded-full bg-gray-300 mr-3"
+                                            className="w-10 h-10 rounded-full border mr-3 border-green-500 object-cover"
                                             src={user.user_img || profile}  // Use user image if available
                                             alt={user.fullName}
                                         />

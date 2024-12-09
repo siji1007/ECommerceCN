@@ -233,10 +233,21 @@ useEffect(() => {
     );
   }
 
+  const handleNewOrderClick = () => {
+   alert("New order")
+  };
+
   return (
     <div className="p-4">
+      
       {/* Filter and Search */}
       <div className="flex items-center mb-4">
+          <button
+        onClick={handleNewOrderClick}
+        className="fixed bottom-2 right-4 bg-green-600 text-white p-2 rounded-lg shadow-md"
+      >
+        New Order
+      </button>
         <select
           className="border rounded-md px-2 py-1 mr-4"
           onChange={handleCategoryChange}
@@ -270,98 +281,34 @@ useEffect(() => {
       </div>
 
 
-  {/* Product List */}
-<div className="flex flex-wrap gap-4">
-  {filteredProducts.length === 0 ? (
-    <h1 className="text-center w-full text-xl font-bold text-gray-600">
-      Your inventory is empty, try adding products.
-    </h1>
-  ) : (
-    filteredProducts.map((product) => (
-      <div
-        key={product.prod_id}
-        className="w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer"
-        onClick={() => setModalProduct(product)}
-      >
+        {/* Product List */}
+      <div className="flex flex-wrap gap-4">
+        {filteredProducts.length === 0 ? (
+          <h1 className="text-center w-full text-xl font-bold text-gray-600">
+            Your inventory is empty, try adding products.
+          </h1>
+        ) : (
+          filteredProducts.map((product) => (
+            <div
+              key={product.prod_id}
+              className="w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer"
+              onClick={() => setModalProduct(product)}
+            >
 
-        
-        <img
-          src={ reactHost + product.prod_image_id}
-          alt={product.prod_name}
-          className="w-full h-32 object-cover rounded-md mb-2"
-        />
-        <h2 className="text-lg font-semibold">{product.prod_name}</h2>
-        <div className="flex justify-between items-center mt-2">
-          <span className="text-green-600 font-bold">{product.prod_price}</span>
-        </div>
-      </div>
-    ))
-  )}
-</div>
-
-      {/* Modal */}
-      {modalProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`bg-white rounded-lg p-6 w-96 transition-transform ${isMinimized ? 'scale-50' : 'scale-100'}`}>
-            {/* Modal Header with Minimize and Close Buttons */}
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">{modalProduct.prod_name}</h2>
-              <div className="flex space-x-2">
-                <button
-                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                  onClick={() => {
-                    setModalProduct(null);
-                    setIsMinimized(false);
-                  }}
-                >
-                  X
-                </button>
+              
+              <img
+                src={ reactHost + product.prod_image_id}
+                alt={product.prod_name}
+                className="w-full h-32 object-cover rounded-md mb-2"
+              />
+              <h2 className="text-lg font-semibold">{product.prod_name}</h2>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-green-600 font-bold">{product.prod_price}</span>
               </div>
             </div>
-
-            {!isMinimized && (
-              <>
-                <img
-                  src={modalProduct.prod_image_id}
-                  alt={modalProduct.prod_name}
-                  className="w-full h-48 object-cover rounded-md mb-4"
-                />
-                <p className="text-green-600 text-lg">{modalProduct.prod_price}</p>
-                {/* <p className="text-yellow-500">{'⭐'.repeat(Math.round(modalProduct.rating))}</p> */}
-
-                {/* Comment Section */}
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold">Reviews</h3>
-                  <div className="space-y-2 mt-2">
-                    {comments.map((comment) => (
-                      <div key={comment.id} className="p-2 bg-gray-100 rounded-md">
-                        <p className="font-bold">{comment.author}:</p>
-                        <p>{comment.text}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4">
-                    <input
-                      type="text"
-                      className="border rounded-md px-2 py-1 w-full"
-                      placeholder="Write a review..."
-                      value={newComment}
-                      onChange={handleCommentChange}
-                    />
-                    <button
-                      className="mt-2 w-full py-2 bg-green-900 text-white rounded-md hover:bg-blue-600"
-                      onClick={handleCommentSubmit}
-                    >
-                      Submit Review
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-        
-      )}
+          ))
+        )}
+      </div>
       <div className='flex w-full justify-end space-x-2'>
       <Link to={`/clientprofile/id=${id}`}>
         <button className='mt-2 p-10 py-2  text-black rounded-md '>
