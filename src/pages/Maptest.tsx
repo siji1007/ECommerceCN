@@ -49,7 +49,7 @@ const MapWithPin: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ height: "60vh", width: "100%" }}>
+    <div className="mt-6" style={{ height: "60vh", width: "100%" }}>
       {position ? (
         <>
           <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }}>
