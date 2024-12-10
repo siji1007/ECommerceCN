@@ -15,9 +15,20 @@ import Settings from './Settings';
 import host_backend from '../host/host.txt?raw';
 import host_frontend from '../host/ReactHost.txt?raw';
 import Neworder from './BusinessPage/NewOrder';
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import axios from 'axios';
 import mypurchased from './Purchased';
 
+
+const DefaultIcon = L.Icon.Default.prototype as any; // TypeScript workaround
+delete DefaultIcon._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 const ClientDashboard: React.FC = () =>{
     const [firstName, setFirstName] = useState<string>('');    
     const [lastName, setLastName] = useState<string>('');
@@ -46,6 +57,15 @@ const ClientDashboard: React.FC = () =>{
     const [image, setImage] = useState<string | null>(null);
     const [uploading, setUploading] = useState<boolean>(false); 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [position, setPosition] = useState<[number, number] | null>(null);
+    const [locationDetails, setLocationDetails] = useState<{
+      state?: string;
+      city?: string;
+      country?: string;
+      postcode?: string;
+      road?:string;
+      region?:string;
+    }>({});
 
 
 
@@ -260,6 +280,34 @@ const ClientDashboard: React.FC = () =>{
  
 
     }, [location]); 
+
+    useEffect(() => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setPosition([latitude, longitude]);
+    
+          // Fetch address using OpenStreetMap's reverse geocoding API
+          const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+          console.log("Latitude:", latitude, "Longitude:", longitude);
+    
+          fetch(url)
+            .then((res) => res.json())
+            .then((data) => {
+              const { state, city, country, postcode, road, region} = data.address;
+              setLocationDetails({ state, city, country, postcode, road, region });
+    
+              // Log all address details for more insight
+              console.log("Detailed Address Information:", data.address);
+            })
+            .catch((err) => console.error("Error fetching address:", err));
+        },
+        (err) => {
+          console.error("Error getting location:", err.message);
+        }
+      );
+    }, []);
+    
   
     
    
@@ -588,7 +636,7 @@ const ClientDashboard: React.FC = () =>{
                           <div className="flex gap-4 mb-4">
                             <div className="flex-1">
                               <label htmlFor="province" className="block text-sm font-medium mb-1">Province</label>
-                              <input type="text" id="province" name="province" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a Province" list="provinces" disabled={isDisabledAddress} value={addressDetails.province} onChange={(e) => setAddressDetails({ ...addressDetails, province: e.target.value })} />
+                              <input type="text" id="province" name="province" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a Province" list="provinces" disabled={isDisabledAddress} value={locationDetails.state} onChange={(e) => setAddressDetails({ ...addressDetails, province: e.target.value })} />
                               <datalist id="provinces">
                                 <option value="Province 1" />
                                 <option value="Province 2" />
@@ -598,7 +646,7 @@ const ClientDashboard: React.FC = () =>{
                             </div>
                             <div className="flex-1">
                               <label htmlFor="city" className="block text-sm font-medium mb-1">City</label>
-                              <input type="text" id="city" name="city" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a City" list="cities" disabled={isDisabledAddress} value={addressDetails.city} onChange={(e) => setAddressDetails({ ...addressDetails, city: e.target.value })} />
+                              <input type="text" id="city" name="city" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a City" list="cities" disabled={isDisabledAddress} value={locationDetails.city} onChange={(e) => setAddressDetails({ ...addressDetails, city: e.target.value })} />
                               <datalist id="cities">
                                 <option value="City 1" />
                                 <option value="City 2" />
@@ -608,7 +656,7 @@ const ClientDashboard: React.FC = () =>{
                             </div>
                             <div className="flex-1">
                               <label htmlFor="barangay" className="block text-sm font-medium mb-1">Barangay</label>
-                              <input type="text" id="barangay" name="barangay" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a Barangay" list="barangays" disabled={isDisabledAddress} value={addressDetails.barangay} onChange={(e) => setAddressDetails({ ...addressDetails, barangay: e.target.value })} />
+                              <input type="text" id="barangay" name="barangay" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a Barangay" list="barangays" disabled={isDisabledAddress} value={locationDetails.road} onChange={(e) => setAddressDetails({ ...addressDetails, barangay: e.target.value })} />
                               <datalist id="barangays">
                                 <option value="Barangay 1" />
                                 <option value="Barangay 2" />
@@ -621,7 +669,7 @@ const ClientDashboard: React.FC = () =>{
                           {/* Postal Code */}
                           <div className="mb-4">
                             <label htmlFor="postalCode" className="block text-sm font-medium mb-1">Postal Code</label>
-                            <input type="text" id="postalCode" name="postalCode" className="w-full p-2 border border-gray-300 rounded" placeholder="Postal Code" disabled={isDisabledAddress} value={addressDetails.postalCode} onChange={(e) => setAddressDetails({ ...addressDetails, postalCode: e.target.value })} />
+                            <input type="text" id="postalCode" name="postalCode" className="w-full p-2 border border-gray-300 rounded" placeholder="Postal Code" disabled={isDisabledAddress} value={locationDetails.postcode} onChange={(e) => setAddressDetails({ ...addressDetails, postalCode: e.target.value })} />
                           </div>
 
                           {/* Get Current Location Button */}
@@ -632,13 +680,28 @@ const ClientDashboard: React.FC = () =>{
                       <label className="block text-sm font-medium mb-2">Map</label>
                           <div className="h-64 border border-gray-300 rounded">
                           {/* Placeholder for map */}
-                            <iframe
-                                title="Map"
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3151.8354345093066!2d144.9556513156555!3d-37.81732397975164!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6ad642af0f11fd81%3A0xff55c0f59bdfe98a!2sMelbourne%20VIC%2C%20Australia!5e0!3m2!1sen!2sph!4v1619941075868!5m2!1sen!2sph"
-                                className="w-full h-full rounded"
-                                allowFullScreen=""
-                                loading="lazy"
-                            />
+                          {position ? (
+                              <>
+                                <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }}>
+                                  <TileLayer
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                  />
+                                  <Marker position={position}>
+                                    <Popup>
+                                      <strong>Your Location:</strong>
+                                      <br />
+                                      {locationDetails.state && <p>State: {locationDetails.state}</p>}
+                                      {locationDetails.city && <p>City: {locationDetails.city}</p>}
+                                      {locationDetails.country && <p>Country: {locationDetails.country}</p>}
+                                      {locationDetails.postcode && <p>Postal Code: {locationDetails.postcode}</p>}
+                                    </Popup>
+                                  </Marker>
+                                </MapContainer>
+                              </>
+                            ) : (
+                              <p>Fetching your location...</p>
+                            )}
                           </div>
                         </section>
                     </>
