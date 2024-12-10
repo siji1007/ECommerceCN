@@ -1,79 +1,84 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+// Fix marker icon issues with Leaflet in React
+const DefaultIcon = L.Icon.Default.prototype as any; // TypeScript workaround
+delete DefaultIcon._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
 const MapWithPin: React.FC = () => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [address, setAddress] = useState<string>("");
-  const mapInstance = useRef<L.Map | null>(null); // Store the map instance to avoid reinitialization
+  const [position, setPosition] = useState<[number, number] | null>(null);
+  const [locationDetails, setLocationDetails] = useState<{
+    state?: string;
+    city?: string;
+    country?: string;
+    postcode?: string;
+  }>({});
 
   useEffect(() => {
-    // Initialize map and markers inside useEffect
-    const initializeMap = () => {
-      if (!mapRef.current) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setPosition([latitude, longitude]);
 
-      // Check if the map is already initialized
-      if (mapInstance.current) return; // If map is already initialized, skip
+        // Fetch address using OpenStreetMap's reverse geocoding API
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+        console.log("Latitude:", latitude, "Longitude:", longitude);
 
-      // Create the map
-      const map = L.map(mapRef.current).setView([14.1090665, 122.9562386], 15); // Default location (Lat, Lng)
-      
-      // Store the map instance to prevent reinitialization
-      mapInstance.current = map;
+        fetch(url)
+          .then((res) => res.json())
+          .then((data) => {
+            const { state, city, country, postcode } = data.address;
+            setLocationDetails({ state, city, country, postcode });
 
-      // Set up the OpenStreetMap tile layer
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
-
-      // Create a draggable marker
-      const marker = L.marker([14.1090665, 122.9562386], {
-        draggable: true, // Allow dragging the pin
-      }).addTo(map);
-
-      // Reverse geocoding using OpenStreetMap Nominatim API
-      const getAddressFromLatLng = async (lat: number, lng: number) => {
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
-          );
-          const data = await response.json();
-          const { state, city, suburb, postcode } = data.address;
-          setAddress(`Province: ${state || "Unknown"}\nCity: ${city || "Unknown"}\nBarangay: ${suburb || "Unknown"}\nPostal Code: ${postcode || "Unknown"}`);
-        } catch (error) {
-          console.error("Error fetching address:", error);
-        }
-      };
-
-      // Add event listener for marker drag end
-      marker.on("dragend", () => {
-        const position = marker.getLatLng();
-        getAddressFromLatLng(position.lat, position.lng);
-      });
-
-      // Fetch the address for the initial marker position
-      const initialPosition = marker.getLatLng();
-      getAddressFromLatLng(initialPosition.lat, initialPosition.lng);
-    };
-
-    // Initialize the map once the script is loaded
-    initializeMap();
-
-    // Cleanup function to remove the map on unmount
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove(); // Remove map on unmount
-        mapInstance.current = null; // Clear map reference
+            // Log all address details for more insight
+            console.log("Detailed Address Information:", data.address);
+          })
+          .catch((err) => console.error("Error fetching address:", err));
+      },
+      (err) => {
+        console.error("Error getting location:", err.message);
       }
-    };
-  }, []); // Empty dependency array ensures the effect runs once when the component mounts
+    );
+  }, []);
 
   return (
-    <div>
-      <div ref={mapRef} style={{ height: "500px", width: "100%" }} />
-      <div>
-        <h3>Address Details</h3>
-        <pre>{address}</pre>
-      </div>
+    <div style={{ height: "60vh", width: "100%" }}>
+      {position ? (
+        <>
+          <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }}>
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+            <Marker position={position}>
+              <Popup>
+                <strong>Your Location:</strong>
+                <br />
+                {locationDetails.state && <p>State: {locationDetails.state}</p>}
+                {locationDetails.city && <p>City: {locationDetails.city}</p>}
+                {locationDetails.country && <p>Country: {locationDetails.country}</p>}
+                {locationDetails.postcode && <p>Postal Code: {locationDetails.postcode}</p>}
+              </Popup>
+            </Marker>
+          </MapContainer>
+          <div>
+            <h1>Location Details</h1>
+            {locationDetails.state && <p>State: {locationDetails.state}</p>}
+            {locationDetails.city && <p>City: {locationDetails.city}</p>}
+            {locationDetails.country && <p>Country: {locationDetails.country}</p>}
+            {locationDetails.postcode && <p>Postal Code: {locationDetails.postcode}</p>}
+          </div>
+        </>
+      ) : (
+        <p>Fetching your location...</p>
+      )}
     </div>
   );
 };

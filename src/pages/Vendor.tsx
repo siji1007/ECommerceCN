@@ -9,23 +9,24 @@ const VendorPage: React.FC = () => {
   const [vendors, setVendors] = useState<any[]>([]); // Stores all vendors
   const [searchTerm, setSearchTerm] = useState('');
   const [filterClassification, setFilterClassification] = useState('');
-  const serverURL = host.trim();
+  const serverURl = host.trim();
 
   const navigate = useNavigate();
 
   // Fetch vendors from the API
   useEffect(() => {
-    const fetchVendors = async () => {
+    const fetchVerifiedVendors = async () => {
       try {
-        const response = await axios.get(serverURL + '/api/fetchVendors');
+        const response = await axios.get(`${serverURl}/api/fetchVendors?status=Verified`);
         setVendors(response.data);
       } catch (error) {
-        console.error('Error fetching vendors:', error);
+        console.error("Error fetching vendors:", error);
       }
     };
-
-    fetchVendors();
+  
+    fetchVerifiedVendors();
   }, []);
+  
 
   // Filtered and grouped vendors
   const filteredVendors = vendors.filter((vendor) => {

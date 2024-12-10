@@ -6,6 +6,7 @@ import NoProductImage from '../assets/OtherImages/product-not-available-icon-vec
 
 interface Product {
   vendorId: number;
+  vendor_name:string;
   id: number;
   productId: number;
   image: string;
@@ -41,26 +42,19 @@ const CartPage: React.FC = () => {
       const response = await fetch(serverURl + `/api/cart/${userId}`);
       if (response.ok) {
         const data = await response.json();
-        // Transform API response into Product format
+        console.log(data); // Log the full response to see the structure
         const formattedData = data.cart_items.map((item: any) => ({
           id: item.cart_id,
-          productId: item.product_id, // Add product ID
+          productId: item.product_id,
           image: item.product_image || ProductPlaceholder,
           title: item.product_name,
           category: item.product_classification,
           unitPrice: item.unit_price,
           quantity: item.product_quantity,
           totalPrice: item.total_price,
-          vendorId: item.vendor_id, // Add vendor ID
+          vendorId: item.vendor_id,
+          vendor_name: item.vendor_name, // Ensure vendor_name is part of the response
         }));
-        
-        // Display formattedData in an alert, including vendor ID
-        let message = "Formatted Cart Data:\n\n";
-        formattedData.forEach((item) => {
-          message += `Cart ID: ${item.id}\nProduct ID: ${item.productId}\nProduct Name: ${item.title}\nCategory: ${item.category}\nUnit Price: ₱${item.unitPrice.toFixed(2)}\nQuantity: ${item.quantity}\nTotal Price: ₱${item.totalPrice.toFixed(2)}\nVendor ID: ${item.vendorId}\n\n`;
-        });
-        alert(message);
-  
         setCartItems(formattedData);
       } else {
         alert("Failed to fetch cart data");
@@ -89,6 +83,7 @@ const CartPage: React.FC = () => {
         subtotal: product.totalPrice,
         quantity: product.quantity,
         vendorId: product.vendorId, // Include vendor ID here
+        vendor_name: product.vendor_name,
       }));
   
     if (selectedProductDetails.length > 0) {
@@ -97,7 +92,7 @@ const CartPage: React.FC = () => {
       selectedProductDetails.forEach((product) => {
         // Include product.id, vendorId, and format the message
         message += `Product ID: ${product.productId} - ${product.name} - ₱ ${product.unitPrice.toFixed(2)} x ${product.quantity} = ₱ ${product.subtotal.toFixed(2)}\n`;
-        message += `Vendor ID: ${product.vendorId}\n`; // Display Vendor ID
+        message += `Vendor ID: ${product.vendorId}\n Vendor Name: ${product.vendor_name}`; 
       });
   
       // Calculate total price of selected products
@@ -282,7 +277,8 @@ const CartPage: React.FC = () => {
                   Delete
                 </button>
               </div>
-              <h1>Show vendor name here</h1>
+              <h1>{product.vendor_name}</h1>
+
             </div>
             
           ))}

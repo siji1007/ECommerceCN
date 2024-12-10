@@ -4,18 +4,23 @@ import host from "../../host/host.txt?raw";
 import VendorProfile from '../../assets/image.png';
 
 const VendorManagement: React.FC = () => {
-    const [vendors, setVendors] = useState([]);
-    const [selectedVendor, setSelectedVendor] = useState<any>(null); // To store selected vendor details
-    const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility
-    const [status, setStatus] = useState("Approve"); // Dropdown selected status
+    const [vendors, setVendors] = useState<any[]>([]);
+    const [selectedVendor, setSelectedVendor] = useState<any>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [status, setStatus] = useState("All"); // Dropdown selected status (All, Pending, Verified, Rejected)
     const serverURl = host.trim();
 
     useEffect(() => {
         // Fetch vendors from the Flask API
         const fetchVendors = async () => {
             try {
-                const response = await axios.get(serverURl + "/api/fetchVendors");
-                setVendors(response.data);
+                const response = await axios.get(`${serverURl}/api/fetchVendors`);
+                // Sort vendors by status (Pending > Verified > Rejected)
+                const sortedVendors = response.data.sort((a: any, b: any) => {
+                    const statusOrder = ["Pending", "Verified", "Rejected"];
+                    return statusOrder.indexOf(a.vendor_status) - statusOrder.indexOf(b.vendor_status);
+                });
+                setVendors(sortedVendors);
             } catch (error) {
                 console.error("Error fetching vendors:", error);
             }
@@ -26,7 +31,6 @@ const VendorManagement: React.FC = () => {
 
     const handleViewVendor = async (id: number) => {
         try {
-            // Fetch vendor details by ID
             const response = await axios.get(`${serverURl}/api/vendorDetails/${id}`);
             setSelectedVendor(response.data);
             setIsModalOpen(true); // Open modal
@@ -37,7 +41,7 @@ const VendorManagement: React.FC = () => {
 
     const closeModal = () => {
         setIsModalOpen(false);
-        setSelectedVendor(null); // Clear selected vendor details
+        setSelectedVendor(null);
     };
 
     const handleSubmit = async () => {
@@ -45,16 +49,16 @@ const VendorManagement: React.FC = () => {
             alert("No vendor selected");
             return;
         }
-    
+
         const statusDropdown = document.getElementById('statusDropdown') as HTMLSelectElement;
         const selectedStatus = statusDropdown.value;
-    
+
         try {
             const response = await axios.post(`${serverURl}/api/updateVendorStatus`, {
                 ven_id: selectedVendor.ven_id,
                 vendor_status: selectedStatus,
             });
-    
+
             if (response.status === 200) {
                 alert(`Vendor status updated to: ${selectedStatus}`);
                 closeModal(); // Close the modal after submission
@@ -68,12 +72,29 @@ const VendorManagement: React.FC = () => {
     }
 
     const handleDropdownChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setStatus(event.target.value); // Update the selected status
+        setStatus(event.target.value);
     };
+
+    const filteredVendors = status === "All" ? vendors : vendors.filter(vendor => vendor.vendor_status === status);
 
     return (
         <div className="p-6">
             <h1 className="text-2xl font-bold mb-6">Vendor Management</h1>
+            <div className="flex justify-between items-center mb-4">
+                <div>
+                    <label className="mr-2">Filter by Status:</label>
+                    <select
+                        value={status}
+                        onChange={handleDropdownChange}
+                        className="border p-2 rounded-md"
+                    >
+                        <option value="All">All</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Verified">Verified</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
             <div className="overflow-y-auto max-h-96 border border-gray-200 rounded-md">
                 <table className="w-full border-collapse border border-gray-200">
                     <thead className="bg-gray-100 sticky top-0">
@@ -86,7 +107,7 @@ const VendorManagement: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {vendors.map((vendor: any) => (
+                        {filteredVendors.map((vendor: any) => (
                             <tr key={vendor.ven_id} className="odd:bg-white even:bg-gray-50">
                                 <td className="p-3 border border-gray-200">{vendor.vendor_name}</td>
                                 <td className="p-3 border border-gray-200">{vendor.created_at}</td>

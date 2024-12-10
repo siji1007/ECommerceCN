@@ -6,6 +6,7 @@ import serverURL from '../../host/host.txt?raw';
 import ReactHost from '../../host/ReactHost.txt?raw';
 import { Line, Bar } from 'react-chartjs-2';
 import NewOrders from './NewOrder'; 
+import ProductModal from './productDetails';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
 interface Product {
@@ -43,6 +44,8 @@ const ProductList: React.FC = () => {
   const [vendorStatus, setVendorStatus] = useState<string>(''); // Store vendor status
   const hosting = serverURL.trim();
   const reactHost = ReactHost.trim();
+  const [modalProduct, setModalProduct] = useState<Product | null>(null); // State to store the selected product
+
   const [vendorId, setVendorId] = useState(null); // State to store vendorId
   const [error, setError] = useState(null);
   
@@ -177,9 +180,7 @@ const ProductList: React.FC = () => {
     );
   }
 
-  const handleNewOrderClick = () => {
-   alert("New order")
-  };
+
 
   return (
     <div className="p-4">
@@ -230,7 +231,7 @@ const ProductList: React.FC = () => {
             <div
               key={product.prod_id}
               className="w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer"
-              onClick={() => setModalProduct(product)}
+              onClick={() => setModalProduct(product)} 
             >
 
               
@@ -260,6 +261,10 @@ const ProductList: React.FC = () => {
       </Link>
         
       </div>
+
+      {modalProduct && (
+      <ProductModal product={modalProduct} onClose={() => setModalProduct(null)} />
+    )}
    
 
     </div>

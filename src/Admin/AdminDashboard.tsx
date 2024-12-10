@@ -8,6 +8,7 @@ import { Link, useLocation } from 'react-router-dom';
 import CustomerManagement from '../Admin/sidebarPages/consumerManagement'; 
 import VendorManagement from '../Admin/sidebarPages/vendorManagement';
 import Settings from '../Admin/sidebarPages/adminSettings';
+import ProductManagement from './sidebarPages/ProductManage';
 
 const AdminDashboard: React.FC = () => {
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
@@ -31,10 +32,15 @@ const AdminDashboard: React.FC = () => {
     setSelectedDashboard('settings');
   };
 
+  const handleProduct = () =>{
+    setSelectedDashboard('product')
+  };
+
 
   const isCustomerActive = location.pathname === `/admin/id_admin=${adminID}/customer-management`;
   const isVendorActive = location.pathname ===`/admin/id_admin=${adminID}/vendor-management`;
   const isSettingsActive = location.pathname === `/admin/id_admin=${adminID}/settings`;
+  const isProductActive = location.pathname === `/admin/id_admin=${adminID}/product-management`;
 
 
   useEffect(() => {
@@ -82,21 +88,17 @@ const AdminDashboard: React.FC = () => {
                 </button>
               </Link>
               <Link to={`/admin/id_admin=${adminID}/vendor-management`}>
-                <button
-                  className={`w-full py-2 px-4 mb-2 text-left font-semibold rounded ${
-                    isVendorActive ? 'bg-green-600 text-white' : 'text-black hover:bg-green-600 hover:text-white'
-                  }`}
-                  onClick={handleVendorClick} 
-                >
+                <button className={`w-full py-2 px-4 mb-2 text-left font-semibold rounded ${ isVendorActive ? 'bg-green-600 text-white' : 'text-black hover:bg-green-600 hover:text-white' }`} onClick={handleVendorClick} >
                   Vendor
                 </button>
               </Link>
             </div>
           )}
-
-          <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded flex items-center">
-            <MdOutlineProductionQuantityLimits className="h-5 w-5 mr-2" /> Product Management
-          </button>
+          <Link to={`/admin/id_admin=${adminID}/product-management`}>
+            <button className={`w-full py-2 px-4 mb-2 text-left font-semibold rounded ${ isProductActive ? 'bg-green-600 text-white flex' : 'text-black hover:bg-green-600 hover:text-white flex' }`} onClick={handleProduct}>
+              <MdOutlineProductionQuantityLimits className="h-5 w-5 mr-2" /> Product Management
+            </button>
+          </Link>
           <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded flex items-center">
             <FaMoneyBillTrendUp className="h-5 w-5 mr-2" /> Sales Report
           </button>
@@ -113,6 +115,7 @@ const AdminDashboard: React.FC = () => {
         {selectedDashboard === 'customer' && <CustomerManagement/>}
         {selectedDashboard === 'vendor' && <VendorManagement/>}
         {selectedDashboard === 'settings' && <Settings/>}
+        {selectedDashboard === 'product' && <ProductManagement/>}
 
       
       </main>

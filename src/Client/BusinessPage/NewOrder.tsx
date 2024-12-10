@@ -95,68 +95,71 @@ const NewOrders: React.FC = () => {
 
     return (
         <div>
-            {error && <p>{error}</p>}
-            <h1 className='text-2xl mb-2 font-semibold'>Request Order </h1>
-            <ul>
-                {transactions.map((transaction) => (
-                    <li key={transaction.transaction_id} className="flex justify-between border mb-2 bg-gray-200 p-4 rounded shadow-lg shadow-green-400">
-                        {/* Product Order Section */}
-                        <div className="flex">
-                            <div className="w-20 h-20 bg-gray-300 flex items-center justify-center">
-                                {/* Product Image */}
-                                {productDetails && productDetails[transaction.p_ID]?.prod_image_id ? (
-                                    <img
-                                        src={`${hostreact}${productDetails[transaction.p_ID]?.prod_image_id}`}
-                                        alt={productDetails[transaction.p_ID]?.prod_name}
-                                        className="object-cover w-full h-full rounded"
-                                    />
-                                ) : (
-                                    <span className="text-sm text-gray-600">Loading...</span>
-                                )}
+            <h1 className='text-2xl mb-2 font-semibold'>Request Order</h1>
+            {transactions.length === 0 ? (
+                <p>No request orders found</p> // Show this message if no transactions are fetched
+            ) : (
+                <ul>
+                    {transactions.map((transaction) => (
+                        <li key={transaction.transaction_id} className="flex justify-between border mb-2 bg-gray-200 p-4 rounded shadow-lg shadow-green-400">
+                            {/* Product Order Section */}
+                            <div className="flex">
+                                <div className="w-20 h-20 bg-gray-300 flex items-center justify-center">
+                                    {/* Product Image */}
+                                    {productDetails && productDetails[transaction.p_ID]?.prod_image_id ? (
+                                        <img
+                                            src={`${hostreact}${productDetails[transaction.p_ID]?.prod_image_id}`}
+                                            alt={productDetails[transaction.p_ID]?.prod_name}
+                                            className="object-cover w-full h-full rounded"
+                                        />
+                                    ) : (
+                                        <span className="text-sm text-gray-600">Loading...</span>
+                                    )}
+                                </div>
+                                <div className="ml-4">
+                                    <p className="font-bold">
+                                        Product Name: {productDetails[transaction.p_ID]?.prod_name || 'Loading...'}
+                                    </p>
+                                    <p>
+                                        Category: {productDetails[transaction.p_ID]?.prod_category || 'Loading...'}
+                                    </p>
+                                    <p>Price: ${transaction.unit_price}</p>
+                                    <p>Quantity: {transaction.quantity}</p>
+                                </div>
                             </div>
-                            <div className="ml-4">
-                                <p className="font-bold">
-                                    Product Name: {productDetails[transaction.p_ID]?.prod_name || 'Loading...'}
-                                </p>
+
+                            {/* Customer Information Section */}
+                            <div className="flex flex-col justify-center">
+                                <p className="font-bold">Customer Information</p>
                                 <p>
-                                    Category: {productDetails[transaction.p_ID]?.prod_category || 'Loading...'}
+                                    Full Name: {userDetails[transaction.u_ID]
+                                        ? `${userDetails[transaction.u_ID].first_name} ${userDetails[transaction.u_ID].last_name}`
+                                        : 'Loading...'}
                                 </p>
-                                <p>Price: ${transaction.unit_price}</p>
-                                <p>Quantity: {transaction.quantity}</p>
                             </div>
-                        </div>
 
-                        {/* Customer Information Section */}
-                        <div className="flex flex-col justify-center">
-                            <p className="font-bold">Customer Information</p>
-                            <p>
-                                Full Name: {userDetails[transaction.u_ID]
-                                    ? `${userDetails[transaction.u_ID].first_name} ${userDetails[transaction.u_ID].last_name}`
-                                    : 'Loading...'}
-                            </p>
-                        </div>
-
-                        {/* Confirm and Cancel Buttons */}
-                        <div className="flex flex-col items-end justify-between">
-                            <p className="font-bold">Subtotal: ${transaction.subtotal}</p>
-                            <div className="mt-4">
-                                <button
-                                    className="bg-green-800 text-white px-4 py-2 rounded mr-2"
-                                    onClick={() => handleConfirm(transaction.transaction_id)}
-                                >
-                                    Confirm
-                                </button>
-                                <button
-                                    className="bg-gray-400 text-white px-4 py-2 rounded"
-                                    onClick={() => handleCancel(transaction.transaction_id)}
-                                >
-                                    Cancel
-                                </button>
+                            {/* Confirm and Cancel Buttons */}
+                            <div className="flex flex-col items-end justify-between">
+                                <p className="font-bold">Subtotal: ${transaction.subtotal}</p>
+                                <div className="mt-4">
+                                    <button
+                                        className="bg-green-800 text-white px-4 py-2 rounded mr-2"
+                                        onClick={() => handleConfirm(transaction.transaction_id)}
+                                    >
+                                        Confirm
+                                    </button>
+                                    <button
+                                        className="bg-yellow-700 text-white px-4 py-2 rounded"
+                                        onClick={() => handleCancel(transaction.transaction_id)}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </li>
-                ))}
-            </ul>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 };

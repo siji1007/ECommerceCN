@@ -264,7 +264,6 @@ const ProductsAdd: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Button */}
       
       <div className="absolute space-x-2 bottom-4 right-4">
         <Link to={`/clientprofile/id=${id}/product-list`}>

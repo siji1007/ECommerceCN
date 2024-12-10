@@ -25,6 +25,7 @@ import Settings from './Client/Settings';
 import Payment from './pages/BuyPayment';
 import host from "./host/host.txt?raw";
 import NewOrders from './Client/BusinessPage/NewOrder';
+import Productmanagement from './Admin/sidebarPages/ProductManage';
 
 function App() {
   const serverHost = host.trim();
@@ -78,6 +79,7 @@ function App() {
           <Route path={`/admin/id_admin=${adminID}`} element={<AdminDashboard />}>
             <Route path='customer-management' element={<CustomerManagement />} />
             <Route path='vendor-management' element={<VendorManagement />} />
+            <Route path='product-management' element={<Productmanagement />} />
             <Route path='settings' element={<AdminSettins />} />
           </Route>
 
