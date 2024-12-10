@@ -47,10 +47,7 @@ const VendorProfile = () => {
             setLoading(false);
           });
       }, [vendorId]);
-      
-      // Add a useEffect to track changes in vendorData
-      
-  
+        
     if (loading) {
       return <div>Loading...</div>;
     }
@@ -68,19 +65,8 @@ const VendorProfile = () => {
     className="absolute top-0 left-0 text-gray-800 hover:text-gray-500 transition-colors duration-200 p-2"
     onClick={() => window.history.back()} // Navigate back to the previous page
   >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      className="w-10 h-10 shadow rounded-lg"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15.75 19.5L8.25 12l7.5-7.5"
-      />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 shadow rounded-lg" >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
     </svg>
   </button>
 

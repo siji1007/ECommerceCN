@@ -5,7 +5,9 @@ import host from '../host/host.txt?raw';
 import NoProductImage from '../assets/OtherImages/product-not-available-icon-vector-21743888-removebg-preview.png'
 
 interface Product {
+  vendorId: number;
   id: number;
+  productId: number;
   image: string;
   title: string;
   category: string;
@@ -42,25 +44,37 @@ const CartPage: React.FC = () => {
         // Transform API response into Product format
         const formattedData = data.cart_items.map((item: any) => ({
           id: item.cart_id,
+          productId: item.product_id, // Add product ID
           image: item.product_image || ProductPlaceholder,
           title: item.product_name,
           category: item.product_classification,
           unitPrice: item.unit_price,
           quantity: item.product_quantity,
           totalPrice: item.total_price,
+          vendorId: item.vendor_id, // Add vendor ID
         }));
-        setCartItems(formattedData);
         
+        // Display formattedData in an alert, including vendor ID
+        let message = "Formatted Cart Data:\n\n";
+        formattedData.forEach((item) => {
+          message += `Cart ID: ${item.id}\nProduct ID: ${item.productId}\nProduct Name: ${item.title}\nCategory: ${item.category}\nUnit Price: ₱${item.unitPrice.toFixed(2)}\nQuantity: ${item.quantity}\nTotal Price: ₱${item.totalPrice.toFixed(2)}\nVendor ID: ${item.vendorId}\n\n`;
+        });
+        alert(message);
+  
+        setCartItems(formattedData);
       } else {
-        alert('Failed to fetch cart data');
+        alert("Failed to fetch cart data");
       }
     } catch (error) {
-      console.error('Error fetching cart data:', error);
-      alert('An error occurred while fetching cart data.');
+      console.error("Error fetching cart data:", error);
+      alert("An error occurred while fetching cart data.");
     } finally {
       setLoading(false);
     }
   };
+  
+  
+  
 
   const handleCheckout = () => {
     // Create a list of selected products to display in the alert
@@ -68,25 +82,28 @@ const CartPage: React.FC = () => {
       .filter((product) => selectedProducts.has(product.id))
       .map((product) => ({
         id: product.id,
+        productId: product.productId,
         image: product.image,
         name: product.title,
         unitPrice: product.unitPrice,
         subtotal: product.totalPrice,
         quantity: product.quantity,
+        vendorId: product.vendorId, // Include vendor ID here
       }));
   
     if (selectedProductDetails.length > 0) {
       // Build the message to be shown in the alert
       let message = 'Your Order:\n\n';
       selectedProductDetails.forEach((product) => {
-        // Include product.id and format the message
-        message += `Product ID: ${product.id} - ${product.name} - ₱ ${product.unitPrice.toFixed(2)} x ${product.quantity} = ₱ ${product.subtotal.toFixed(2)}\n`;
+        // Include product.id, vendorId, and format the message
+        message += `Product ID: ${product.productId} - ${product.name} - ₱ ${product.unitPrice.toFixed(2)} x ${product.quantity} = ₱ ${product.subtotal.toFixed(2)}\n`;
+        message += `Vendor ID: ${product.vendorId}\n`; // Display Vendor ID
       });
   
       // Calculate total price of selected products
       const orderTotal = selectedProductDetails.reduce((total, product) => total + product.subtotal, 0);
   
-      message += `\nOrder Total: ₱ ${orderTotal.toFixed(2)}`;
+      message += `Order Total: ₱ ${orderTotal.toFixed(2)}`;
   
       // Show alert with the order details
       alert(message);
@@ -98,6 +115,17 @@ const CartPage: React.FC = () => {
     } else {
       alert('No products selected for checkout.');
     }
+  };
+  
+  const handleSelectProduct = (id: number,productId:number ) => {
+    console.log('Selecting product cart with ID:', id, 'product ID ', productId);
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedProducts(newSelected);
   };
   
 
@@ -156,16 +184,7 @@ const CartPage: React.FC = () => {
   };
   
 
-  const handleSelectProduct = (id: number) => {
-    console.log('Selecting product with ID:', id);
-    const newSelected = new Set(selectedProducts);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedProducts(newSelected);
-  };
+
 
   const handleSelectAll = () => {
     if (selectAll) {

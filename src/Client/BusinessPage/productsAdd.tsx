@@ -76,17 +76,23 @@ const ProductsAdd: React.FC = () => {
 
 
     useEffect(() => {
-      const fetchVendorID = async () => {
+      const fetchVendorId = async (userId: number) => {
         try {
-          const response = await axios.get( serverURL + `/fetchVendorId/${id}`);
-          setVendorID(response.data.vendor_id);
+          const response = await axios.get(`${serverURL}/api/fetchVendorId/${userId}`);
+          if (response.status === 200) {
+            const { vendor_id } = response.data;
+            setVendorID(vendor_id); // Set the vendorID properly
+            alert(`Vendor ID: ${vendor_id}`);
+          }
         } catch (error) {
-          console.error('Error fetching vendor ID:', error);
-          setVendorID(null);
+          console.error("Error while fetching vendor ID: ", error);
+          setVendorID(null); // Set to null in case of error
         }
       };
   
-      fetchVendorID();
+      if (id) {
+        fetchVendorId(Number(id)); // Pass the `id` as the user ID to the API
+      }
     }, [id]);
 
 

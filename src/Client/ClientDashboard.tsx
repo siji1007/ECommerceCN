@@ -5,15 +5,18 @@ import { IoStorefrontSharp } from "react-icons/io5";
 import { AiFillProfile } from "react-icons/ai";
 import { useState, useEffect, useRef } from 'react';
 import { MdArrowForward } from 'react-icons/md';
-import { LiaHistorySolid } from "react-icons/lia";
+import { BiSolidPurchaseTag } from "react-icons/bi";
 import Business from './BusinessPage/business';
 import ProductList from './BusinessPage/ProductLIst';
 import ProductAdd from './BusinessPage/productsAdd';
 import MyCartPage from '../components/CartSideBar';
+import MyPurchased from './Purchased';
 import Settings from './Settings';
 import host_backend from '../host/host.txt?raw';
 import host_frontend from '../host/ReactHost.txt?raw';
+import Neworder from './BusinessPage/NewOrder';
 import axios from 'axios';
+import mypurchased from './Purchased';
 
 const ClientDashboard: React.FC = () =>{
     const [firstName, setFirstName] = useState<string>('');    
@@ -32,6 +35,8 @@ const ClientDashboard: React.FC = () =>{
     const [isProductAdd, setIsProductAdd] = useState(false);
     const [isMyCart, setMyCart] = useState(false);
     const [isSettings, setSettings] = useState(false);
+    const [isNeworder, setNeworders] = useState(false);
+    const [isPurchased, setPurchased] = useState(false);
     const [isDisabledPesonalInfo, setIsDisabledPersonalInfo] = useState(true);
     const [isDisabledAddress, setIsDisabledAddress] = useState(true);
     const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false); 
@@ -191,18 +196,13 @@ const ClientDashboard: React.FC = () =>{
         };
       
 
-
-
-
-
-
-
-
-
-
-
     const navigateToProductList = () => {
         navigate(`/clientprofile/id=${id}/product-list`);
+      };
+
+
+      const navigateNewOrder = () => {
+        navigate(`/clientprofile/id=${id}/neworders`);
       };
 
       const months = [
@@ -229,10 +229,11 @@ const ClientDashboard: React.FC = () =>{
     const navigate = useNavigate();
 
     const isActive = location.pathname === `/clientprofile/id=${id}`;
-    const isProducts = location.pathname === `/clientprofile/id=${id}/product-list` ||location.pathname === `/clientprofile/id=${id}/products-add` ;
+    const isProducts = location.pathname === `/clientprofile/id=${id}/product-list` ||location.pathname === `/clientprofile/id=${id}/products-add` || location.pathname === `/clientprofile/id=${id}/product-list/neworders` ;
     const isStart = location.pathname == `/clientprofile/id=${id}/business-form`;
     const MyCartActive = location.pathname === `/clientprofile/id=${id}/shop-cart`;
     const MySettingsActive = location.pathname === `/clientprofile/id=${id}/settings`; 
+    const MyPurchasedisActive = location.pathname === `/clientprofile/id=${id}/purchased`; 
 
 
     useEffect(() => {
@@ -243,13 +244,17 @@ const ClientDashboard: React.FC = () =>{
       const productAddIncluded = path.includes('products-add');
       const MyCartIncluded = path.includes('shop-cart')
       const MySettingsIncluded = path.includes('settings')
+      const NewOrdersIncluded = path.includes('neworders')
+      const MyPurchased = path.includes("purchased")
 
       setIsBusinessForm(businessFormIncluded);
       setIsProductList(productListIncluded);
       setIsProductAdd(productAddIncluded);
-      setIsDropdownOpen(businessFormIncluded || productListIncluded || productAddIncluded);
+      setIsDropdownOpen(businessFormIncluded || productListIncluded || productAddIncluded || NewOrdersIncluded);
       setMyCart(MyCartIncluded);
       setSettings(MySettingsIncluded);
+      setNeworders(NewOrdersIncluded)
+      setPurchased(MyPurchased);
 
 
  
@@ -355,12 +360,16 @@ const ClientDashboard: React.FC = () =>{
                           </button>
                     </Link>
 
+
+                    <Link to = 'purchased'>
                     <button
-                             className="w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center text-black"
+                             className={`w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center 
+                              ${MyPurchasedisActive ? 'bg-green-600 text-white' : ' text-black hover:bg-green-600 hover:text-white'}`}
                                > 
-                              <LiaHistorySolid className="h-5 w-5 mr-2" />
-                              My History
+                              <BiSolidPurchaseTag  className="h-5 w-5 mr-2" />
+                              My Purchased
                           </button>
+                    </Link>
 
                     {/* Register your business button */}
                     <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center" onClick={toggleDropdown} >
@@ -389,6 +398,15 @@ const ClientDashboard: React.FC = () =>{
                         Products
                         </button>
 
+
+                        <button
+                          className={`w-full py-2 px-4 text-left text-black font-semibold ${isNeworder ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`}
+                        onClick={navigateNewOrder}
+                        >
+                        New Order
+                        </button>
+
+
                     </div>
                     )}
 
@@ -416,6 +434,10 @@ const ClientDashboard: React.FC = () =>{
                 <MyCartPage/>
                 ) : isSettings ? (
                 <Settings/>
+                ) : isNeworder ? (
+                <Neworder/>
+              ) : isPurchased ? (
+                <MyPurchased/>
                 ):(
                     <>
                         <section className="mb-6 shadow p-4 bg-white rounded relative">{/* Client Information Section */}

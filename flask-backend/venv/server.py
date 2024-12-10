@@ -262,6 +262,15 @@ class Vendor(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     vendor_status = db.Column(db.String(50), default='Pending')
     document_img_src = db.Column(db.String(255))
+    # Example Flask API endpoint to fetch vendor by user_id
+@app.route('/get_vendor_by_user_id', methods=['GET'])
+def get_vendor_by_user_id():
+    user_id = request.args.get('user_id')
+    vendor = Vendor.query.filter_by(user_id=user_id).first()  # Query vendor table
+    if vendor:
+        return jsonify({'ven_id': vendor.ven_id})
+    return jsonify({'error': 'Vendor not found'}), 404
+
 
 @app.route('/api/updateVendorStatus', methods=['POST'])
 def update_vendor_status():
@@ -524,11 +533,6 @@ def get_credentials():
 
 
 
-
-
-# Define the Vendor model based on the table structure
-
-
 @app.route('/api/fetchSpecificVendor', methods=['GET'])
 def fetch_specific_vendor():
     # Get the vendor_id from the query string or request arguments
@@ -675,31 +679,42 @@ def check_vendor_status(user_id):
 
 
 
-@app.route('/fetchVendorId/<int:user_id>', methods=['GET', 'OPTIONS'])
+@app.route('/api/fetchVendorStatus/<int:vendor_id>', methods=['GET'])
+def fetch_vendor_status(vendor_id):
+    try:
+        # Assuming you are querying the Vendor table to get the vendor status
+        vendor = Vendor.query.get(vendor_id)
+        
+        if not vendor:
+            return jsonify({"message": "Vendor not found."}), 404
+        
+        status = vendor.vendor_status 
+        
+        return jsonify({"vendor_id": vendor_id, "status": status}), 200
+    
+    except Exception as e:
+        print(f"Error fetching status for vendor {vendor_id}: {e}")
+        return jsonify({"message": "An error occurred while fetching the vendor status."}), 500
+
+
+@app.route('/api/fetchVendorId/<int:user_id>', methods=['GET', 'OPTIONS'])
 def fetch_vendor_id(user_id):
-    """
-    Fetch the vendor ID associated with the given user ID from the vendors table.
-    """
     try:
         print(f"Received request to fetch vendor ID for user_id: {user_id}")
-        # Query the Vendor table for the given user_id
         vendor = Vendor.query.filter_by(user_id=user_id).first()
         
         if not vendor:
             print("Vendor not found.")
             return jsonify({"message": "Vendor not found"}), 404
         
-        # Get the vendor ID and other relevant details if needed
         vendor_id = vendor.ven_id  # Assuming ven_id is the primary key for the vendors table
         print(f"Vendor ID: {vendor_id}")
         
-        # Return the vendor ID
         return jsonify({"vendor_id": vendor_id}), 200
 
     except Exception as e:
         print(f"Error fetching vendor ID: {e}")
         return jsonify({"message": "An error occurred while fetching the vendor ID"}), 500
-    
 
 
 
@@ -883,14 +898,8 @@ def get_all_products():
 
 class Product(db.Model):
     __tablename__ = 'products'  # Name of the table in the database
-
-    # Primary Key
     prod_id = db.Column(db.Integer, primary_key=True)
-
-    # Foreign Key
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.ven_id'), nullable=False)
-
-    # Product Attributes
     prod_name = db.Column(db.String(255), nullable=False)
     prod_category = db.Column(db.String(255), nullable=False)
     prod_descript = db.Column(db.Text, nullable=True)
@@ -899,9 +908,6 @@ class Product(db.Model):
     prod_disc_price = db.Column(db.Float, nullable=True)
     prod_status = db.Column(db.String(50), nullable=False, default="Pending")
     prod_image_id = db.Column(db.String(255), nullable=False)
-
-
-    # Relationship with Vendor
     vendor = db.relationship('Vendor', backref=db.backref('products', lazy=True))
 
     def __init__(self, vendor_id, prod_name, prod_category, prod_descript, prod_price, prod_stock, prod_disc_price, prod_status="Pending", prod_image_id=None):
@@ -919,7 +925,7 @@ class Product(db.Model):
         return {
             "prod_id": self.prod_id,
             "vendor_id": self.vendor_id,
-            "vendor_name": self.vendor.ven_name if self.vendor else None,
+            "vendor_name": self.vendor.vendor_name if self.vendor else None,
             "prod_name": self.prod_name,
             "prod_category": self.prod_category,
             "prod_descript": self.prod_descript,
@@ -978,14 +984,14 @@ def delete_cart_item(cart_id):
 @app.route('/api/cart/<int:us_id>', methods=['GET'])
 def fetch_user_cart(us_id):
     try:
-        # Query to fetch cart items for the specific user ID, along with product details (including the image)
+        # Query to fetch cart items for the specific user ID, along with product details (including the image and vendor ID)
         cart_items = db.session.query(Cart, Product).join(Product, Cart.product_id == Product.prod_id).filter(Cart.us_id == us_id).all()
 
         # Check if the user has items in the cart
         if not cart_items:
             return jsonify({'message': 'No cart items found for this user'}), 404
 
-        # Serialize the cart items into a list of dictionaries, including the product image
+        # Serialize the cart items into a list of dictionaries, including the product image and vendor_id
         cart_data = [
             {
                 'cart_id': item.Cart.cart_id,
@@ -997,14 +1003,18 @@ def fetch_user_cart(us_id):
                 'total_price': item.Cart.total_price,
                 'date_added': item.Cart.date_added.strftime('%Y-%m-%d %H:%M:%S'),
                 'product_image': item.Product.prod_image_id,  # Add the product image ID here
+                'vendor_id': item.Product.vendor_id  # Include the vendor_id here
             }
             for item in cart_items
         ]
+        print(cart_items)
 
         return jsonify({'message': 'Cart items fetched successfully', 'cart_items': cart_data}), 200
 
     except Exception as e:
         return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
+
+
 
 
 @app.route('/api/cart/add', methods=['POST'])
@@ -1046,28 +1056,70 @@ def add_to_cart():
 
 
 
-class Transaction(db.Model):
-    transaction_id = db.Column(db.Integer, primary_key=True)
-    u_ID = db.Column(db.Integer, nullable=False)  # FK to users table
-    p_ID = db.Column(db.Integer, nullable=False)  # FK to products table
-    quantity = db.Column(db.Integer, nullable=False)
-    unit_price = db.Column(db.Float, nullable=False)
-    subtotal = db.Column(db.Float, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(50), default='processing')  # 'processing' or 'processed'
+
+
+@app.route('/api/transactions/<int:user_id>/to_pay', methods=['GET'])
+def get_to_pay_transactions(user_id):
+    transactions = Transaction.query.filter_by(u_ID=user_id, status='processing').all()
+    return jsonify([
+        {
+            'transaction_id': t.transaction_id,
+            'product_id': t.p_ID,
+            'quantity': t.quantity,
+            'unit_price': t.unit_price,
+            'subtotal': t.subtotal,
+            'created_at': t.created_at,
+            'status': t.status,
+            'product_image': t.product.prod_image_id,  # Access Product model's image ID
+            'product_name': t.product.prod_name,
+            'product_category': t.product.prod_category
+        }
+        for t in transactions
+    ])
+
+
+@app.route('/api/transactions/<int:user_id>/to_receive', methods=['GET'])
+def get_to_receive_transactions(user_id):
+    transactions = Transaction.query.filter_by(u_ID=user_id, status='processed').all()
+    return jsonify([
+        {
+            'transaction_id': t.transaction_id,
+            'product_id': t.p_ID,
+            'quantity': t.quantity,
+            'unit_price': t.unit_price,
+            'subtotal': t.subtotal,
+            'created_at': t.created_at,
+            'status': t.status,
+            'product_image': t.product.prod_image_id,
+            'product_name': t.product.prod_name,
+            'product_category': t.product.prod_category
+        }
+        for t in transactions
+    ])
+
+
+
 
 @app.route('/api/create_transaction', methods=['POST'])
 def create_transaction():
     data = request.get_json()  # Get the data from the request body
 
+    # Get the payment method from the front end (either 'COD' or 'POD')
+    payment = data['paymentMethod']  # Make sure the front end sends this
+
+    # Validate payment method
+
     # Loop through the selected products to insert them into the transaction table
     for product in data['selectedProductDetails']:
+        # Create a new transaction entry with vendor_id
         new_transaction = Transaction(
-            u_ID=data['userId'],  # User ID passed from front end
-            p_ID=product['id'],  # Product ID
+            u_ID=data['userId'],  # User ID passed from the front end
+            p_ID=product['productId'],  # Product ID
+            v_ID=product['vendorId'],  # Add vendor ID from the product
             quantity=product['quantity'],
             unit_price=product['unitPrice'],
             subtotal=product['subtotal'],
+            payment=data['paymentMethod'] ,  # Add payment method to transaction
             status='processing'  # Status can be 'processing' or 'processed'
         )
 
@@ -1076,6 +1128,113 @@ def create_transaction():
     db.session.commit()  # Commit the transaction to the database
 
     return jsonify({"message": "Transaction created successfully!"}), 201
+
+class Transaction(db.Model):
+    __tablename__ = 'transactions'
+
+    transaction_id = db.Column(db.Integer, primary_key=True)
+    u_ID = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    p_ID = db.Column(db.Integer, db.ForeignKey('products.prod_id'), nullable=False)
+    v_ID = db.Column(db.Integer, db.ForeignKey('vendors.ven_id'), nullable=False)  # Vendor ID should be here
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(db.Float, nullable=False)
+    subtotal = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(50), nullable=False)
+    payment = db.Column(db.String(20), nullable=False)
+
+    # Define relationships if needed (optional, just for easy access to related records)
+    user = db.relationship('User', backref='transactions')
+    product = db.relationship('Product', backref='transactions')
+    vendor = db.relationship('Vendor', backref='transactions')
+
+@app.route('/update_transaction_status', methods=['POST'])
+def update_transaction_status():
+    try:
+        data = request.json  # Get the JSON payload from the request
+        transaction_id = data.get('transaction_id')
+        status = data.get('status')
+
+        # Validate input
+        if not transaction_id or not status:
+            return jsonify({'error': 'Missing transaction_id or status'}), 400
+
+        # Fetch the transaction from the database
+        transaction = Transaction.query.filter_by(transaction_id=transaction_id).first()
+        if not transaction:
+            return jsonify({'error': 'Transaction not found'}), 404
+
+        # Update the status
+        transaction.status = status
+        db.session.commit()  # Save changes to the database
+
+        return jsonify({'message': 'Transaction status updated successfully'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/get_user_by_id', methods=['GET'])
+def get_user_by_id():
+    u_id = request.args.get('u_id')
+    if not u_id:
+        return jsonify({'error': 'u_id is required'}), 400
+    user = User.query.filter_by(id=u_id).first()
+    if user:
+        return jsonify({
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        })
+    return jsonify({'error': 'User not found'}), 404
+
+
+
+# Example Flask API to fetch transactions by v_ID
+@app.route('/get_transactions_by_vendor', methods=['GET'])
+def get_transactions_by_vendor():
+    ven_id = request.args.get('ven_id')
+    transactions = Transaction.query.filter_by(v_ID=ven_id, status="Processing").all()  # Filter by status "Processing"
+    
+    if transactions:
+        # Format the response to send relevant details
+        transaction_details = [{
+            'transaction_id': transaction.transaction_id,
+            'u_ID': transaction.u_ID,
+            'p_ID': transaction.p_ID,
+            'quantity':transaction.quantity,
+            'subtotal':transaction.subtotal,
+            'created_at':transaction.created_at,
+            'payment':transaction.payment,
+            'unit_price':transaction.unit_price,
+
+            'status': transaction.status
+        } for transaction in transactions]
+        
+        return jsonify(transaction_details)
+    
+    return jsonify({'error': 'No processing transactions found for this vendor'}), 404
+
+
+@app.route('/get_product_by_id', methods=['GET'])
+def get_product_by_id():
+    p_id = request.args.get('p_id')  # Get the p_id from the query parameters
+    
+    if not p_id:
+        return jsonify({'error': 'Product ID is required'}), 400
+    
+    # Query the product by prod_id (assuming your Product model is correctly set up)
+    product = Product.query.filter_by(prod_id=p_id).first()
+    
+    if product:
+        # Return the product details if found
+        product_details = {
+            'prod_name': product.prod_name,
+            'prod_category': product.prod_category,
+            'prod_image_id': product.prod_image_id
+        }
+        return jsonify(product_details)
+    
+    return jsonify({'error': 'Product not found'}), 404
+
 
 with app.app_context():
     db.create_all()

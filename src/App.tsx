@@ -20,9 +20,11 @@ import Maptest from './pages/Maptest';
 import Footer from './components/footer';
 import VendorProfile from './pages/vendor_Profile';
 import Cartpage from './components/CartSideBar';
+import MyPurchase from './Client/Purchased';
 import Settings from './Client/Settings';
 import Payment from './pages/BuyPayment';
 import host from "./host/host.txt?raw";
+import NewOrders from './Client/BusinessPage/NewOrder';
 
 function App() {
   const serverHost = host.trim();
@@ -90,17 +92,20 @@ function App() {
 
           {/* Client Routes with userId */}
           <Route path={`/clientprofile/id=${userId}`} element={<Clientdashboard />}>
-            <Route path='shop-cart' element={<Cartpage />} />
-            <Route path='settings' element={<Settings />} />
-            <Route path='business-form' element={<Business />} />
-            <Route path='product-list' element={<ProductList />} />
-            <Route path='products-add' element={<ProductUpload />} />
-          </Route>
+          <Route path="shop-cart" element={<Cartpage />} />
+          <Route path="purchased" element={<MyPurchase />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="business-form" element={<Business />} />
+          <Route path="product-list" element={<ProductList />}/>
+          <Route path="neworders" element={<NewOrders />} />
+          
+          <Route path="products-add" element={<ProductUpload />} />
+        </Route>
           
           <Route path='*' element={<Error404 />} />
         </Routes>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </Router>
   );
 }

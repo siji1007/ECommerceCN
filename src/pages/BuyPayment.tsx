@@ -1,42 +1,48 @@
-import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key } from 'react';
+import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import host from "../host/host.txt?raw";
+import { BsCashCoin } from "react-icons/bs";
+import { MdPaid } from "react-icons/md";
 
 const Payment: React.FC = () => {
-  // Get the passed data from the location state
-
-  
   const serverURL = host.trim();
   const location = useLocation();
   const { selectedProductDetails } = location.state || { selectedProductDetails: [] };
 
+
   // Calculate total price from selected products
   const orderTotal = selectedProductDetails.reduce((total, product) => total + product.subtotal, 0);
 
+  
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'POD'>('COD'); 
+  alert(paymentMethod);
   const handleConfirmOrder = async () => {
     const authData = localStorage.getItem('Auth');  // Get user ID from local storage
-   
   
-    const orderTotal = selectedProductDetails.reduce((total, product) => total + product.subtotal, 0);
-  
+    // Add the vendorId to the orderData, which will be sent to the API
     const orderData = {
       userId: authData,
-      selectedProductDetails: selectedProductDetails,
+      selectedProductDetails: selectedProductDetails.map((product) => ({
+        ...product,
+        vendorId: product.vendorId,  // Include vendor ID in each product
+      })),
+      paymentMethod: paymentMethod, // Include payment method in the order data
     };
   
     try {
       // Send the order data to the Flask API
       const response = await axios.post(serverURL + '/api/create_transaction', orderData);
-      
+  
       if (response.status === 201) {
         // Show the confirmation message in an alert
         let message = 'Your Order Details:\n\n';
         selectedProductDetails.forEach((product) => {
           message += `${product.name} - ₱${product.unitPrice.toFixed(2)} x ${product.quantity} = ₱${product.subtotal.toFixed(2)}\n`;
+          message += `Vendor ID: ${product.vendorId}\n`; // Display Vendor ID in the alert
         });
   
-        message += `\nUserId: ${authData} \nTotal Payment: ₱${orderTotal.toFixed(2)}`;
+        message += `\nUserId: ${authData} \nTotal Payment: ₱${orderTotal.toFixed(2)}\nPayment Method: ${paymentMethod}`;
         alert(message);
       }
     } catch (error) {
@@ -44,6 +50,7 @@ const Payment: React.FC = () => {
       alert("There was an issue processing your order. Please try again.");
     }
   };
+  
 
   return (
     <div className="flex flex-col h-auto pt-16 min-h-screen">
@@ -52,7 +59,7 @@ const Payment: React.FC = () => {
       {/* Address Section */}
       <h2 className="text-xl font-semibold">Shipping Address</h2>
       <div className="flex justify-between items-center mb-8 mx-4 border-b pb-4">
-        <div className="flex flex-col">
+        <div className="flex flex-row gap-2 font-semibold">
           <p className="text-sm">User Name: John Doe</p>
           <p className="text-sm">Email: johndoe@example.com</p>
           <p className="text-sm">Postal Code: 12345</p>
@@ -62,6 +69,39 @@ const Payment: React.FC = () => {
         </div>
         <button className="bg-blue-500 text-white px-4 py-2 rounded">Change</button>
       </div>
+
+      {/* Payment Method Section */}
+<h2 className="text-xl font-semibold mb-4">Payment Method</h2>
+<div className="flex justify-center gap-4 space-around items-center mb-8 mx-4 border-b pb-4">
+  <div
+    className={`card ${paymentMethod === 'COD' ? 'border-green-800' : 'border-gray-300'} p-4 cursor-pointer border rounded-lg`}
+    onClick={() => {
+      setPaymentMethod('COD');
+      
+    }}
+  >
+    <div className="flex flex-col items-center">
+      <BsCashCoin className='h-10 w-10' />
+      <h3 className="text-lg font-semibold">Cash On Delivery (COD)</h3>
+
+    </div>
+  </div>
+  
+  <div
+    className={`card ${paymentMethod === 'POD' ? 'border-green-800' : 'border-gray-300'} p-4 cursor-pointer  border rounded-lg`}
+    onClick={() => {
+      setPaymentMethod('POD');
+      
+    }}
+  >
+    <div className="flex flex-col items-center">
+      <MdPaid className='h-10 w-10' />
+      <h3 className="text-lg font-semibold">Pay On Delivery (POD)</h3>
+  
+    </div>
+  </div>
+</div>
+
 
       {/* Product Ordered Section */}
       <div className="mb-8 mx-4">
@@ -75,7 +115,7 @@ const Payment: React.FC = () => {
         </div>
 
         {/* Display each product from selectedProductDetails */}
-        {selectedProductDetails.map((product: { image: any; name: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined; category: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | null | undefined; unitPrice: number; quantity: string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | null | undefined; subtotal: number; }, index: Key | null | undefined) => (
+        {selectedProductDetails.map((product, index) => (
           <div key={index} className="grid grid-cols-5 gap-4 w-full items-center mb-4 border-b pb-4 m-2">
             <div className="flex items-center">
               <img src={product.image || "default_product_image.jpg"} alt={product.name} className="w-16 h-16 object-cover" />

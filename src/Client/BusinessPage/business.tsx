@@ -20,40 +20,6 @@ const Business: React.FC = () => {
       return <div>ID not found in the URL</div>;
   }
 
-
-
-
-  // const handleNext = async () => {
-  //   const isFormValid = Object.values(formData).every((value) => value.trim() !== '');
-    
-  //   if (!isFormValid) {
-  //     alert('Please fill in all required fields before proceeding.');
-  //     return; // Stop execution if validation fails
-  //   }
-  //   if (step === 1) {
-  //     try {
-  //       alert("next!");
-       
-  //       const userId = id;
-  //       const response = await axios.post(`${serverHost}/submit-form-vendor/${userId}`, formData, {
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //       });
-        
-  //       console.log(response.data.message); // Log success message
-  //       alert('Form data sent to server!');
-  //       setStep(2); // Proceed to the next step
-  //      } catch (error) {
-  //       console.error('Error submitting form:', error);
-  //       alert('Failed to submit form.');
-  //      }
-  //   } else {
-  //     alert('Form Submitted!');
-  //     localStorage.setItem('BusinessStatus', 'verified');
-  //   }
-  // };
-
   const [imageName, setImageName] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
 

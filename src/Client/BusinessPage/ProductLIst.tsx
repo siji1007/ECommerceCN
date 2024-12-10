@@ -5,6 +5,7 @@ import axios from 'axios';
 import serverURL from '../../host/host.txt?raw';
 import ReactHost from '../../host/ReactHost.txt?raw';
 import { Line, Bar } from 'react-chartjs-2';
+import NewOrders from './NewOrder'; 
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
 interface Product {
@@ -39,10 +40,6 @@ const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [modalProduct, setModalProduct] = useState<Product | null>(null);
-  const [isMinimized, setIsMinimized] = useState<boolean>(false);
-  const [newComment, setNewComment] = useState<string>('');
-  const [comments, setComments] = useState<Comment[]>([]);
   const [vendorStatus, setVendorStatus] = useState<string>(''); // Store vendor status
   const hosting = serverURL.trim();
   const reactHost = ReactHost.trim();
@@ -100,87 +97,53 @@ const ProductList: React.FC = () => {
   };
 
 
-  let url = window.location.href;
-  let match = url.match(/id=(\d+)/);  // This will match 'id=2' or similar
-  
-  const id = match ? match[1] : null;
-  
-  if (!id) {
-      return <div>ID not found in the URL</div>;
-  }
+
+  const id = localStorage.getItem('Auth')
 
   useEffect(() => {
-    const fetchVendorStatus = async () => {
+    const fetchVendorData = async () => {
         try {
-            // Send the GET request to the backend
-            const response = await fetch(`${hosting}/checkVendorStatus/${id}`, {
+            // Fetch vendor status
+            const vendorStatusResponse = await fetch(`${hosting}/checkVendorStatus/${id}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
 
-            const result = await response.json();
+            const vendorStatusResult = await vendorStatusResponse.json();
 
-            if (response.ok) {
-                const vendorStatus = result.message; // Extract vendor status
-                const vendorId = result.vendor_id; // Extract vendor ID
+            if (vendorStatusResponse.ok) {
+                const vendorStatus = vendorStatusResult.message;
+                const vendorId = vendorStatusResult.vendor_id;
 
                 setVendorStatus(vendorStatus);
-                setVendorId(vendorId); // Set vendorId in state
+                setVendorId(vendorId);
                 console.log(`Vendor Status: ${vendorStatus}, Vendor ID: ${vendorId}`);
 
-                // Show the vendor status and vendor ID in an alert
-                alert(`Vendor Status: ${vendorStatus}\nVendor ID: ${vendorId}`);
+                // Fetch products if vendor ID is valid
+                if (vendorId !== null) {
+                    try {
+                        const productsResponse = await axios.get<FetchProductsResponse>(`${hosting}/FetchProducts/${vendorId}`);
+                        const validProducts = productsResponse.data.products.filter(
+                            (product: Product) => product.prod_name && product.prod_category
+                        );
+                        setProducts(validProducts);
+                    } catch (err) {
+                        console.error('Error fetching products:', err);
+                    }
+                }
             } else {
-                // If the response is not OK, show the message from the server
-                alert(result.message || 'Failed to fetch vendor status');
+                console.error('Error fetching vendor status:', vendorStatusResult.message);
             }
         } catch (error) {
-            // Handle any network or unexpected errors
             console.error('Request failed', error);
             alert('An error occurred while trying to fetch vendor status');
         }
     };
 
-    fetchVendorStatus();
+    fetchVendorData();
 }, [hosting, id]);
-
-useEffect(() => {
-  const fetchProducts = async () => {
-    if (vendorId !== null) {
-      try {
-        const response = await axios.get<FetchProductsResponse>(`${hosting}/FetchProducts/${vendorId}`);
-        const validProducts = response.data.products.filter(
-          (product: Product) => product.prod_name && product.prod_category
-        );
-        setProducts(validProducts);
-
-        // Show products in an alert
-        const productDetails = validProducts
-          .map((product: Product) =>
-            `prod_id: ${product.prod_id}\n` +
-            `vendor_id: ${product.vendor_id}\n` +
-            `vendor_name: ${product.vendor_name}\n` +
-            `prod_name: ${product.prod_name}\n` +
-            `prod_category: ${product.prod_category}\n` +
-            `prod_descript: ${product.prod_descript}\n` +
-            `prod_price: ${product.prod_price}\n` +
-            `prod_disc_price: ${product.prod_disc_price}\n` +
-            `prod_status: ${product.prod_status}\n` +
-            `prod_image_id: ${product.prod_image_id}`
-          )
-          .join('\n\n');
-
-        alert(`Products:\n\n${productDetails}`);
-      } catch (err) {
-        console.error('Error fetching products:', err);
-      }
-    }
-  };
-
-  fetchProducts();
-}, [hosting, vendorId]);
 
 
 
@@ -192,24 +155,7 @@ useEffect(() => {
     setSearchQuery(e.target.value.toLowerCase());
   };
 
-  const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewComment(e.target.value);
-  };
-
-  const handleCommentSubmit = () => {
-    if (newComment.trim()) {
-      const newCommentObject: Comment = {
-        id: Date.now(), // Using timestamp as a unique ID
-        author: 'Seller', // Can be dynamic depending on the author
-        text: newComment.trim(),
-      };
-      setComments([...comments, newCommentObject]);
-      setNewComment('');
-    }
-  };
-
-
-
+ 
   const filteredProducts = products.filter(
     (product) =>
       (selectedCategory === 'All' || product.prod_category === selectedCategory) &&
@@ -217,18 +163,16 @@ useEffect(() => {
   );
   
 
-  if (vendorStatus === 'Pending') {
+  const statusMessages: { [key: string]: { text: string; color: string } } = {
+    Pending: { text: 'Your request is pending...', color: 'text-yellow-500' },
+    Rejected: { text: 'Your request is rejected.', color: 'text-red-500' },
+  };
+  
+  if (statusMessages[vendorStatus]) {
+    const { text, color } = statusMessages[vendorStatus];
     return (
-      <div className="p-4 text-center text-yellow-500">
-        <h1>Your request is pending...</h1>
-      </div>
-    );
-
-  }
-  if (vendorStatus === 'Rejected') {
-    return (
-      <div className="p-4 text-center text-red-500">
-        <h1>Your request is rejected.</h1>
+      <div className={`p-4 text-center ${color}`}>
+        <h1>{text}</h1>
       </div>
     );
   }
@@ -242,12 +186,6 @@ useEffect(() => {
       
       {/* Filter and Search */}
       <div className="flex items-center mb-4">
-          <button
-        onClick={handleNewOrderClick}
-        className="fixed bottom-2 right-4 bg-green-600 text-white p-2 rounded-lg shadow-md"
-      >
-        New Order
-      </button>
         <select
           className="border rounded-md px-2 py-1 mr-4"
           onChange={handleCategoryChange}
