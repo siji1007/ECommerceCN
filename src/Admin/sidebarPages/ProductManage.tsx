@@ -121,7 +121,7 @@ const ProductManage: React.FC = () => {
               />
               <h2 className="text-lg font-bold mt-2">{product.prod_name}</h2>
               <p className="text-gray-600">
-                ${product.prod_price.toFixed(2)}
+              ₱ {product.prod_price.toFixed(2)}
               </p>
             </div>
           ))}

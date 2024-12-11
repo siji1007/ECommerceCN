@@ -6,8 +6,9 @@ import hostreact from '../../host/ReactHost.txt?raw';
 const NewOrders: React.FC = () => {
     const [venId, setVenId] = useState<number | null>(null);
     const [transactions, setTransactions] = useState<any[]>([]);
-    const [userDetails, setUserDetails] = useState<{ [key: string]: { first_name: string, last_name: string } }>({});
+    const [userDetails, setUserDetails] = useState<{ [key: string]: { first_name: string, last_name: string, email:string} }>({});
     const [productDetails, setProductDetails] = useState<{ [key: string]: { prod_name: string, prod_category: string, prod_image_id: string } }>({});
+    const [userAddressDetails, setUserAddressDetails] = useState<{ [key: string]: any }>({});  // to hold address info
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -36,14 +37,29 @@ const NewOrders: React.FC = () => {
                             .then((res) => ({ p_ID: transaction.p_ID, ...res.data }))
                     );
 
+                    // Fetch address details
+                    const addressPromises = transactions.map(transaction => 
+                        axios.get(`${host}/api/addresses/${transaction.u_ID}`)
+                            .then((res) => ({ u_ID: transaction.u_ID, address: res.data.address, exists: res.data.exists }))
+                            .catch((err) => ({ u_ID: transaction.u_ID, address: null, exists: false }))  // Handle no address found
+                    );
+
                     // Resolve all promises
                     Promise.all(userPromises).then(users => {
                         const userMap = users.reduce((acc, user) => {
-                            acc[user.u_ID] = { first_name: user.first_name, last_name: user.last_name };
-                            return acc;
+                          // Include first_name, last_name, and email in the user details
+                          acc[user.u_ID] = {
+                            first_name: user.first_name,
+                            last_name: user.last_name,
+                            email: user.email, 
+                          };
+                          return acc;
                         }, {});
+                      
+                        // Set the state with the updated userMap
                         setUserDetails(userMap);
-                    });
+                      });
+                      
 
                     Promise.all(productPromises).then(products => {
                         const productMap = products.reduce((acc, product) => {
@@ -52,6 +68,25 @@ const NewOrders: React.FC = () => {
                         }, {});
                         setProductDetails(productMap);
                     });
+
+                    // Fetch address data
+                    Promise.all(addressPromises).then(addresses => {
+                        const addressMap = addresses.reduce((acc, address) => {
+                            if (address.exists) {
+                                acc[address.u_ID] = {
+                                    province: address.address.province,
+                                    city: address.address.city,
+                                    barangay: address.address.barangay,
+                                    postal_code: address.address.postal_code
+                                };
+                            } else {
+                                acc[address.u_ID] = { message: 'No address found' };
+                            }
+                            return acc;
+                        }, {});
+                        setUserAddressDetails(addressMap);
+                    });
+
                 })
                 .catch((err) => {
                     setError('Error occurred while fetching data');
@@ -63,16 +98,13 @@ const NewOrders: React.FC = () => {
     }, []);
 
     const handleConfirm = (transactionId: number) => {
-        // Make an API call to update the transaction status
         axios
             .post(`${host}/update_transaction_status`, {
                 transaction_id: transactionId,
-                status: 'processed', // New status
+                status: 'processed', 
             })
             .then(() => {
                 alert(`Transaction ID ${transactionId} marked as processed`);
-                
-                // Optionally, update the UI by removing the processed transaction or changing its state
                 setTransactions((prevTransactions) =>
                     prevTransactions.map((transaction) =>
                         transaction.transaction_id === transactionId
@@ -86,18 +118,16 @@ const NewOrders: React.FC = () => {
                 alert(`Failed to update status for Transaction ID ${transactionId}`);
             });
     };
-    
 
     const handleCancel = (transactionId: number) => {
         alert(`Cancel clicked for Transaction ID: ${transactionId}`);
-        // Additional logic for canceling the transaction can go here
     };
 
     return (
         <div>
             <h1 className='text-2xl mb-2 font-semibold'>Request Order</h1>
             {transactions.length === 0 ? (
-                <p>No request orders found</p> // Show this message if no transactions are fetched
+                <p>No request orders found</p>
             ) : (
                 <ul>
                     {transactions.map((transaction) => (
@@ -105,7 +135,6 @@ const NewOrders: React.FC = () => {
                             {/* Product Order Section */}
                             <div className="flex">
                                 <div className="w-20 h-20 bg-gray-300 flex items-center justify-center">
-                                    {/* Product Image */}
                                     {productDetails && productDetails[transaction.p_ID]?.prod_image_id ? (
                                         <img
                                             src={`${hostreact}${productDetails[transaction.p_ID]?.prod_image_id}`}
@@ -133,14 +162,35 @@ const NewOrders: React.FC = () => {
                                 <p className="font-bold">Customer Information</p>
                                 <p>
                                     Full Name: {userDetails[transaction.u_ID]
-                                        ? `${userDetails[transaction.u_ID].first_name} ${userDetails[transaction.u_ID].last_name}`
+                                    ? `${userDetails[transaction.u_ID].first_name} ${userDetails[transaction.u_ID].last_name}`
+                                    : 'Loading...'}
+                                </p>
+                                <p>
+                                    Email: {userDetails[transaction.u_ID]
+                                        ? `${userDetails[transaction.u_ID].email}`  // Should now work if email is correctly mapped
                                         : 'Loading...'}
                                 </p>
+                                </div>
+
+
+                            {/* Address Information Section */}
+                            <div className="flex flex-col justify-center mt-4">
+                                <p className="font-bold">Address Information</p>
+                                {userAddressDetails[transaction.u_ID] ? (
+                                    <div>
+                                        <p>Province: {userAddressDetails[transaction.u_ID].province || 'Not Available'}</p>
+                                        <p>City: {userAddressDetails[transaction.u_ID].city || 'Not Available'}</p>
+                                        <p>Barangay: {userAddressDetails[transaction.u_ID].barangay || 'Not Available'}</p>
+                                        <p>Postal Code: {userAddressDetails[transaction.u_ID].postal_code || 'Not Available'}</p>
+                                    </div>
+                                ) : (
+                                    <p>Loading address...</p>
+                                )}
                             </div>
 
                             {/* Confirm and Cancel Buttons */}
                             <div className="flex flex-col items-end justify-between">
-                                <p className="font-bold">Subtotal: ${transaction.subtotal}</p>
+                                <p className="font-bold">Subtotal: ₱ {transaction.subtotal}</p>
                                 <div className="mt-4">
                                     <button
                                         className="bg-green-800 text-white px-4 py-2 rounded mr-2"

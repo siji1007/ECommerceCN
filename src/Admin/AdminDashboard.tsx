@@ -11,10 +11,11 @@ import Settings from '../Admin/sidebarPages/adminSettings';
 import ProductManagement from './sidebarPages/ProductManage';
 
 const AdminDashboard: React.FC = () => {
-  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
-  const [selectedDashboard, setSelectedDashboard] = useState<string | null>(null);
-  const location = useLocation(); // Get the current URL path
   const adminID = localStorage.getItem('adminID'); 
+
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const [selectedDashboard, setSelectedDashboard] = useState<string>('');
+  const location = useLocation(); // Get the current URL path
 
   const toggleUserManagement = () => {
     setIsUserManagementOpen((prev) => !prev);
@@ -28,21 +29,36 @@ const AdminDashboard: React.FC = () => {
     setSelectedDashboard('vendor');
   };
 
-  const handleSettings = () =>{
+  const handleSettings = () => {
     setSelectedDashboard('settings');
   };
 
-  const handleProduct = () =>{
+  const handleProduct = () => {
     setSelectedDashboard('product')
   };
 
-
+  // Handle active links for the sidebar
   const isCustomerActive = location.pathname === `/admin/id_admin=${adminID}/customer-management`;
-  const isVendorActive = location.pathname ===`/admin/id_admin=${adminID}/vendor-management`;
+  const isVendorActive = location.pathname === `/admin/id_admin=${adminID}/vendor-management`;
   const isSettingsActive = location.pathname === `/admin/id_admin=${adminID}/settings`;
   const isProductActive = location.pathname === `/admin/id_admin=${adminID}/product-management`;
 
+  // Sync selectedDashboard with current pathname on mount
+  useEffect(() => {
+    if (location.pathname === `/admin/id_admin=${adminID}/customer-management`) {
+      setIsUserManagementOpen(true);
+      setSelectedDashboard('customer');
+    } else if (location.pathname === `/admin/id_admin=${adminID}/vendor-management`) {
+      setIsUserManagementOpen(true);
+      setSelectedDashboard('vendor');
+    } else if (location.pathname === `/admin/id_admin=${adminID}/settings`) {
+      setSelectedDashboard('settings');
+    } else if (location.pathname === `/admin/id_admin=${adminID}/product-management`) {
+      setSelectedDashboard('product');
+    }
+  }, [location.pathname, adminID]);  // Trigger when location.pathname or adminID changes
 
+  // Initially open the User Management section if we're on the customer page
   useEffect(() => {
     if (isCustomerActive) {
       setIsUserManagementOpen(true);
@@ -50,7 +66,7 @@ const AdminDashboard: React.FC = () => {
   }, [isCustomerActive]);
 
   return (
-    <div className="flex ">
+    <div className="flex">
       {/* Sidebar Section */}
       <div className="w-64 bg-white text-white flex flex-col items-center py-8 h-screen border">
         <div className="flex flex-col items-center justify-center mb-8 border-b w-full">
@@ -112,12 +128,10 @@ const AdminDashboard: React.FC = () => {
 
       {/* Right Section - Dynamic Content */}
       <main className="flex-1 p-8">
-        {selectedDashboard === 'customer' && <CustomerManagement/>}
-        {selectedDashboard === 'vendor' && <VendorManagement/>}
-        {selectedDashboard === 'settings' && <Settings/>}
-        {selectedDashboard === 'product' && <ProductManagement/>}
-
-      
+        {selectedDashboard === 'customer' && <CustomerManagement />}
+        {selectedDashboard === 'vendor' && <VendorManagement />}
+        {selectedDashboard === 'settings' && <Settings />}
+        {selectedDashboard === 'product' && <ProductManagement />}
       </main>
     </div>
   );

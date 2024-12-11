@@ -34,9 +34,9 @@ const ClientDashboard: React.FC = () =>{
     const [lastName, setLastName] = useState<string>('');
     const [email, setEmail] =  useState<string>('');
     const [gender, setGender] =  useState<string>('');
-    const [birthMonth, setBirthmonth] =  useState<string>('');
-    const [birthDay, setBirthday] =  useState<string>('');
-    const [birthYear, setBirthyear] =  useState<string>('');
+    const [birthMonth, setBirthMonth] = useState(0);
+    const [birthDay, setBirthday] =  useState('');
+    const [birthYear, setBirthyear] =  useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [user, setUser] = useState<{ first_name: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -104,10 +104,9 @@ const ClientDashboard: React.FC = () =>{
                     latitude: address.latitude,
                     longitude: address.longitude,
                   });
-                  const fetchedPosition: [number, number] = [address.latitude, address.longitude];
-                  setPosition(fetchedPosition);
-                  alert(fetchedPosition);
-                  mapRef.current?.setView(fetchedPosition, 20);
+                
+                  setPosition([address.latitude, address.longitude]);
+                  mapRef.current?.setView([address.latitude, address.longitude], 20);
       
                   // const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}0&lon=${longitude}`;
                  
@@ -163,6 +162,12 @@ const ClientDashboard: React.FC = () =>{
         
         useEffect(() => {
           const userId = id;  // The user ID you want to query for
+          
+          // Array to map month names to their numeric values
+          const monthNames = [
+            "January", "February", "March", "April", "May", "June", 
+            "July", "August", "September", "October", "November", "December"
+          ];
       
           // Send the GET request with the id query parameter
           fetch(serverUrl + `/api/get-credentials?id=${userId}`, {
@@ -176,21 +181,25 @@ const ClientDashboard: React.FC = () =>{
             })
             .then((data) => {
               setUser(data);
-              // Set user details from the fetched data
               setFirstName(data.first_name);
               setLastName(data.last_name);
               setEmail(data.email);
               setGender(data.gender);
-              setBirthmonth(data.birthmonth);
               setBirthday(data.birthday);
               setBirthyear(data.birthyear);
               setImage(data.user_image);  // Set the current profile image
+              
+              // Map the birthMonth (string) to its corresponding numeric value (1-12)
+              const monthIndex = monthNames.indexOf(data.birthmonth);
+              if (monthIndex !== -1) {
+                setBirthMonth(monthIndex + 1);  // Set the numeric value of the month
+              }
             })
             .catch((error) => {
               setUser(error.message);
               console.error('Error:', error);
             });
-        }, [id]); // Runs when `id` changes or component mounts
+        }, [id]); 
       
         // Handle the change when the user selects a file
         const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -291,22 +300,11 @@ const ClientDashboard: React.FC = () =>{
         navigate(`/clientprofile/id=${id}/neworders`);
       };
 
-      const months = [
-        { name: "January", value: 1 },
-        { name: "February", value: 2 },
-        { name: "March", value: 3 },
-        { name: "April", value: 4 },
-        { name: "May", value: 5 },
-        { name: "June", value: 6 },                      //show months and paire to its array
-        { name: "July", value: 7 },
-        { name: "August", value: 8 },
-        { name: "September", value: 9 },
-        { name: "October", value: 10 },
-        { name: "November", value: 11 },
-        { name: "December", value: 12 }
-      ];
+    
 
-
+      const handleGenderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setGender(e.target.value);  // Update the gender state when a radio button is selected
+      };
 
 
     
@@ -373,11 +371,75 @@ const ClientDashboard: React.FC = () =>{
       };
     
       const handleSaveClickPersonalInfo = () => {
+        // Disable editing
         setIsDisabledPersonalInfo(true); 
         setIsEditingPersonalInfo(false); 
-        alert("Save Personal Information");
         
+        // Create the months array to map numeric month to string (A Letter Month)
+        const months = [
+          { name: "January", value: 1 },
+          { name: "February", value: 2 },
+          { name: "March", value: 3 },
+          { name: "April", value: 4 },
+          { name: "May", value: 5 },
+          { name: "June", value: 6 },
+          { name: "July", value: 7 },
+          { name: "August", value: 8 },
+          { name: "September", value: 9 },
+          { name: "October", value: 10 },
+          { name: "November", value: 11 },
+          { name: "December", value: 12 }
+        ];
+      
+        // Find the selected month as a string
+        const selectedMonthName = months.find(month => month.value === parseInt(birthMonth)).name;
+      
+        // Collect values from the input fields
+        const personalInfo = {
+          firstName,
+          lastName,
+          email,
+          gender,
+          birthMonth: selectedMonthName,  // Use the string month name
+          birthDay,
+          birthYear
+        };
+      
+        // Show the values in an alert (optional for debugging)
+        alert(
+          `Personal Information Saved:\n
+          First Name: ${personalInfo.firstName}\n
+          Last Name: ${personalInfo.lastName}\n
+          Email: ${personalInfo.email}\n
+          Gender: ${personalInfo.gender}\n
+          Birth Date: ${personalInfo.birthMonth} ${personalInfo.birthDay}, ${personalInfo.birthYear}`
+        );
+      
+        // Send the data to the backend via an API call (POST request)
+        fetch(host_backend+'/update-user-info', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: id,  // Include the user ID for the backend to identify which user to update
+            personalInfo: personalInfo
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('User information updated successfully.');
+          } else {
+            console.error('Error updating user information:', data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
       };
+      
+      
     
       const handleInputClickAddress = () =>{
         setIsDisabledAddress(false);
@@ -478,6 +540,19 @@ const ClientDashboard: React.FC = () =>{
       }
     };
 
+    const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setBirthMonth(Number(e.target.value)); // Update birthMonth state
+    };
+    
+  
+    const handleDayChange = (event) => {
+      setBirthday(event.target.value); // Update the state with the selected day
+    };
+    
+    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setBirthyear(Number(e.target.value)); // Update birthYear state
+    };
+
 
  
 
@@ -489,7 +564,7 @@ const ClientDashboard: React.FC = () =>{
             <div className="w-64 bg-white text-white flex flex-col items-center py-8 h-screen border-r">
               <div className="flex flex-col items-center justify-center mb-8 ">
               <img
-                src={image ? frontendUrl + image : Profile}
+                src={image ? host_frontend  + image : Profile}
                 alt="Profile"
                 className="w-24 h-24 rounded-full mb-4 border-4 border-green-500 object-cover"
               />
@@ -638,58 +713,108 @@ const ClientDashboard: React.FC = () =>{
                             </section>
 
                             {/* Gender Section */}
-                            <section className="flex-1 text-left ">
-                                <label className="block text-gray-600 font-medium mb-1">Gender</label> 
-                                <div className="flex justify-start gap-4 border border-gray-300 p-2"> 
-                                <label className="flex items-center"> 
-                                    <input type="radio" name="gender" value="Female" className="mr-2"  checked={gender === 'Female'}  disabled={isDisabledPesonalInfo} /> Female </label>
+                            <section className="flex-1 text-left">
+                              <label className="block text-gray-600 font-medium mb-1">Gender</label>
+                              <div className="flex justify-start gap-4 border border-gray-300 p-2">
                                 <label className="flex items-center">
-                                    <input type="radio" name="gender" value="Male" className="mr-2"  checked={gender === 'Male'}  disabled={isDisabledPesonalInfo} /> Male </label>
-                                <label className="flex items-center">
-                                    <input type="radio" name="gender" value="Custom" className="mr-2"  checked={gender === 'Custom'} disabled={isDisabledPesonalInfo} />
-                                    Custom
+                                  <input
+                                    type="radio"
+                                    name="gender"
+                                    value="Female"
+                                    className="mr-2"
+                                    checked={gender === 'Female'}
+                                    onChange={handleGenderChange}  // Handle change to update gender
+                                    disabled={isDisabledPesonalInfo}
+                                  />
+                                  Female
                                 </label>
-                                </div>
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="gender"
+                                    value="Male"
+                                    className="mr-2"
+                                    checked={gender === 'Male'}
+                                    onChange={handleGenderChange}  // Handle change to update gender
+                                    disabled={isDisabledPesonalInfo}
+                                  />
+                                  Male
+                                </label>
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    name="gender"
+                                    value="Custom"
+                                    className="mr-2"
+                                    checked={gender === 'Custom'}
+                                    onChange={handleGenderChange}  // Handle change to update gender
+                                    disabled={isDisabledPesonalInfo}
+                                  />
+                                  Custom
+                                </label>
+                              </div>
                             </section>
                         </div>
 
 
-                      <div className="flex w-full items-start justify-between space-x-4 mt-3">
-                        {/* Left Side: Dropdown Section */}
-                        <div className="flex-1">
-                            <div className="flex items-start space-x-2">
-                                <div className="flex-1">
-                                    <label htmlFor="birthMonth" className="block text-gray-600 font-medium mb-1">Month</label>
-                                    <select id="birthMonth" name="birthMonth" className="p-2 border border-gray-300 rounded w-full" disabled={isDisabledPesonalInfo} value={months.find(month => month.name === birthMonth)?.value || 1}  >
-                                        {Array.from({ length: 12 }, (_, i) => (
-                                            <option key={i + 1} value={i + 1}>
-                                                {new Date(0, i).toLocaleString("default", { month: "long" })}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="flex-1">
-                                    <label htmlFor="birthDay" className="block text-gray-600 font-medium mb-1">Day</label>
-                                    <select id="birthDay" name="birthDay" className="p-2 border border-gray-300 rounded w-full" disabled={isDisabledPesonalInfo} value={birthDay}>
-                                        {Array.from({ length: 31 }, (_, i) => (
-                                            <option key={i + 1} value={i + 1}>
-                                                {i + 1}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="flex-1">
-                                    <label htmlFor="birthYear" className="block text-gray-600 font-medium mb-1">Year</label>
-                                    <select id="birthYear" name="birthYear" className="p-2 border border-gray-300 rounded w-full" disabled={isDisabledPesonalInfo} value={birthYear}>
-                                        {Array.from({ length: 120 }, (_, i) => (
-                                            <option key={i} value={new Date().getFullYear() - i}>
-                                                {new Date().getFullYear() - i}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
+                        <div className="flex w-full items-start justify-between space-x-4 mt-3">
+                      {/* Left Side: Dropdown Section */}
+                      <div className="flex-1">
+                        <div className="flex items-start space-x-2">
+                          <div className="flex-1">
+                            <label htmlFor="birthMonth" className="block text-gray-600 font-medium mb-1">Month</label>
+                            <select
+                              id="birthMonth"
+                              name="birthMonth"
+                              className="p-2 border border-gray-300 rounded w-full"
+                              disabled={isDisabledPesonalInfo}
+                              value={birthMonth}
+                              onChange={handleMonthChange}
+                            >
+                              {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i + 1} value={i + 1}>
+                                  {new Date(0, i).toLocaleString("default", { month: "long" })}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex-1">
+                            <label htmlFor="birthDay" className="block text-gray-600 font-medium mb-1">Day</label>
+                            <select
+                              id="birthDay"
+                              name="birthDay"
+                              className="p-2 border border-gray-300 rounded w-full"
+                              disabled={isDisabledPesonalInfo}
+                              value={birthDay}
+                              onChange={handleDayChange} // Handle change for birthDay
+                            >
+                              {Array.from({ length: 31 }, (_, i) => (
+                                <option key={i + 1} value={i + 1}>
+                                  {i + 1}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex-1">
+                            <label htmlFor="birthYear" className="block text-gray-600 font-medium mb-1">Year</label>
+                            <select
+                              id="birthYear"
+                              name="birthYear"
+                              className="p-2 border border-gray-300 rounded w-full"
+                              disabled={isDisabledPesonalInfo}
+                              value={birthYear}
+                              onChange={handleYearChange} // Handle change for birthYear
+                            >
+                              {Array.from({ length: 120 }, (_, i) => (
+                                <option key={i} value={new Date().getFullYear() - i}>
+                                  {new Date().getFullYear() - i}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
+                      </div>
+
 
                         {/* Right Side: Image Upload Section */}
                         <div className='flex flex-col justify-center items-center'>

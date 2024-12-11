@@ -12,7 +12,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 app = Flask(__name__)
 
-CORS(app, resources={r"/*": {"origins": ["https://192.168.1.6:5173", "https://192.168.1.6:8082"]}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://192.168.1.6:5173", "https://192.168.1.6:8082"]}})
 
 
 
@@ -1194,6 +1194,24 @@ class Transaction(db.Model):
     product = db.relationship('Product', backref='transactions')
     vendor = db.relationship('Vendor', backref='transactions')
 
+
+@app.route('/fetchTransactions/<int:vendor_id>', methods=['GET'])
+def fetch_transactions(vendor_id):
+    transactions = Transaction.query.filter_by(v_ID=vendor_id, status='processed').all()
+    return jsonify([{
+        'transaction_id': transaction.transaction_id,
+        'u_ID': transaction.u_ID,
+        'p_ID': transaction.p_ID,
+        'v_ID': transaction.v_ID,
+        'quantity': transaction.quantity,
+        'unit_price': transaction.unit_price,
+        'subtotal': transaction.subtotal,
+        'created_at': transaction.created_at,
+        'status': transaction.status,
+        'payment': transaction.payment,
+    } for transaction in transactions])
+
+
 @app.route('/update_transaction_status', methods=['POST'])
 def update_transaction_status():
     try:
@@ -1228,7 +1246,8 @@ def get_user_by_id():
     if user:
         return jsonify({
             'first_name': user.first_name,
-            'last_name': user.last_name
+            'last_name': user.last_name,
+            'email': user.email_or_mobile
         })
     return jsonify({'error': 'User not found'}), 404
 
@@ -1305,6 +1324,7 @@ class User(db.Model):
         self.email_or_mobile = email_or_mobile
         self.password = password
         self.user_image = user_image
+
 
 
 

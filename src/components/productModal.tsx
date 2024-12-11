@@ -34,15 +34,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, product, onClose, o
     setComment(''); // Clear the comment field after submission
   };
 
-  // Handle rating
-  const handleRating = (star: number) => setRating(star);
 
-  // Handle Buy Now action
-  // Handle Buy Now action
 const handleBuyNow = async (product: any, quantity: number): Promise<void> => {
   try {
       // Fetch current session from the server
-      const response = await fetch(severURL + '/api/get-current-session', {
+      const response = await fetch(host + '/api/get-current-session', {
           method: 'GET',
           headers: {
               'Content-Type': 'application/json',
@@ -65,9 +61,9 @@ const handleBuyNow = async (product: any, quantity: number): Promise<void> => {
             `;
             alert(alertMessage);
     
-            // Add the product to the cart in the database via API
+
             try {
-                const addToCartResponse = await fetch(severURL + '/api/cart/add', {
+                const addToCartResponse = await fetch(host + '/api/cart/add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

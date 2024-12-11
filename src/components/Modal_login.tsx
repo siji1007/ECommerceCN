@@ -73,7 +73,7 @@ const LoginPage: React.FC = () => {
                     localStorage.setItem('adminName', result.admin.admin_fname + " " + result.admin.admin_lname); 
                     const adminID = result.admin.admin_id;
                     // Navigate to the admin page
-                    navigate(`/admin/id_admin=${adminID}`);
+                    navigate(`/admin/id_admin=${adminID}/product-management`);
 
                 } else {
                     const errorResult = await response.json();

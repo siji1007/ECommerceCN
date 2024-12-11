@@ -28,13 +28,13 @@ import NewOrders from './Client/BusinessPage/NewOrder';
 import Productmanagement from './Admin/sidebarPages/ProductManage';
 
 function App() {
-  const serverHost = host.trim();
+
   const [userId, setUserId] = useState<string | null>(null);
   const [adminID, setAdminID] = useState<string | null>(null); // For admin ID
 
   useEffect(() => {
     // Fetch session info
-    fetch(serverHost + '/api/get-current-session', {
+    fetch(host + '/api/get-current-session', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -49,9 +49,9 @@ const Header: React.FC = () => {
         .then(data => {
             if (data.success) {
                 console.log('Logout successful');
-                setDropdownOpen(false);  // Close the dropdown or any other UI elements
-                setFullName('');  // Clear the state for fullName
-                navigate('/login')
+                setDropdownOpen(false);  
+                setFullName('');  
+               
             } else {
                 console.error('Logout failed');
             }
@@ -124,10 +124,13 @@ const navigateCart = () => {
                             >
                                 My Profile
                             </Link>
-                       
-                                <button  className="block w-full text-left px-4 py-2 hover:bg-gray-200" onClick={navigateCart}>Cart</button>
-                        
+
+                            <Link to = {`/shop/cart/id=${storeAuth}`}>
+                                <button  className="block w-full text-left px-4 py-2 hover:bg-gray-200"  onClick={() => setDropdownOpen(false)}>Cart</button>
+                            </Link>         
+                                <Link to='/login' >
                                 <button onClick={handleLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-200">Logout</button>
+                                </Link>
                             </div>
                         )}
                     </li>
