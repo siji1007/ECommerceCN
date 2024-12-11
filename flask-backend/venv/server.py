@@ -150,29 +150,7 @@ def admin_login():
 
 
 # Define the User model (already provided in your case)
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(255), nullable=False)
-    last_name = db.Column(db.String(255), nullable=False)
-    birth_month = db.Column(db.String(50), nullable=False)
-    birth_day = db.Column(db.String(50), nullable=False)
-    birth_year = db.Column(db.String(50), nullable=False)
-    gender = db.Column(db.String(10))
-    email_or_mobile = db.Column(db.String(255), nullable=False, unique=True)
-    password = db.Column(db.String(255), nullable=False)
-    user_image = db.Column(db.String(255))
 
-    def __init__(self, first_name, last_name, birth_month, birth_day, birth_year, gender, email_or_mobile, password, user_image):
-        self.first_name = first_name
-        self.last_name = last_name
-        self.birth_month = birth_month
-        self.birth_day = birth_day
-        self.birth_year = birth_year
-        self.gender = gender
-        self.email_or_mobile = email_or_mobile
-        self.password = password
-        self.user_image = user_image
 
 
 @app.route('/api/users', methods=['GET'])
@@ -1302,6 +1280,122 @@ def get_product_by_id():
         return jsonify(product_details)
     
     return jsonify({'error': 'Product not found'}), 404
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(255), nullable=False)
+    last_name = db.Column(db.String(255), nullable=False)
+    birth_month = db.Column(db.String(50), nullable=False)
+    birth_day = db.Column(db.String(50), nullable=False)
+    birth_year = db.Column(db.String(50), nullable=False)
+    gender = db.Column(db.String(10))
+    email_or_mobile = db.Column(db.String(255), nullable=False, unique=True)
+    password = db.Column(db.String(255), nullable=False)
+    user_image = db.Column(db.String(255))
+
+    def __init__(self, first_name, last_name, birth_month, birth_day, birth_year, gender, email_or_mobile, password, user_image):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.birth_month = birth_month
+        self.birth_day = birth_day
+        self.birth_year = birth_year
+        self.gender = gender
+        self.email_or_mobile = email_or_mobile
+        self.password = password
+        self.user_image = user_image
+
+
+
+class Address(db.Model):
+    __tablename__ = 'addresses'
+
+    addr_id = db.Column(db.Integer, primary_key=True)
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Corrected ForeignKey reference to 'users.id'
+    province = db.Column(db.String(100), nullable=True)
+    city = db.Column(db.String(100), nullable=True)
+    barangay = db.Column(db.String(100), nullable=True)
+    postal_code = db.Column(db.String(20), nullable=True)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
+ 
+
+    # Relationship to User (backref to access user from address)
+    user = db.relationship('User', backref='addresses', lazy=True)
+
+    def __init__(self, u_id, province, city, barangay, postal_code, latitude, longitude):
+        self.u_id = u_id
+        self.province = province
+        self.city = city
+        self.barangay = barangay
+        self.postal_code = postal_code
+        self.latitude = latitude
+        self.longitude = longitude
+
+
+
+@app.route('/api/addresses/<int:u_id>', methods=['GET'])
+def check_address_existence(u_id):
+    address = Address.query.filter_by(u_id=u_id).first()
+    if address:
+        return jsonify({'exists': True, 'address': {
+            'addr_id': address.addr_id,
+            'u_id': address.u_id,
+            'province': address.province,
+            'city': address.city,
+            'barangay': address.barangay,
+            'postal_code': address.postal_code,
+            'latitude': address.latitude,
+            'longitude': address.longitude,
+          
+        }}), 200
+    else:
+        return jsonify({'exists': False}), 404
+
+
+
+@app.route('/api/addresses', methods=['POST'])
+def save_address():
+    data = request.get_json()
+
+    # Validate that u_id is in the data
+    u_id = data.get('u_id')
+    if not u_id:
+        return jsonify({'message': 'User ID is required'}), 400
+
+    # Create a new Address
+    new_address = Address(
+        u_id=u_id,
+        province=data.get('province'),
+        city=data.get('city'),
+        barangay=data.get('barangay'),
+        postal_code=data.get('postal_code'),
+        latitude=data.get('latitude'),
+        longitude=data.get('longitude')
+    )
+
+    db.session.add(new_address)
+    db.session.commit()
+    return jsonify({'message': 'Address saved successfully!'}), 201
+
+@app.route('/api/addresses/<int:u_id>', methods=['PUT'])
+def update_address(u_id):
+    data = request.get_json()
+
+    address = Address.query.filter_by(u_id=u_id).first()
+    if address:
+        address.province = data.get('province')
+        address.city = data.get('city')
+        address.barangay = data.get('barangay')
+        address.postal_code = data.get('postal_code')
+        address.latitude = data.get('latitude')
+        address.longitude = data.get('longitude')
+
+        db.session.commit()
+        return jsonify({'message': 'Address updated successfully!'}), 200
+    
+    return jsonify({'message': 'Address not found!'}), 404
 
 
 with app.app_context():

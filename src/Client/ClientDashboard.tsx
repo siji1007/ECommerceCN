@@ -57,7 +57,10 @@ const ClientDashboard: React.FC = () =>{
     const [image, setImage] = useState<string | null>(null);
     const [uploading, setUploading] = useState<boolean>(false); 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+   
     const [position, setPosition] = useState<[number, number] | null>(null);
+    const [zoom, setZoom] = useState(13); // Default zoom level
+
     const [locationDetails, setLocationDetails] = useState<{
       state?: string;
       city?: string;
@@ -65,7 +68,10 @@ const ClientDashboard: React.FC = () =>{
       postcode?: string;
       road?:string;
       region?:string;
+      latitude?:number;
+      longitude?:number;
     }>({});
+    const mapRef = useRef<L.Map | null>(null);
 
 
 
@@ -80,21 +86,81 @@ const ClientDashboard: React.FC = () =>{
             return <div>ID not found in the URL</div>;
         }
 
-     
-        const [locations, setLocation] = useState(null);
-        const [addressDetails, setAddressDetails] = useState({
-          province: '',
-          city: '',
-          barangay: '',
-          postalCode: '',
-          street: '',
-        });
-        const [mapUrl, setMapUrl] = useState('');
-      
-  
           
+  
+        useEffect(() => {
+          const u_id = localStorage.getItem('Auth');
+          if (u_id) {
+            axios
+              .get(`${host_backend}/api/addresses/${u_id}`)
+              .then((response) => {
+                if (response.data.exists) {
+                  const address = response.data.address;
+                  setLocationDetails({
+                    state: address.province,
+                    city: address.city,
+                    road: address.barangay,
+                    postcode: address.postal_code,
+                    latitude: address.latitude,
+                    longitude: address.longitude,
+                  });
+                  const fetchedPosition: [number, number] = [address.latitude, address.longitude];
+                  setPosition(fetchedPosition);
+                  alert(fetchedPosition);
+                  mapRef.current?.setView(fetchedPosition, 20);
       
-      
+                  // const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}0&lon=${longitude}`;
+                 
+                 // Update state with fetched position
+                
+                }
+              })
+              .catch((error) => {
+                console.error("Error fetching address data:", error);
+              });
+          }
+        }, []);
+
+
+
+
+        const handleGetCurrentLocation = () => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const { latitude, longitude } = pos.coords;
+              setPosition([latitude, longitude]);
+              setZoom(20); // Optional: Zoom closer to the location
+        
+              // Enable editing mode automatically
+              setIsDisabledAddress(false);
+              setIsEditingAddress(true);
+        
+              // Fetch address using OpenStreetMap's reverse geocoding API
+              const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+              console.log("Latitude:", latitude, "Longitude:", longitude);
+        
+              fetch(url)
+                .then((res) => res.json())
+                .then((data) => {
+                  const { state, city, country, postcode, road } = data.address || {};
+                  setLocationDetails({ state, city, country, postcode, road });
+        
+                  // Log detailed address for debugging
+                  console.log("Detailed Address Information:", data.address);
+        
+                  // Update the map's view to center on the current location
+                  mapRef.current?.setView([latitude, longitude], 20);
+                })
+                .catch((err) => console.error("Error fetching address:", err));
+            },
+            (err) => {
+              console.error("Error getting location:", err.message);
+            }
+          );
+        };
+        
+        
+        
         useEffect(() => {
           const userId = id;  // The user ID you want to query for
       
@@ -281,33 +347,7 @@ const ClientDashboard: React.FC = () =>{
 
     }, [location]); 
 
-    useEffect(() => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude } = pos.coords;
-          setPosition([latitude, longitude]);
-    
-          // Fetch address using OpenStreetMap's reverse geocoding API
-          const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
-          console.log("Latitude:", latitude, "Longitude:", longitude);
-    
-          fetch(url)
-            .then((res) => res.json())
-            .then((data) => {
-              const { state, city, country, postcode, road, region} = data.address;
-              setLocationDetails({ state, city, country, postcode, road, region });
-    
-              // Log all address details for more insight
-              console.log("Detailed Address Information:", data.address);
-            })
-            .catch((err) => console.error("Error fetching address:", err));
-        },
-        (err) => {
-          console.error("Error getting location:", err.message);
-        }
-      );
-    }, []);
-    
+   
   
     
    
@@ -346,12 +386,60 @@ const ClientDashboard: React.FC = () =>{
         alert("Edit Personal Address");
       };
 
+
       const handleSaveClickAddress = () => {
         setIsDisabledAddress(true);
         setIsEditingAddress(false);
-
-        alert("Save Personal Address");
-      };
+    
+        // Get user id from localStorage (assuming it's stored as 'Auth')
+        const u_id = localStorage.getItem('Auth');
+    
+        // Construct the address object with the current values, including latitude and longitude
+        const addressData = {
+            u_id,
+            province: locationDetails.state || "Not specified",
+            city: locationDetails.city || "Not specified",
+            barangay: locationDetails.road || "Not specified",
+            postal_code: locationDetails.postcode || "Not specified",
+            latitude: position ? position[0] : "Not available",
+            longitude: position ? position[1] : "Not available",
+        };
+    
+        // Check if the address exists by making a GET request to the backend
+        axios.get(`${host_backend}/api/addresses/${u_id}`)
+            .then((response) => {
+                // If the address exists, update it using PUT
+                if (response.data.exists) {
+                    axios.put(`${host_backend}/api/addresses/${u_id}`, addressData)
+                        .then(() => {
+                            alert("Address updated successfully!");
+                        })
+                        .catch((error) => {
+                            console.error("Error updating address:", error);
+                            alert("Error updating address.");
+                        });
+                }
+            })
+            .catch((error) => {
+                // If address doesn't exist (404), create a new address
+                if (error.response && error.response.status === 404) {
+                    axios.post(`${host_backend}/api/addresses`, addressData)
+                        .then(() => {
+                            alert("Address saved successfully!");
+                        })
+                        .catch((error) => {
+                            console.error("Error saving address:", error);
+                            alert("Error saving address.");
+                        });
+                } else {
+                    console.error("Error checking address existence:", error);
+                    alert("Error checking address existence.");
+                }
+            });
+    };
+    
+      
+      
   
     const StartBusiness = () => {
       const newPath = isBusinessForm ? `/clientprofile/id=${id}` : `/clientprofile/id=${id}/business-form`;
@@ -359,6 +447,35 @@ const ClientDashboard: React.FC = () =>{
    
       navigate(newPath);
       setIsBusinessForm(!isBusinessForm); 
+    };
+
+    const handleMarkerDragEnd = async (event: any) => {
+      const marker = event.target;
+      const newPosition = marker.getLatLng();
+      
+      // Display the new position in an alert
+      alert(`New Position:\nLatitude: ${newPosition.lat}\nLongitude: ${newPosition.lng}`);
+      setIsDisabledAddress(false);
+      setIsEditingAddress(true);
+
+      // Fetch location details using reverse geocoding
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${newPosition.lat}&lon=${newPosition.lng}&format=json`
+        );
+        const data = await response.json();
+    
+        // Extract and update location details
+        const updatedDetails = {
+          state: data.address.state || "",
+          city: data.address.city || data.address.town || data.address.village || "",
+          road: data.address.suburb || data.address.road || "",
+          postcode: data.address.postcode || "",
+        };
+        setLocationDetails(updatedDetails);
+      } catch (error) {
+        console.error("Error fetching location details:", error);
+      }
     };
 
 
@@ -632,11 +749,21 @@ const ClientDashboard: React.FC = () =>{
                           </button>
 
                           {/* Province, City, Barangay */}
-                          <h1 className='text-xl font-bold text-gray-700 mb-4'>Address</h1>
+                          <h1 className="text-xl font-bold text-gray-700 mb-4">Address</h1>
                           <div className="flex gap-4 mb-4">
                             <div className="flex-1">
                               <label htmlFor="province" className="block text-sm font-medium mb-1">Province</label>
-                              <input type="text" id="province" name="province" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a Province" list="provinces" disabled={isDisabledAddress} value={locationDetails.state} onChange={(e) => setAddressDetails({ ...addressDetails, province: e.target.value })} />
+                              <input
+                                type="text"
+                                id="province"
+                                name="province"
+                                className="w-full p-2 border border-gray-300 rounded"
+                                placeholder="Select or type a Province"
+                                list="provinces"
+                                disabled={isDisabledAddress}
+                                value={locationDetails.state}
+                                onChange={(e) => setLocationDetails({ ...locationDetails, state: e.target.value })}
+                              />
                               <datalist id="provinces">
                                 <option value="Province 1" />
                                 <option value="Province 2" />
@@ -646,7 +773,17 @@ const ClientDashboard: React.FC = () =>{
                             </div>
                             <div className="flex-1">
                               <label htmlFor="city" className="block text-sm font-medium mb-1">City</label>
-                              <input type="text" id="city" name="city" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a City" list="cities" disabled={isDisabledAddress} value={locationDetails.city} onChange={(e) => setAddressDetails({ ...addressDetails, city: e.target.value })} />
+                              <input
+                                type="text"
+                                id="city"
+                                name="city"
+                                className="w-full p-2 border border-gray-300 rounded"
+                                placeholder="Select or type a City"
+                                list="cities"
+                                disabled={isDisabledAddress}
+                                value={locationDetails.city}
+                                onChange={(e) => setLocationDetails({ ...locationDetails, city: e.target.value })}
+                              />
                               <datalist id="cities">
                                 <option value="City 1" />
                                 <option value="City 2" />
@@ -656,7 +793,17 @@ const ClientDashboard: React.FC = () =>{
                             </div>
                             <div className="flex-1">
                               <label htmlFor="barangay" className="block text-sm font-medium mb-1">Barangay</label>
-                              <input type="text" id="barangay" name="barangay" className="w-full p-2 border border-gray-300 rounded" placeholder="Select or type a Barangay" list="barangays" disabled={isDisabledAddress} value={locationDetails.road} onChange={(e) => setAddressDetails({ ...addressDetails, barangay: e.target.value })} />
+                              <input
+                                type="text"
+                                id="barangay"
+                                name="barangay"
+                                className="w-full p-2 border border-gray-300 rounded"
+                                placeholder="Select or type a Barangay"
+                                list="barangays"
+                                disabled={isDisabledAddress}
+                                value={locationDetails.road}
+                                onChange={(e) => setLocationDetails({ ...locationDetails, road: e.target.value })}
+                              />
                               <datalist id="barangays">
                                 <option value="Barangay 1" />
                                 <option value="Barangay 2" />
@@ -669,41 +816,66 @@ const ClientDashboard: React.FC = () =>{
                           {/* Postal Code */}
                           <div className="mb-4">
                             <label htmlFor="postalCode" className="block text-sm font-medium mb-1">Postal Code</label>
-                            <input type="text" id="postalCode" name="postalCode" className="w-full p-2 border border-gray-300 rounded" placeholder="Postal Code" disabled={isDisabledAddress} value={locationDetails.postcode} onChange={(e) => setAddressDetails({ ...addressDetails, postalCode: e.target.value })} />
+                            <input
+                              type="text"
+                              id="postalCode"
+                              name="postalCode"
+                              className="w-full p-2 border border-gray-300 rounded"
+                              placeholder="Postal Code"
+                              disabled={isDisabledAddress}
+                              value={locationDetails.postcode}
+                              onChange={(e) => setLocationDetails({ ...locationDetails, postcode: e.target.value })}
+                            />
                           </div>
 
                           {/* Get Current Location Button */}
-                          <button type="button" className="text-white bg-blue-500 hover:bg-blue-700 py-2 px-4 rounded" onClick={() => { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(handlePositionSuccess, handlePositionError); } }} > Get Current Location </button>
+                          <button
+                            type="button"
+                            className="text-white bg-blue-500 hover:bg-blue-700 py-2 px-4 rounded"
+                            onClick={handleGetCurrentLocation}
+                          >
+                            Get Current Location
+                          </button>
 
                           {/* Map */}
-                       
-                      <label className="block text-sm font-medium mb-2">Map</label>
+                          <label className="block text-sm font-medium mb-2">Map</label>
                           <div className="h-64 border border-gray-300 rounded">
-                          {/* Placeholder for map */}
-                          {position ? (
-                              <>
-                                <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }}>
-                                  <TileLayer
-                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                  />
-                                  <Marker position={position}>
-                                    <Popup>
-                                      <strong>Your Location:</strong>
-                                      <br />
-                                      {locationDetails.state && <p>State: {locationDetails.state}</p>}
-                                      {locationDetails.city && <p>City: {locationDetails.city}</p>}
-                                      {locationDetails.country && <p>Country: {locationDetails.country}</p>}
-                                      {locationDetails.postcode && <p>Postal Code: {locationDetails.postcode}</p>}
-                                    </Popup>
-                                  </Marker>
-                                </MapContainer>
-                              </>
+                            {position ? (
+                            <MapContainer
+                            center={position} // Use position from state as the center
+                            zoom={zoom}       // Use zoom state for zoom level
+                            style={{ height: "100%", width: "100%" }}
+                            ref={mapRef}      // Attach the reference to the MapContainer
+                          >
+                            <TileLayer
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            />
+                            <Marker
+                              position={position} // Use the position from state for marker
+                              draggable={true} // Enable dragging for the marker
+                              eventHandlers={{
+                                dragend: handleMarkerDragEnd, // Add handler if needed
+                              }}
+                            >
+                              <Popup>
+                                <strong>Your Location:</strong>
+                                <br />
+                                {locationDetails.state && <p>State: {locationDetails.state}</p>}
+                                {locationDetails.city && <p>City: {locationDetails.city}</p>}
+                                {locationDetails.postcode && <p>Postal Code: {locationDetails.postcode}</p>}
+                                {locationDetails.latitude && <p>Latitude: {locationDetails.latitude}</p>}
+                                {locationDetails.longitude && <p>Longitude: {locationDetails.longitude}</p>}
+                              </Popup>
+                            </Marker>
+                          </MapContainer>
+                            
                             ) : (
                               <p>Fetching your location...</p>
                             )}
                           </div>
                         </section>
+
                     </>
                     )}
           </main>
