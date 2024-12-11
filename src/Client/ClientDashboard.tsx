@@ -1,5 +1,5 @@
 import Profile from '../../src/assets/profiles/Profile.jpg'
-import { FaEdit, FaCog, FaSave, FaShoppingCart  } from 'react-icons/fa';
+import { FaEdit, FaCog, FaSave, FaShoppingCart, FaBars, FaArrowLeft   } from 'react-icons/fa';
 import { useLocation, useNavigate, Link  } from 'react-router-dom';
 import { IoStorefrontSharp } from "react-icons/io5";
 import { AiFillProfile } from "react-icons/ai";
@@ -74,7 +74,11 @@ const ClientDashboard: React.FC = () =>{
     const mapRef = useRef<L.Map | null>(null);
 
 
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+    const toggleSidebarVisibility = () => {
+      setIsSidebarOpen(!isSidebarOpen);
+    };
 
         // Extract the ID from the URL
         let url = window.location.href;
@@ -556,114 +560,154 @@ const ClientDashboard: React.FC = () =>{
 
  
 
-    return (
-   
-       
-        <div className="flex "> {/* main div of clientDashboard*/}
-            {/* Sidebar Section */}
-            <div className="w-64 bg-white text-white flex flex-col items-center py-8 h-screen border-r">
-              <div className="flex flex-col items-center justify-center mb-8 ">
-              <img
-                src={image ? host_frontend  + image : Profile}
-                alt="Profile"
-                className="w-24 h-24 rounded-full mb-4 border-4 border-green-500 object-cover"
-              />
+    return (  
+      <div className="flex w-full h-screen">
+          <button
+            className="fixed top-20 left-4 p-2 z-50"
+            onClick={toggleSidebarVisibility}
+          >
+            {/* Show Hamburger icon when sidebar is closed, Arrow icon when sidebar is open */}
+            {isSidebarOpen ? (
+              <FaArrowLeft className="text-black" size={24} />
+            ) : (
+              <FaBars className="text-black" size={24} />
+            )}
+          </button>
+  {/* Sidebar Section */}
+  <aside
+    className={`bg-gray-200  mt-5 space-y-4 pt-3 border border-gray-500 flex-shrink-0 transition-transform duration-300 ${
+      isSidebarOpen ? 'w-60 translate-x-0' : 'w-0 -translate-x-60'
+    }`}
+  >
+    {/* Sidebar content goes here */}
+  
 
-                <h2 className="text-lg text-black font-semibold text-center">
-                {firstName +" "+ lastName}
-                </h2>
-                <p className='text-black text-sm'>{email}
-                </p>
-                {/* <h2 className="text-lg text-green-900 font-semibold text-center">
-                    Verified
-                </h2> */}
-                </div>
-
-
-                <div className="w-full p-2  flex flex-col h-full mb-10">
-                    <Link   to={`/clientprofile/id=${id}`}>
-                        <button
-                            className={`w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center 
-                            ${isActive ? 'bg-green-600 text-white' : ' text-black hover:bg-green-600 hover:text-white'}`}
-                        >
-                            <AiFillProfile className="h-5 w-5 mr-2" />
-                            Personal Information
-                        </button>
-                    </Link>
-
-                    <Link to="shop-cart">
-                      <button
-                             className={`w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center 
-                              ${MyCartActive ? 'bg-green-600 text-white' : ' text-black hover:bg-green-600 hover:text-white'}`} > 
-                              <FaShoppingCart className="h-5 w-5 mr-2" />
-                              My Cart
-                          </button>
-                    </Link>
+  {/* Sidebar Toggle Button */}
 
 
-                    <Link to = 'purchased'>
-                    <button
-                             className={`w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center 
-                              ${MyPurchasedisActive ? 'bg-green-600 text-white' : ' text-black hover:bg-green-600 hover:text-white'}`}
-                               > 
-                              <BiSolidPurchaseTag  className="h-5 w-5 mr-2" />
-                              My Purchased
-                          </button>
-                    </Link>
 
-                    {/* Register your business button */}
-                    <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center" onClick={toggleDropdown} >
-                        <IoStorefrontSharp className="h-5 w-5 mr-2"/>
-                        Business
-                    </button>
+    <div className="flex flex-col items-center justify-center mb-8">
+      <img
+        src={image ? host_frontend + image : Profile}
+        alt="Profile"
+        className="w-24 h-24 rounded-full mb-4 border-4 border-green-500 object-cover"
+      />
+      <h2 className="text-lg text-black font-semibold text-center">
+        {firstName + ' ' + lastName}
+      </h2>
+      <p className="text-black text-sm">{email}</p>
+    </div>
 
-                {/* Conditionally rendered dropdown */}
-                {isDropdownOpen && (
-                    <div className="ml-4 mb-4">
-                    <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
-                        Tutorial
-                    </button>
-                    <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
-                    Contract Details
-                    </button>
-                    <Link to="business-form">
-                        <button  className={`w-full py-2 px-4 text-left text-black font-semibold ${isStart ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`} onClick={StartBusiness}>
-                            Start Selling
-                        </button>
-                    </Link>
-                    <button
-                          className={`w-full py-2 px-4 text-left text-black font-semibold ${isProducts ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`}
-                        onClick={navigateToProductList}
-                        >
-                        Products
-                        </button>
+    <div className="w-full p-2 flex flex-col h-full mb-10">
+      {/* Sidebar buttons */}
+      <Link to={`/clientprofile/id=${id}`}>
+        <button
+          className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
+            isActive
+              ? 'bg-green-600 text-white'
+              : ' text-black hover:bg-green-600 hover:text-white'
+          }`}
+        >
+          <AiFillProfile className="h-5 w-5 mr-2" />
+          Personal Information
+        </button>
+      </Link>
 
+      <Link to="shop-cart">
+        <button
+          className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
+            MyCartActive
+              ? 'bg-green-600 text-white'
+              : ' text-black hover:bg-green-600 hover:text-white'
+          }`}
+        >
+          <FaShoppingCart className="h-5 w-5 mr-2" />
+          My Cart
+        </button>
+      </Link>
 
-                        <button
-                          className={`w-full py-2 px-4 text-left text-black font-semibold ${isNeworder ? 'bg-green-600 text-white' : 'hover:bg-green-600 hover:text-white'} rounded`}
-                        onClick={navigateNewOrder}
-                        >
-                        New Order
-                        </button>
+      <Link to="purchased">
+        <button
+          className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
+            MyPurchasedisActive
+              ? 'bg-green-600 text-white'
+              : ' text-black hover:bg-green-600 hover:text-white'
+          }`}
+        >
+          <BiSolidPurchaseTag className="h-5 w-5 mr-2" />
+          My Purchased
+        </button>
+      </Link>
 
+      <button
+        className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center"
+        onClick={toggleDropdown}
+      >
+        <IoStorefrontSharp className="h-5 w-5 mr-2" />
+        Business
+      </button>
 
-                    </div>
-                    )}
+      {/* Conditionally rendered dropdown */}
+      {isDropdownOpen && (
+        <div className="ml-4 mb-4">
+          <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
+            Tutorial
+          </button>
+          <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
+            Contract Details
+          </button>
+          <Link to="business-form">
+            <button
+              className={`w-full py-2 px-4 text-left text-black font-semibold ${
+                isStart
+                  ? 'bg-green-600 text-white'
+                  : 'hover:bg-green-600 hover:text-white'
+              } rounded`}
+              onClick={StartBusiness}
+            >
+              Start Selling
+            </button>
+          </Link>
+          <button
+            className={`w-full py-2 px-4 text-left text-black font-semibold ${
+              isProducts
+                ? 'bg-green-600 text-white'
+                : 'hover:bg-green-600 hover:text-white'
+            } rounded`}
+            onClick={navigateToProductList}
+          >
+            Products
+          </button>
 
-                    <Link to = 'settings'>
-                    <button className={`w-full py-2 px-4 mb-4 text-left  font-semibold rounded flex items-center 
-                              ${MySettingsActive ? 'bg-green-600 text-white' : ' text-black hover:bg-green-600 hover:text-white'}`} >           <FaCog className="h-5 w-5 mr-2" />
-                    Settings
-                    </button>
-                    </Link>
-                  
-                  
-              </div>
+          <button
+            className={`w-full py-2 px-4 text-left text-black font-semibold ${
+              isNeworder
+                ? 'bg-green-600 text-white'
+                : 'hover:bg-green-600 hover:text-white'
+            } rounded`}
+            onClick={navigateNewOrder}
+          >
+            New Order
+          </button>
+        </div>
+      )}
 
-            </div>
-      
-          {/* main div */}
-          <main className="flex-1 bg-gray-100 pt-8 p-2 overflow-y-auto">
+      <Link to="settings">
+        <button
+          className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
+            MySettingsActive
+              ? 'bg-green-600 text-white'
+              : ' text-black hover:bg-green-600 hover:text-white'
+          }`}
+        >
+          <FaCog className="h-5 w-5 mr-2" />
+          Settings
+        </button>
+      </Link>
+    </div>
+  </aside>
+  {/* Main Content */}
+  <main className={`flex-1 transition-all duration-300 mt-3 ${isSidebarOpen ? 'ml-0' : 'ml-10 mt-5'} min-h-screen overflow-y-auto`}>
                 {isBusinessForm ? (
                 <Business />
                 ) : isProductList ? (
@@ -680,8 +724,11 @@ const ClientDashboard: React.FC = () =>{
                 <MyPurchased/>
                 ):(
                     <>
+
+
                         <section className="mb-6 shadow p-4 bg-white rounded relative">{/* Client Information Section */}
                         {/* Edit Button */}
+
                         <button
                             className="absolute top-4 right-4 text-green-900 hover:text-blue-700 font-medium"
                             onClick={isEditingPersonalInfo ? handleSaveClickPersonalInfo : handleInputClickPersonalInfo} // Toggle between Edit and Save

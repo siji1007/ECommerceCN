@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import host from '../../host/host.txt?raw';
 import hostreact from '../../host/ReactHost.txt?raw';
+import NoOrder from '../../assets/OtherImages/no_order.png';
 
 const NewOrders: React.FC = () => {
     const [venId, setVenId] = useState<number | null>(null);
@@ -127,7 +128,15 @@ const NewOrders: React.FC = () => {
         <div>
             <h1 className='text-2xl mb-2 font-semibold'>Request Order</h1>
             {transactions.length === 0 ? (
-                <p>No request orders found</p>
+           <div className="relative bg-transparent">
+           <img 
+             src={NoOrder} 
+             alt="Full Screen" 
+             className="object-center w-[50vh] h-[50vh] mx-auto bg-transparent" 
+           />
+         </div>
+         
+          
             ) : (
                 <ul>
                     {transactions.map((transaction) => (
