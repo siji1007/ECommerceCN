@@ -953,15 +953,6 @@ const ClientDashboard: React.FC = () =>{
                             />
                           </div>
 
-                          {/* Get Current Location Button */}
-                          <button
-                            type="button"
-                            className="text-white bg-blue-500 hover:bg-blue-700 py-2 px-4 rounded"
-                            onClick={handleGetCurrentLocation}
-                          >
-                            Get Current Location
-                          </button>
-
                           {/* Map */}
                           <label className="block text-sm font-medium mb-2">Map</label>
                           <div className="h-64 border border-gray-300 rounded">
@@ -994,11 +985,19 @@ const ClientDashboard: React.FC = () =>{
                               </Popup>
                             </Marker>
                           </MapContainer>
+                          
                             
                             ) : (
                               <p>Fetching your location...</p>
                             )}
                           </div>
+                          <button
+                            type="button"
+                            className="text-white mt-5 bg-green-800 hover:bg-blue-700 py-2 px-4 rounded"
+                            onClick={handleGetCurrentLocation}
+                          >
+                            Get Current Location
+                          </button>
                         </section>
 
                     </>

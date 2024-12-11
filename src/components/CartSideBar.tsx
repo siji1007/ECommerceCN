@@ -206,7 +206,7 @@ const CartPage: React.FC = () => {
   const totalPrice = calculateTotalPrice();
 
   return (
-    <div className="flex flex-col h-auto w-full min-h-screen pt-8">
+    <div className="flex flex-col h-auto w-full min-h-screen ">
       {cartItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center text-gray-500 mt-8">
           <img src={NoProductImage} alt="No product found" className="w-1/2 h-1/2 object-contain" />

@@ -117,7 +117,17 @@ const ShopPage: React.FC = () => {
         {/* Product Area */}
         <div className="bg-white pt-10 px-6 min-h-screen">
           {loading ? (
-            <h2>Loading products...</h2>
+           <div className="relative">
+           {/* Content here (e.g., filtered products) */}
+         
+           {/* Loading Modal */}
+           <div className="absolute inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+             <div className="w-16 h-16 border-4 border-t-4 border-gray-200 border-t-green-500 rounded-full animate-spin"></div>
+           </div>
+         </div>
+         
+          
+          
           ) : error ? (
             <h2>{error}</h2>
           ) : filteredProducts.length === 0 ? (
@@ -125,9 +135,10 @@ const ShopPage: React.FC = () => {
           ) : (
             <div className="flex flex-wrap gap-4">
               {filteredProducts.map((product: any) => (
+              
                 <div
                   key={product.prod_id}
-                  className="relative w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer group transform transition-transform duration-300 hover:scale-105"
+                  className="relative w-48 bg-white border rounded-lg shadow-md p-2 cursor-pointer group transform transition-transform duration-500 hover:scale-105"
                   onClick={() => openModal(product)} // Open modal on click
                 >
                   {/* Bookmark/Star icon in the top right */}

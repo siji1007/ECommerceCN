@@ -13,6 +13,7 @@ interface Product {
   vendor_name: string;
   prod_name: string;
   prod_category: string;
+  prod_stock:number;
   prod_descript: string;
   prod_price: number;
   prod_disc_price: number;
@@ -38,6 +39,8 @@ const ProductList: React.FC = () => {
   const [weeklySubtotals, setWeeklySubtotals] = useState<any[]>([]); // Store weekly subtotals
   const [vendorId, setVendorId] = useState(null); // State to store vendorId
   const [filterPeriod, setFilterPeriod] = useState<'daily' | 'weekly' | 'monthly'>('weekly'); // State for time filter
+  const [transactionTotals, setTransactionTotals] = useState<any>({});
+
   const [error, setError] = useState(null);
 
   const id = localStorage.getItem('Auth');
@@ -67,31 +70,37 @@ useEffect(() => {
         setVendorStatus(vendorStatus);
         setVendorId(vendorId);
 
+        // Fetch products first
         if (vendorId !== null) {
           const productsResponse = await axios.get<FetchProductsResponse>(`${hosting}/FetchProducts/${vendorId}`);
           const validProducts = productsResponse.data.products.filter(
             (product: Product) => product.prod_name && product.prod_category
           );
-          setProducts(validProducts);
+          setProducts(validProducts);  // This will update the products state
         }
 
-        // Fetch transactions with product names
+        // After products are set, fetch transactions
         const transactionsResponse = await axios.get(`${hosting}/fetchTransactions/${vendorId}`);
         const filteredTransactions = transactionsResponse.data.filter(
           (transaction: any) => transaction.status === 'processed'
         );
 
-        // Optionally, if product name is not in the response, match product manually by prod_id
+        // Map transactions to product names only after the products are fetched
         const transactionsWithProductNames = filteredTransactions.map((transaction: any) => {
+          // Find the matching product by p_ID (prod_id)
           const product = products.find((p) => p.prod_id === transaction.p_ID);
-          return { ...transaction, prod_name: product ? product.prod_name : 'Unknown' };
+          return { 
+            ...transaction, 
+            prod_name: product ? product.prod_name : 'Unknown' // Set product name or 'Unknown'
+          };
         });
 
-        setTransactions(transactionsWithProductNames);
+        setTransactions(transactionsWithProductNames);  // Set transactions with product names
 
         // Calculate weekly subtotals after fetching transactions
         calculateWeeklySubtotals(transactionsWithProductNames);
 
+        // Optionally show processed total alert
         showProcessedTotalAlert(transactionsWithProductNames);
       }
     } catch (error) {
@@ -100,43 +109,10 @@ useEffect(() => {
   };
 
   fetchVendorData();
-}, [hosting, id, products]);
+}, [hosting, id, products]);  // Add 'products' to the dependency list to rerun when products change
+ // Now includes products as a dependency
 
 
-
-
-const showProcessedTotalAlert = (transactions: any[]) => {
-  const transactionTotals: any = {};
-
-  // Sum subtotals for each unique transaction ID
-  transactions.forEach((transaction) => {
-    const transactionId = transaction.transaction_id;
-    const subtotal = transaction.subtotal;
-
-    // If this transaction ID is already in the totals object, add the subtotal
-    if (transactionTotals[transactionId]) {
-      transactionTotals[transactionId].subtotal += subtotal;
-    } else {
-      // Initialize the transaction total with the current subtotal and date
-      const transactionDate = new Date(transaction.created_at);
-      transactionTotals[transactionId] = {
-        subtotal: subtotal,
-        date: transactionDate,
-        productName: transaction.prod_name,  // Add product name here
-      };
-    }
-  });
-
-  // Display an alert for each unique transaction ID with its total processed subtotal, the date, and product name
-  Object.keys(transactionTotals).forEach((transactionId) => {
-    const total = transactionTotals[transactionId];
-    const formattedDate = total.date.toLocaleDateString(); // Format the date
-    // Show alert including the product name
-    // alert(
-    //   `Transaction ID: ${transactionId} - Product: ${total.productName} - Total Processed Subtotal: ${total.subtotal} - Date: ${formattedDate}`
-    // );
-  });
-};
 
 // Calculate weekly subtotals for the last 7 days (starting from Monday)
 const calculateWeeklySubtotals = (transactions: any[]) => {
@@ -218,24 +194,97 @@ const calculateTopProducts = (transactions: any[]) => {
   return sortedProducts;
 };
 
-// Fetch and prepare data for the bar chart (top products)
-const prepareTopProductsChartData = () => {
-  const topProducts = calculateTopProducts(transactions);
-  const topProductIds = topProducts.slice(0, 5); // Get the top 5 products
 
-  const labels = topProductIds.map((product) => {
-    const productData = products.find((p) => p.prod_id === product.prod_id);
-    return productData ? productData.prod_name : 'Unknown Product';
+// Function to show processed totals with product names
+const showProcessedTotalAlert = (transactions: any[]) => {
+  const transactionTotals: any = {};
+
+  // Sum subtotals for each unique transaction ID
+  transactions.forEach((transaction) => {
+    const transactionId = transaction.transaction_id;
+    const subtotal = transaction.subtotal;
+
+    // If this transaction ID is already in the totals object, add the subtotal
+    if (transactionTotals[transactionId]) {
+      transactionTotals[transactionId].subtotal += subtotal;
+    } else {
+      // Initialize the transaction total with the current subtotal and date
+      const transactionDate = new Date(transaction.created_at);
+      transactionTotals[transactionId] = {
+        subtotal: subtotal,
+        date: transactionDate,
+        productName: transaction.prod_name, // Store the product name here
+        quantity: transaction.quantity, // Store the quantity here
+      };
+    }
   });
 
+  // Update the state with the transactionTotals
+  setTransactionTotals(transactionTotals);
+
+  // Display an alert for each unique transaction ID with its total processed subtotal, the date, and product name
+  Object.keys(transactionTotals).forEach((transactionId) => {
+    const total = transactionTotals[transactionId];
+    const formattedDate = total.date.toLocaleDateString(); // Format the date
+    // Show alert including the product name
+    // console.log(
+    //   `Transaction ID: ${transactionId} - Product: ${total.productName} - Total Processed Subtotal: ${total.subtotal} - Date: ${formattedDate}`
+    // );
+  });
+};
+
+
+
+const prepareTopProductsChartData = () => {
+  // Step 1: Calculate top products based on transactions (already filtered in transactionTotals)
+  const topProducts = calculateTopProducts(transactions);
+
+  // Step 2: Aggregate the quantities for each product and store in a map
+  const aggregatedProductData: { [prod_name: string]: { quantity: number; prod_id: number } } = {};
+
+  transactions.forEach((transaction) => {
+    const productName = transaction.prod_name;
+    const quantity = transaction.quantity;
+
+    // If the product already exists in the aggregated data, add its quantity
+    if (aggregatedProductData[productName]) {
+      aggregatedProductData[productName].quantity += quantity;
+    } else {
+      // Otherwise, initialize with the current quantity
+      aggregatedProductData[productName] = {
+        quantity: quantity,
+        prod_id: transaction.prod_id, // Store the prod_id as well for reference
+      };
+    }
+  });
+
+  // Step 3: Convert the aggregated data to an array and sort by quantity
+  const aggregatedProducts = Object.keys(aggregatedProductData)
+    .map((prod_name) => ({
+      prod_name: prod_name,
+      quantity: aggregatedProductData[prod_name].quantity,
+      prod_id: aggregatedProductData[prod_name].prod_id,
+    }))
+    .sort((a, b) => b.quantity - a.quantity); // Sort by quantity in descending order
+
+  // Step 4: Slice the top products (you can adjust the number to show more/less)
+  const topProductIds = aggregatedProducts.slice(0, 5); // Display top 5 products
+
+  // Step 5: Map the top products to labels and data for the chart
+  const labels = topProductIds.map((product) => product.prod_name);
   const data = topProductIds.map((product) => product.quantity);
 
+  // Log the labels and data to ensure they are correct
+  console.log('Labels for Chart:', labels);
+  console.log('Data for Chart:', data);
+
+  // Step 6: Return the chart data
   return {
-    labels,
+    labels: labels,
     datasets: [
       {
         label: 'Top Products by Quantity Sold',
-        data,
+        data: data,
         backgroundColor: '#4CAF50',
         borderColor: '#388E3C',
         borderWidth: 1,
@@ -243,14 +292,6 @@ const prepareTopProductsChartData = () => {
     ],
   };
 };
-
-// Use useEffect to update the top products chart when transactions change
-useEffect(() => {
-  const topProductsChartData = prepareTopProductsChartData();
-
-  // You can use the topProductsChartData for your Bar chart
-  // For example, setting state or directly passing it to your Bar component
-}, [transactions, products]);
 
 
 
@@ -306,19 +347,21 @@ useEffect(() => {
 
       <div className="flex flex-col lg:flex-row w-full overflow-x-auto mb-2 gap-2 items-center justify-center">
         {/* Line Chart for Weekly Sales */}
-        <div className="mb-6 w-full lg:w-1/2">
+        <div className="mb-6 w-full lg:w-1/2 border p-5 rounded-lg">
           <h2 className="text-xl font-semibold mb-4">Weekly Sales</h2>
           <Line data={LinechartData} />
         </div>
 
         {/* Bar Chart for Top Products Sales */}
-        <div className="mb-6 w-full lg:w-1/2">
+        <div className="mb-6 w-full lg:w-1/2 border p-5 rounded-lg">
           <h2 className="text-xl font-semibold mb-4">Top Products by Sales</h2>
           <Bar data={prepareTopProductsChartData()} />
         </div>
       </div>
 
       {/* Product List */}
+
+      <h1 className='ml-2 text-lg font-semibold'>My product list</h1>
       <div className="flex flex-wrap gap-4">
         {filteredProducts.length === 0 ? (
           <h1 className="text-center w-full text-xl font-bold text-gray-600">
@@ -338,13 +381,14 @@ useEffect(() => {
               />
               <h2 className="text-lg font-semibold">{product.prod_name}</h2>
               <div className="flex justify-between items-center mt-2">
-                <span className="text-green-600 font-bold">{product.prod_price}</span>
+                <span className="text-green-600 font-bold">₱ {product.prod_price}</span>
+                <span className="text-black-600 font-bold">Stocks: {product.prod_stock}</span>
               </div>
             </div>
           ))
         )}
 
-<div className='flex w-full justify-end space-x-2'>
+    <div className='flex w-full justify-end space-x-2'>
       <Link to={`/clientprofile/id=${id}`}>
         <button className='mt-2 p-10 py-2  text-black rounded-md '>
             Back

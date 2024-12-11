@@ -930,14 +930,27 @@ def update_product(prod_id):
         
         # Get the updated product data from the request body
         data = request.get_json()
+        
+        # Log the received data for debugging
+        print("Received data:", data)  # Ensure prod_category is included
 
         # Update product fields
         product.prod_name = data.get('prod_name', product.prod_name)
         product.prod_price = data.get('prod_price', product.prod_price)
+        product.prod_category = data.get('prod_category', product.prod_category)  # Update category
         product.prod_descript = data.get('prod_descript', product.prod_descript)
-
+        product.prod_stock = data.get('prod_stock', product.prod_stock)
+        
+        # Check if there's a new image ID and update it
+        prod_image_id = data.get('prod_image_id')
+        if prod_image_id:
+            product.prod_image_id = prod_image_id  # Update the image ID if provided
+        
         # Commit the changes to the database
         db.session.commit()
+
+        # Log the updated product to verify changes
+        print(f"Product {prod_id} updated: {product.prod_category}")
 
         return jsonify({'message': 'Product updated successfully.'}), 200
 
@@ -947,46 +960,7 @@ def update_product(prod_id):
 
 
 
-class Product(db.Model):
-    __tablename__ = 'products'  # Name of the table in the database
-    prod_id = db.Column(db.Integer, primary_key=True)
-    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.ven_id'), nullable=False)
-    prod_name = db.Column(db.String(255), nullable=False)
-    prod_category = db.Column(db.String(255), nullable=False)
-    prod_descript = db.Column(db.Text, nullable=True)
-    prod_price = db.Column(db.Float, nullable=False)
-    prod_stock = db.Column(db.Integer, nullable=False, default=0)
-    prod_disc_price = db.Column(db.Float, nullable=True)
-    prod_status = db.Column(db.String(50), nullable=False, default="Pending")
-    prod_image_id = db.Column(db.String(255), nullable=False)
-    vendor = db.relationship('Vendor', backref=db.backref('products', lazy=True))
 
-    def __init__(self, vendor_id, prod_name, prod_category, prod_descript, prod_price, prod_stock, prod_disc_price, prod_status="Pending", prod_image_id=None):
-        self.vendor_id = vendor_id
-        self.prod_name = prod_name
-        self.prod_category = prod_category
-        self.prod_descript = prod_descript
-        self.prod_price = prod_price
-        self.prod_stock = prod_stock
-        self.prod_disc_price = prod_disc_price
-        self.prod_status = prod_status
-        self.prod_image_id = prod_image_id
-
-    def to_dict(self):
-        return {
-            "prod_id": self.prod_id,
-            "vendor_id": self.vendor_id,
-            "vendor_name": self.vendor.vendor_name if self.vendor else None,
-            "prod_name": self.prod_name,
-            "prod_category": self.prod_category,
-            "prod_descript": self.prod_descript,
-            "prod_price": self.prod_price,
-            "prod_disc_price": self.prod_disc_price,
-            "prod_status": self.prod_status,
-            "prod_image_id": self.prod_image_id,
-            "prod_stock": self.prod_stock,
-
-        }
 
 class Cart(db.Model):
     cart_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -1174,6 +1148,50 @@ def create_transaction():
 
     return jsonify({"message": "Transaction created successfully!"}), 201
 
+
+
+
+
+class Product(db.Model):
+    __tablename__ = 'products'  # Name of the table in the database
+    prod_id = db.Column(db.Integer, primary_key=True)
+    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.ven_id'), nullable=False)
+    prod_name = db.Column(db.String(255), nullable=False)
+    prod_category = db.Column(db.String(255), nullable=False)
+    prod_descript = db.Column(db.Text, nullable=True)
+    prod_price = db.Column(db.Float, nullable=False)
+    prod_stock = db.Column(db.Integer, nullable=False, default=0)
+    prod_disc_price = db.Column(db.Float, nullable=True)
+    prod_status = db.Column(db.String(50), nullable=False, default="Pending")
+    prod_image_id = db.Column(db.String(255), nullable=False)
+    vendor = db.relationship('Vendor', backref=db.backref('products', lazy=True))
+
+    def __init__(self, vendor_id, prod_name, prod_category, prod_descript, prod_price, prod_stock, prod_disc_price, prod_status="Pending", prod_image_id=None):
+        self.vendor_id = vendor_id
+        self.prod_name = prod_name
+        self.prod_category = prod_category
+        self.prod_descript = prod_descript
+        self.prod_price = prod_price
+        self.prod_stock = prod_stock
+        self.prod_disc_price = prod_disc_price
+        self.prod_status = prod_status
+        self.prod_image_id = prod_image_id
+
+    def to_dict(self):
+        return {
+            "prod_id": self.prod_id,
+            "vendor_id": self.vendor_id,
+            "vendor_name": self.vendor.vendor_name if self.vendor else None,
+            "prod_name": self.prod_name,
+            "prod_category": self.prod_category,
+            "prod_descript": self.prod_descript,
+            "prod_price": self.prod_price,
+            "prod_disc_price": self.prod_disc_price,
+            "prod_status": self.prod_status,
+            "prod_image_id": self.prod_image_id,
+            "prod_stock": self.prod_stock,
+
+        }
 class Transaction(db.Model):
     __tablename__ = 'transactions'
 
