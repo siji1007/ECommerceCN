@@ -8,7 +8,7 @@ const NewOrders: React.FC = () => {
     const [venId, setVenId] = useState<number | null>(null);
     const [transactions, setTransactions] = useState<any[]>([]);
     const [userDetails, setUserDetails] = useState<{ [key: string]: { first_name: string, last_name: string, email:string} }>({});
-    const [productDetails, setProductDetails] = useState<{ [key: string]: { prod_name: string, prod_category: string, prod_image_id: string } }>({});
+    const [productDetails, setProductDetails] = useState<{ [key: string]: { prod_name: string, prod_category: string, prod_image_id: string, prod_disc_price: number } }>({});
     const [userAddressDetails, setUserAddressDetails] = useState<{ [key: string]: any }>({});  // to hold address info
     const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +44,7 @@ const NewOrders: React.FC = () => {
                             .then((res) => ({ u_ID: transaction.u_ID, address: res.data.address, exists: res.data.exists }))
                             .catch((err) => ({ u_ID: transaction.u_ID, address: null, exists: false }))  // Handle no address found
                     );
+                    
 
                     // Resolve all promises
                     Promise.all(userPromises).then(users => {
@@ -64,7 +65,7 @@ const NewOrders: React.FC = () => {
 
                     Promise.all(productPromises).then(products => {
                         const productMap = products.reduce((acc, product) => {
-                            acc[product.p_ID] = { prod_name: product.prod_name, prod_category: product.prod_category, prod_image_id: product.prod_image_id };
+                            acc[product.p_ID] = { prod_name: product.prod_name, prod_category: product.prod_category, prod_image_id: product.prod_image_id, prod_disc_price: product.prod_disc_price };
                             return acc;
                         }, {});
                         setProductDetails(productMap);
@@ -89,6 +90,7 @@ const NewOrders: React.FC = () => {
                     });
 
                 })
+             
                 .catch((err) => {
                     setError('Error occurred while fetching data');
                     console.error(err);
@@ -102,7 +104,7 @@ const NewOrders: React.FC = () => {
         axios
             .post(`${host}/update_transaction_status`, {
                 transaction_id: transactionId,
-                status: 'processed', 
+                status: 'processed',
             })
             .then(() => {
                 alert(`Transaction ID ${transactionId} marked as processed`);
@@ -119,7 +121,7 @@ const NewOrders: React.FC = () => {
                 alert(`Failed to update status for Transaction ID ${transactionId}`);
             });
     };
-
+    
     const handleCancel = (transactionId: number) => {
         alert(`Cancel clicked for Transaction ID: ${transactionId}`);
     };
@@ -161,7 +163,14 @@ const NewOrders: React.FC = () => {
                                     <p>
                                         Category: {productDetails[transaction.p_ID]?.prod_category || 'Loading...'}
                                     </p>
-                                    <p>Price: ${transaction.unit_price}</p>
+                                    <p>Price: ₱{(transaction.unit_price).toFixed(2)}</p>
+                                    <p>Discount: ₱{
+                                        productDetails[transaction.p_ID] && productDetails[transaction.p_ID].prod_disc_price !== undefined
+                                        ? productDetails[transaction.p_ID].prod_disc_price.toFixed(2)
+                                        : 'N/A'
+                                    }</p>
+
+
                                     <p>Quantity: {transaction.quantity}</p>
                                 </div>
                             </div>
@@ -176,7 +185,7 @@ const NewOrders: React.FC = () => {
                                 </p>
                                 <p>
                                     Email: {userDetails[transaction.u_ID]
-                                        ? `${userDetails[transaction.u_ID].email}`  // Should now work if email is correctly mapped
+                                        ? `${userDetails[transaction.u_ID].email}`  
                                         : 'Loading...'}
                                 </p>
                                 </div>
@@ -199,7 +208,7 @@ const NewOrders: React.FC = () => {
 
                             {/* Confirm and Cancel Buttons */}
                             <div className="flex flex-col items-end justify-between">
-                                <p className="font-bold">Subtotal: ₱ {transaction.subtotal}</p>
+                                <p className="font-bold">Subtotal: ₱ {(transaction.subtotal).toFixed(2)}</p>
                                 <div className="mt-4">
                                     <button
                                         className="bg-green-800 text-white px-4 py-2 rounded mr-2"

@@ -962,18 +962,6 @@ def update_product(prod_id):
 
 
 
-class Cart(db.Model):
-    cart_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    us_id = db.Column(db.Integer, nullable=False)
-    product_id = db.Column(db.Integer,db.ForeignKey('products.prod_id', ondelete='CASCADE'), nullable=False)
-    product_name = db.Column(db.String(255), nullable=False)
-    product_classification = db.Column(db.String(255), nullable=True)
-    product_quantity = db.Column(db.Integer, nullable=False)
-    total_price = db.Column(db.Float, nullable=False)
-    date_added = db.Column(db.DateTime, default=datetime.utcnow)
-
-
-
 
 @app.route('/delete-cart-item/<int:cart_id>', methods=['DELETE'])
 def delete_cart_item(cart_id):
@@ -992,8 +980,68 @@ def delete_cart_item(cart_id):
     return jsonify({'message': 'Cart item deleted successfully', 'execution_time': execution_time}), 200
 
 
+class Cart(db.Model):
+    cart_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    us_id = db.Column(db.Integer, nullable=False)
+    product_id = db.Column(db.Integer,db.ForeignKey('products.prod_id', ondelete='CASCADE'), nullable=False)
+    product_name = db.Column(db.String(255), nullable=False)
+    product_classification = db.Column(db.String(255), nullable=True)
+    product_quantity = db.Column(db.Integer, nullable=False)
+    total_price = db.Column(db.Float, nullable=False)
+    date_added = db.Column(db.DateTime, default=datetime.utcnow)
+
+    
+
+@app.route('/api/cart/check', methods=['POST'])
+def check_cart_product():
+    data = request.get_json()
+    us_id = data.get('us_id')
+    product_id = data.get('product_id')
+    
+    # Query cart for the product and user
+    cart_item = Cart.query.filter_by(us_id=us_id, product_id=product_id).first()
+    if cart_item:
+        return jsonify({'found': True}), 200
+    else:
+        return jsonify({'found': False}), 404
 
 
+@app.route('/api/cart/update', methods=['POST'])
+def update_cart():
+    try:
+        data = request.get_json()
+
+        # Extract data from the request body
+        us_id = data.get('us_id')
+        cart_id = data.get('cart_id')  # We are using cart_id to find the item
+        product_quantity = data.get('product_quantity')
+        total_price = data.get('total_price')  # The updated total price
+
+        # Ensure required fields are provided
+        if not all([us_id, cart_id, product_quantity, total_price]):
+            return jsonify({'message': 'Missing required fields'}), 400
+
+        # Debugging: Log the values you're searching for
+        print(f"Looking for cart item with us_id: {us_id} and cart_id: {cart_id}")
+
+        # Find the cart item based on cart_id
+        cart_item = Cart.query.filter_by(cart_id=cart_id, us_id=us_id).first()
+
+        if cart_item:
+            # If the cart item exists, update the quantity and total price
+            cart_item.product_quantity = product_quantity
+            cart_item.total_price = total_price  # Update total price
+
+            # Commit changes to the database
+            db.session.commit()
+
+            return jsonify({'message': 'Cart item quantity and total price updated successfully!'}), 200
+        else:
+            # Cart item not found
+            return jsonify({'message': 'Product not found in cart'}), 404
+
+    except Exception as e:
+        return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
 
 
     
@@ -1018,6 +1066,7 @@ def fetch_user_cart(us_id):
                 'product_classification': item.Cart.product_classification,
                 'product_quantity': item.Cart.product_quantity,
                 'unit_price': item.Product.prod_price,
+                'DicountedPrice':item.Product.prod_disc_price,
                 'total_price': item.Cart.total_price,
                 'date_added': item.Cart.date_added.strftime('%Y-%m-%d %H:%M:%S'),
                 'product_image': item.Product.prod_image_id, 
@@ -1035,43 +1084,6 @@ def fetch_user_cart(us_id):
 
 
 
-
-@app.route('/api/cart/add', methods=['POST'])
-def add_to_cart():
-    try:
-        data = request.get_json()
-
-        # Extracting data from the request
-        us_id = data.get('us_id')
-        product_id = data.get('product_id')
-        product_name = data.get('product_name')
-        product_classification = data.get('product_classification')
-        product_quantity = data.get('product_quantity')
-        total_price = data.get('total_price')
-
-        # Validate required fields
-        if not all([us_id, product_id, product_name, product_quantity, total_price]):
-            return jsonify({'message': 'Missing required fields'}), 400
-
-        # Create a new cart record
-        new_cart = Cart(
-            us_id=us_id,
-            product_id=product_id,
-            product_name=product_name,
-            product_classification=product_classification,
-            product_quantity=product_quantity,
-            total_price=total_price
-        )
-
-        # Add and commit to the database
-        db.session.add(new_cart)
-        db.session.commit()
-
-        return jsonify({'message': 'Product added to cart successfully!'}), 201
-
-    except Exception as e:
-        return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
-    
 
 
 
@@ -1151,6 +1163,47 @@ def create_transaction():
 
 
 
+@app.route('/fetchTransactionsAll', methods=['GET'])
+def fetch_transactionsall():
+    # Fetch all transactions where the status is 'processed'
+    transactions = Transaction.query.filter_by(status='processed').all()
+
+    # Aggregate quantities by product ID
+    product_quantities = {}
+    transaction_details = []
+
+    for transaction in transactions:
+        if transaction.p_ID in product_quantities:
+            product_quantities[transaction.p_ID] += transaction.quantity
+        else:
+            product_quantities[transaction.p_ID] = transaction.quantity
+
+        # Get user information
+        user = User.query.get(transaction.u_ID)
+        product = Product.query.get(transaction.p_ID)
+
+        # Store the transaction details (User, Product, and Transaction)
+        transaction_details.append({
+            'transaction_id': transaction.transaction_id,
+            'user_name': user.first_name if user else 'Unknown',  # Assuming user has a 'name' attribute
+            'product_name': product.prod_name if product else 'Unknown',
+            'created_at': transaction.created_at,
+            'payment': transaction.payment
+        })
+
+    # Prepare the response with both product quantities and transaction details
+    result = {
+        'product_quantities': [{
+            'product_id': product.prod_id,
+            'product_name': product.prod_name,
+            'total_quantity': product_quantities[product.prod_id]
+        } for product in Product.query.all() if product.prod_id in product_quantities],
+        'transaction_details': transaction_details
+    }
+
+    return jsonify(result)
+
+
 
 class Product(db.Model):
     __tablename__ = 'products'  # Name of the table in the database
@@ -1192,14 +1245,63 @@ class Product(db.Model):
             "prod_stock": self.prod_stock,
 
         }
+    
+
+
+
+
+@app.route('/api/cart/add', methods=['POST'])
+def add_to_cart():
+    try:
+        data = request.get_json()
+
+        # Extracting data from the request
+        us_id = data.get('us_id')
+        product_id = data.get('product_id')
+        product_name = data.get('product_name')
+        product_classification = data.get('product_classification')
+        product_quantity = data.get('product_quantity')
+        total_price = data.get('total_price')
+
+        # Validate required fields
+        if not all([us_id, product_id, product_name, product_quantity, total_price]):
+            return jsonify({'message': 'Missing required fields'}), 400
+
+        # Check if the product is already in the cart
+        existing_cart_item = Cart.query.filter_by(us_id=us_id, product_id=product_id).first()
+        if existing_cart_item:
+            return jsonify({'message': 'You already have this product in your cart!'}), 400
+
+        # Create a new cart record
+        new_cart = Cart(
+            us_id=us_id,
+            product_id=product_id,
+            product_name=product_name,
+            product_classification=product_classification,
+            product_quantity=product_quantity,
+            total_price=total_price
+        )
+
+        # Add and commit to the database
+        db.session.add(new_cart)
+        db.session.commit()
+
+        return jsonify({'message': 'Product added to cart successfully!'}), 201
+
+    except Exception as e:
+        return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
+
+
+    
+
 class Transaction(db.Model):
     __tablename__ = 'transactions'
 
     transaction_id = db.Column(db.Integer, primary_key=True)
     
     u_ID = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    p_ID = db.Column(db.Integer, db.ForeignKey('products.prod_id', ondelete='CASCADE'), nullable=False)
-    v_ID = db.Column(db.Integer, db.ForeignKey('vendors.ven_id'), nullable=False)  # Vendor ID should be here
+    p_ID = db.Column(db.Integer, db.ForeignKey('products.prod_id', ondelete='CASCADE'), nullable=False)  # Correct foreign key reference
+    v_ID = db.Column(db.Integer, db.ForeignKey('vendors.ven_id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     unit_price = db.Column(db.Float, nullable=False)
     subtotal = db.Column(db.Float, nullable=False)
@@ -1207,72 +1309,10 @@ class Transaction(db.Model):
     status = db.Column(db.String(50), nullable=False)
     payment = db.Column(db.String(20), nullable=False)
 
-    # Define relationships if needed (optional, just for easy access to related records)
-    user = db.relationship('User', backref='transactions')
-    product = db.relationship('Product', backref='transactions')
+    # Relationship to Product
+    product = db.relationship('Product', backref='transactions', lazy='joined')  # Use joined loading here
+    # Relationship to Vendor
     vendor = db.relationship('Vendor', backref='transactions')
-
-
-
-@app.route('/fetchTransactionsAll', methods=['GET'])
-def fetch_transactionsall():
-    # Fetch all transactions where the status is 'processed'
-    transactions = Transaction.query.filter_by(status='processed').all()
-
-    # Aggregate quantities by product ID
-    product_quantities = {}
-    transaction_details = []
-
-    for transaction in transactions:
-        if transaction.p_ID in product_quantities:
-            product_quantities[transaction.p_ID] += transaction.quantity
-        else:
-            product_quantities[transaction.p_ID] = transaction.quantity
-
-        # Get user information
-        user = User.query.get(transaction.u_ID)
-        product = Product.query.get(transaction.p_ID)
-
-        # Store the transaction details (User, Product, and Transaction)
-        transaction_details.append({
-            'transaction_id': transaction.transaction_id,
-            'user_name': user.first_name if user else 'Unknown',  # Assuming user has a 'name' attribute
-            'product_name': product.prod_name if product else 'Unknown',
-            'created_at': transaction.created_at,
-            'payment': transaction.payment
-        })
-
-    # Prepare the response with both product quantities and transaction details
-    result = {
-        'product_quantities': [{
-            'product_id': product.prod_id,
-            'product_name': product.prod_name,
-            'total_quantity': product_quantities[product.prod_id]
-        } for product in Product.query.all() if product.prod_id in product_quantities],
-        'transaction_details': transaction_details
-    }
-
-    return jsonify(result)
-
-@app.route('/fetchTransactions/<int:vendor_id>', methods=['GET'])
-def fetch_transactions(vendor_id):
-    transactions = Transaction.query.filter_by(v_ID=vendor_id, status='processed').all()
-    return jsonify([{
-        'transaction_id': transaction.transaction_id,
-        'u_ID': transaction.u_ID,
-        'p_ID': transaction.p_ID,
-        'v_ID': transaction.v_ID,
-        'quantity': transaction.quantity,
-        'unit_price': transaction.unit_price,
-        'subtotal': transaction.subtotal,
-        'created_at': transaction.created_at,
-        'status': transaction.status,
-        'payment': transaction.payment,
-    } for transaction in transactions])
-
-
-
-
 
 
 @app.route('/update_transaction_status', methods=['POST'])
@@ -1291,14 +1331,35 @@ def update_transaction_status():
         if not transaction:
             return jsonify({'error': 'Transaction not found'}), 404
 
-        # Update the status
+        # Update the transaction status
         transaction.status = status
-        db.session.commit()  # Save changes to the database
+        
+        # Deduct the quantity from the product stock if the status is 'processed'
+        if status == 'processed':
+            # Fetch the product associated with the transaction
+            product = transaction.product
 
-        return jsonify({'message': 'Transaction status updated successfully'}), 200
+            if product:
+                # Ensure product stock is sufficient
+                if product.prod_stock >= transaction.quantity:
+                    # Deduct the quantity from the product stock
+                    product.prod_stock -= transaction.quantity
+                    db.session.commit()  # Save changes to the product stock
+                else:
+                    return jsonify({'error': 'Insufficient stock for the product'}), 400
+            else:
+                return jsonify({'error': 'Product not found'}), 404
+
+        # Commit the transaction status update
+        db.session.commit()  # Save the changes to the transaction status
+
+        return jsonify({'message': 'Transaction status and stock updated successfully'}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+
 
 @app.route('/get_user_by_id', methods=['GET'])
 def get_user_by_id():
@@ -1313,6 +1374,36 @@ def get_user_by_id():
             'email': user.email_or_mobile
         })
     return jsonify({'error': 'User not found'}), 404
+
+
+
+
+
+@app.route('/fetchTransactions/<int:vendor_id>', methods=['GET'])
+def fetch_transactions(vendor_id):
+    transactions = Transaction.query.filter_by(v_ID=vendor_id, status='processed').all()
+
+  
+    return jsonify([{
+        'transaction_id': transaction.transaction_id,
+        'u_ID': transaction.u_ID,
+        'p_ID': transaction.p_ID,
+        'v_ID': transaction.v_ID,
+        'quantity': transaction.quantity,
+        'unit_price': transaction.unit_price,
+        'subtotal': transaction.subtotal,
+        'created_at': transaction.created_at,
+        'status': transaction.status,
+        'payment': transaction.payment,
+        'prod_disc_price': transaction.product.prod_disc_price if transaction.product else None
+    } for transaction in transactions])
+
+
+
+
+
+
+
 
 
 
@@ -1357,7 +1448,8 @@ def get_product_by_id():
         product_details = {
             'prod_name': product.prod_name,
             'prod_category': product.prod_category,
-            'prod_image_id': product.prod_image_id
+            'prod_image_id': product.prod_image_id,
+            'prod_disc_price': product.prod_disc_price
         }
         return jsonify(product_details)
     

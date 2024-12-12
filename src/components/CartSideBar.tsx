@@ -13,6 +13,7 @@ interface Product {
   title: string;
   category: string;
   unitPrice: number;
+  DicountedPrice:number;
   quantity: number;
   totalPrice: number;
 }
@@ -50,6 +51,7 @@ const CartPage: React.FC = () => {
           title: item.product_name,
           category: item.product_classification,
           unitPrice: item.unit_price,
+          DicountedPrice:item.DicountedPrice,
           quantity: item.product_quantity,
           totalPrice: item.total_price,
           vendorId: item.vendor_id,
@@ -124,33 +126,120 @@ const CartPage: React.FC = () => {
   };
   
 
-  const handleIncreaseQuantity = (id: number) => {
+const handleIncreaseQuantity = async (id: number) => {
+    // Update the cart items' quantity and total price in the state
     setCartItems((prevItems) =>
       prevItems.map((item) =>
         item.id === id
           ? {
               ...item,
               quantity: item.quantity + 1,
-              totalPrice: (item.quantity + 1) * item.unitPrice,
+              totalPrice: (item.quantity + 1) * (item.unitPrice - item.DicountedPrice),  // Update total price
             }
           : item
       )
     );
+  
+    // Find the updated item from the cart items array
+    const updatedItem = cartItems.find(item => item.id === id);
+  
+    if (updatedItem) {
+      const userId = localStorage.getItem('Auth'); // Get the userId from localStorage
+  
+      if (userId) {
+        console.log(`User ID: ${userId}`);  // Log the userId to the console
+        console.log(`Cart ID: ${updatedItem.id}`); // Log the cartId to the console
+  
+        try {
+          // Send the updated quantity and total price to the backend using cart_id
+          const updateResponse = await fetch(serverURl + '/api/cart/update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              us_id: userId,                // User ID from localStorage
+              cart_id: updatedItem.id,       // cart_id (not product_id)
+              product_quantity: updatedItem.quantity + 1,  // Incremented quantity
+              total_price: updatedItem.totalPrice,        // Updated total price
+            }),
+          });
+  
+          if (updateResponse.ok) {
+            alert('Product quantity and total price updated successfully!');
+          } else {
+            const errorData = await updateResponse.json();
+            alert(`Failed to update product quantity: ${errorData.message || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Error updating cart quantity:', error);
+          alert('An error occurred while updating the product quantity.');
+        }
+      } else {
+        alert('User is not logged in');
+      }
+    }
   };
-
-  const handleDecreaseQuantity = (id: number) => {
+  
+  
+  
+  const handleDecreaseQuantity = async (id: number) => {
+    // Update the cart items' quantity and total price in the state
     setCartItems((prevItems) =>
       prevItems.map((item) =>
-        item.id === id && item.quantity > 1
+        item.id === id && item.quantity > 1  // Only allow decreasing if quantity > 1
           ? {
               ...item,
-              quantity: item.quantity - 1,
-              totalPrice: (item.quantity - 1) * item.unitPrice,
+              quantity: item.quantity - 1,  // Decrease quantity by 1
+              totalPrice: (item.quantity - 1) * (item.unitPrice - item.DicountedPrice),  // Update total price
             }
           : item
       )
     );
+  
+    // Find the updated item after state update
+    const updatedItem = cartItems.find(item => item.id === id);
+  
+    if (updatedItem && updatedItem.quantity > 1) {
+      const userId = localStorage.getItem('Auth');  // Get userId from localStorage
+  
+      if (userId) {
+        console.log(`User ID: ${userId}`);  // Log userId
+        console.log(`Cart ID: ${updatedItem.id}`);  // Log cartId
+  
+        try {
+          // Send updated quantity and total price to the backend using cart_id
+          const updateResponse = await fetch(serverURl + '/api/cart/update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              us_id: userId,                // User ID from localStorage
+              cart_id: updatedItem.id,       // cart_id (not product_id)
+              product_quantity: updatedItem.quantity - 1,  // Decreased quantity
+              total_price: updatedItem.totalPrice,        // Updated total price
+            }),
+          });
+  
+          if (updateResponse.ok) {
+            alert('Product quantity and total price updated successfully!');
+          } else {
+            const errorData = await updateResponse.json();
+            alert(`Failed to update product quantity: ${errorData.message || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Error updating cart quantity:', error);
+          alert('An error occurred while updating the product quantity.');
+        }
+      } else {
+        alert('User is not logged in');
+      }
+    } else {
+      alert('Quantity cannot be less than 1');
+    }
   };
+  
 
   const handleDeleteItem = async (id: number) => {
     try {
@@ -247,8 +336,9 @@ const CartPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-center">
-                {product.unitPrice ? `₱ ${product.unitPrice.toFixed(2)}` : 'Price not available'}
+              <div className="items-center justify-center flex-col flex">
+                <span>{product.unitPrice ? `₱ ${(product.unitPrice - product.DicountedPrice).toFixed(2)}` : 'Price not available'}</span>
+               
               </div>
 
               <div className="flex items-center justify-center">
