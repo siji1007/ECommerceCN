@@ -312,7 +312,7 @@ const prepareTopProductsChartData = () => {
   return (
     <div className="p-4">
       {/* Filter and Search */}
-      <div className="flex items-center mb-4 justify-between">
+      <div className="flex items-center pb-10 justify-between">
         <div className="flex items-center">
           <select
             className="border rounded-md px-2 py-1 mr-4"
@@ -345,7 +345,7 @@ const prepareTopProductsChartData = () => {
         </select>
       </div>
 
-      <div className="flex flex-col lg:flex-row w-full overflow-x-auto mb-2 gap-2 items-center justify-center">
+      <div className="flex flex-col lg:flex-row w-full overflow-x-auto overflow-y-hidden mb-2 gap-2 items-center justify-center">
         {/* Line Chart for Weekly Sales */}
         <div className="mb-6 w-full lg:w-1/2 border p-5 rounded-lg">
           <h2 className="text-xl font-semibold mb-4">Weekly Sales</h2>
@@ -388,7 +388,7 @@ const prepareTopProductsChartData = () => {
           ))
         )}
 
-    <div className='flex w-full justify-end space-x-2'>
+    <div className='flex w-full justify-end space-x-2 pb-10 '>
       <Link to={`/clientprofile/id=${id}`}>
         <button className='mt-2 p-10 py-2  text-black rounded-md '>
             Back

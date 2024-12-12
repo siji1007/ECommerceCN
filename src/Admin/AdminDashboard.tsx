@@ -9,6 +9,7 @@ import CustomerManagement from '../Admin/sidebarPages/consumerManagement';
 import VendorManagement from '../Admin/sidebarPages/vendorManagement';
 import Settings from '../Admin/sidebarPages/adminSettings';
 import ProductManagement from './sidebarPages/ProductManage';
+import SalesReport from './sidebarPages/SalesReport';
 
 const AdminDashboard: React.FC = () => {
   const adminID = localStorage.getItem('adminID'); 
@@ -37,11 +38,17 @@ const AdminDashboard: React.FC = () => {
     setSelectedDashboard('product')
   };
 
+  const handleSaleReport = () => {
+    setSelectedDashboard('sales-report')
+  }
+
   // Handle active links for the sidebar
   const isCustomerActive = location.pathname === `/admin/id_admin=${adminID}/customer-management`;
   const isVendorActive = location.pathname === `/admin/id_admin=${adminID}/vendor-management`;
   const isSettingsActive = location.pathname === `/admin/id_admin=${adminID}/settings`;
   const isProductActive = location.pathname === `/admin/id_admin=${adminID}/product-management`;
+  const isSalesActive = location.pathname === `/admin/id_admin=${adminID}/sales-report`;
+
 
   // Sync selectedDashboard with current pathname on mount
   useEffect(() => {
@@ -56,6 +63,9 @@ const AdminDashboard: React.FC = () => {
     } else if (location.pathname === `/admin/id_admin=${adminID}/product-management`) {
       setSelectedDashboard('product');
     }
+    else if (location.pathname === `/admin/id_admin=${adminID}/sales-report`) {
+    setSelectedDashboard('sales-report');
+  }
   }, [location.pathname, adminID]);  // Trigger when location.pathname or adminID changes
 
   // Initially open the User Management section if we're on the customer page
@@ -115,9 +125,12 @@ const AdminDashboard: React.FC = () => {
               <MdOutlineProductionQuantityLimits className="h-5 w-5 mr-2" /> Product Management
             </button>
           </Link>
-          <button className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded flex items-center">
+
+          <Link to={`/admin/id_admin=${adminID}/sales-report`}>
+          <button className={`w-full py-2 px-4 mb-2 text-left font-semibold rounded ${ isSalesActive ? 'bg-green-600 text-white flex' : 'text-black hover:bg-green-600 hover:text-white flex' }`} onClick={handleSaleReport}>
             <FaMoneyBillTrendUp className="h-5 w-5 mr-2" /> Sales Report
           </button>
+          </Link>
           <Link to={`/admin/id_admin=${adminID}/settings`}>
             <button  onClick={handleSettings}  className={`w-full py-2 px-4 mb-2 text-left font-semibold rounded ${
                     isSettingsActive ? 'flex bg-green-600 text-white' : 'flex text-black hover:bg-green-600 hover:text-white'
@@ -132,6 +145,7 @@ const AdminDashboard: React.FC = () => {
         {selectedDashboard === 'vendor' && <VendorManagement />}
         {selectedDashboard === 'settings' && <Settings />}
         {selectedDashboard === 'product' && <ProductManagement />}
+        {selectedDashboard === 'sales-report' && <SalesReport />}
       </main>
     </div>
   );

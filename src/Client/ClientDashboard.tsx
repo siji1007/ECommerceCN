@@ -453,59 +453,6 @@ const ClientDashboard: React.FC = () =>{
       };
 
 
-      const handleSaveClickAddress = () => {
-        setIsDisabledAddress(true);
-        setIsEditingAddress(false);
-    
-        // Get user id from localStorage (assuming it's stored as 'Auth')
-        const u_id = localStorage.getItem('Auth');
-    
-        // Construct the address object with the current values, including latitude and longitude
-        const addressData = {
-            u_id,
-            province: locationDetails.state || "Not specified",
-            city: locationDetails.city || "Not specified",
-            barangay: locationDetails.road || "Not specified",
-            postal_code: locationDetails.postcode || "Not specified",
-            latitude: position ? position[0] : "Not available",
-            longitude: position ? position[1] : "Not available",
-        };
-    
-        // Check if the address exists by making a GET request to the backend
-        axios.get(`${host_backend}/api/addresses/${u_id}`)
-            .then((response) => {
-                // If the address exists, update it using PUT
-                if (response.data.exists) {
-                    axios.put(`${host_backend}/api/addresses/${u_id}`, addressData)
-                        .then(() => {
-                            alert("Address updated successfully!");
-                        })
-                        .catch((error) => {
-                            console.error("Error updating address:", error);
-                            alert("Error updating address.");
-                        });
-                }
-            })
-            .catch((error) => {
-                // If address doesn't exist (404), create a new address
-                if (error.response && error.response.status === 404) {
-                    axios.post(`${host_backend}/api/addresses`, addressData)
-                        .then(() => {
-                            alert("Address saved successfully!");
-                        })
-                        .catch((error) => {
-                            console.error("Error saving address:", error);
-                            alert("Error saving address.");
-                        });
-                } else {
-                    console.error("Error checking address existence:", error);
-                    alert("Error checking address existence.");
-                }
-            });
-    };
-    
-      
-      
   
     const StartBusiness = () => {
       const newPath = isBusinessForm ? `/clientprofile/id=${id}` : `/clientprofile/id=${id}/business-form`;
@@ -515,7 +462,58 @@ const ClientDashboard: React.FC = () =>{
       setIsBusinessForm(!isBusinessForm); 
     };
 
-    const handleMarkerDragEnd = async (event: any) => {
+    const handleSaveClickAddress = () => {
+      setIsDisabledAddress(true);
+      setIsEditingAddress(false);
+  
+      // Get user id from localStorage (assuming it's stored as 'Auth')
+      const u_id = localStorage.getItem('Auth');
+  
+      // Construct the address object with the current values, including latitude and longitude
+      const addressData = {
+          u_id,
+          province: locationDetails.state || "Not specified",
+          city: locationDetails.city || "Not specified",
+          barangay: locationDetails.road || "Not specified",
+          postal_code: locationDetails.postcode || "Not specified",
+          latitude: position ? position[0] : "Not available",
+          longitude: position ? position[1] : "Not available",
+      };
+  
+      // Check if the address exists by making a GET request to the backend
+      axios.get(`${host_backend}/api/addresses/${u_id}`)
+          .then((response) => {
+              // If the address exists, update it using PUT
+              if (response.data.exists) {
+                  axios.put(`${host_backend}/api/addresses/${u_id}`, addressData)
+                      .then(() => {
+                          alert("Address updated successfully!");
+                      })
+                      .catch((error) => {
+                          console.error("Error updating address:", error);
+                          alert("Error updating address.");
+                      });
+              }
+          })
+          .catch((error) => {
+              // If address doesn't exist (404), create a new address
+              if (error.response && error.response.status === 404) {
+                  axios.post(`${host_backend}/api/addresses`, addressData)
+                      .then(() => {
+                          alert("Address saved successfully!");
+                      })
+                      .catch((error) => {
+                          console.error("Error saving address:", error);
+                          alert("Error saving address.");
+                      });
+              } else {
+                  console.error("Error checking address existence:", error);
+                  alert("Error checking address existence.");
+              }
+          });
+  };
+  
+  const handleMarkerDragEnd = async (event: any) => {
       const marker = event.target;
       const newPosition = marker.getLatLng();
       
@@ -523,26 +521,30 @@ const ClientDashboard: React.FC = () =>{
       alert(`New Position:\nLatitude: ${newPosition.lat}\nLongitude: ${newPosition.lng}`);
       setIsDisabledAddress(false);
       setIsEditingAddress(true);
-
+  
       // Fetch location details using reverse geocoding
       try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${newPosition.lat}&lon=${newPosition.lng}&format=json`
-        );
-        const data = await response.json();
-    
-        // Extract and update location details
-        const updatedDetails = {
-          state: data.address.state || "",
-          city: data.address.city || data.address.town || data.address.village || "",
-          road: data.address.suburb || data.address.road || "",
-          postcode: data.address.postcode || "",
-        };
-        setLocationDetails(updatedDetails);
+          const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${newPosition.lat}&lon=${newPosition.lng}&format=json`
+          );
+          const data = await response.json();
+  
+          // Extract and update location details
+          const updatedDetails = {
+              state: data.address.state || "",
+              city: data.address.city || data.address.town || data.address.village || "",
+              road: data.address.suburb || data.address.road || "",
+              postcode: data.address.postcode || "",
+          };
+          setLocationDetails(updatedDetails);
+          
+          // Update position state for saving later
+          setPosition([newPosition.lat, newPosition.lng]);
       } catch (error) {
-        console.error("Error fetching location details:", error);
+          console.error("Error fetching location details:", error);
       }
-    };
+  };
+  
 
     const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       setBirthMonth(Number(e.target.value)); // Update birthMonth state
@@ -563,7 +565,7 @@ const ClientDashboard: React.FC = () =>{
     return (  
       <div className="flex w-full h-screen">
           <button
-            className="fixed top-20 left-4 p-2 z-50"
+            className="fixed top-20 left-4 z-50"
             onClick={toggleSidebarVisibility}
           >
             {/* Show Hamburger icon when sidebar is closed, Arrow icon when sidebar is open */}
@@ -575,17 +577,10 @@ const ClientDashboard: React.FC = () =>{
           </button>
   {/* Sidebar Section */}
   <aside
-    className={`bg-gray-200  mt-5 space-y-4 pt-3 border border-gray-500 flex-shrink-0 transition-transform duration-300 ${
+    className={`border-r  mt-5 space-y-4 pt-3  flex-shrink-0 transition-transform duration-300 ${
       isSidebarOpen ? 'w-60 translate-x-0' : 'w-0 -translate-x-60'
     }`}
-  >
-    {/* Sidebar content goes here */}
-  
-
-  {/* Sidebar Toggle Button */}
-
-
-
+    >
     <div className="flex flex-col items-center justify-center mb-8">
       <img
         src={image ? host_frontend + image : Profile}

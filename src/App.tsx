@@ -26,6 +26,7 @@ import Payment from './pages/BuyPayment';
 import host from "./host/host.txt?raw";
 import NewOrders from './Client/BusinessPage/NewOrder';
 import Productmanagement from './Admin/sidebarPages/ProductManage';
+import SaleReport from './Admin/sidebarPages/SalesReport';
 
 function App() {
 
@@ -80,6 +81,7 @@ function App() {
             <Route path='customer-management' element={<CustomerManagement />} />
             <Route path='vendor-management' element={<VendorManagement />} />
             <Route path='product-management' element={<Productmanagement />} />
+            <Route path='sales-report' element={<SaleReport/>}/>
             <Route path='settings' element={<AdminSettins />} />
           </Route>
 

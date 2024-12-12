@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import No_order from '../assets/OtherImages/no_order.png';
 import host from '../host/host.txt?raw';
 
 const TransactionsPage: React.FC = () => {
@@ -86,6 +87,7 @@ const TransactionsPage: React.FC = () => {
             ) : (
             <div className="flex flex-col items-center justify-center mt-10">
                 <p className="text-lg text-gray-700">No available products at the moment. Start shopping now!</p>
+                <img className='h-[50vh] w-[50vh]' src={No_order} alt='No Order'></img>
                 <button
                 onClick={() => window.location.href = '/shop'} // Update '/shop' with the actual shop page route
                 className="mt-4 px-6 py-2 bg-green-800 text-white rounded-lg hover:bg-green-600 transition"

@@ -12,7 +12,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 app = Flask(__name__)
 
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://192.168.1.6:5173", "https://192.168.1.6:8082"]}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://192.168.1.7:5173", "https://192.168.1.7:8082"]}})
 
 
 
@@ -1213,6 +1213,47 @@ class Transaction(db.Model):
     vendor = db.relationship('Vendor', backref='transactions')
 
 
+
+@app.route('/fetchTransactionsAll', methods=['GET'])
+def fetch_transactionsall():
+    # Fetch all transactions where the status is 'processed'
+    transactions = Transaction.query.filter_by(status='processed').all()
+
+    # Aggregate quantities by product ID
+    product_quantities = {}
+    transaction_details = []
+
+    for transaction in transactions:
+        if transaction.p_ID in product_quantities:
+            product_quantities[transaction.p_ID] += transaction.quantity
+        else:
+            product_quantities[transaction.p_ID] = transaction.quantity
+
+        # Get user information
+        user = User.query.get(transaction.u_ID)
+        product = Product.query.get(transaction.p_ID)
+
+        # Store the transaction details (User, Product, and Transaction)
+        transaction_details.append({
+            'transaction_id': transaction.transaction_id,
+            'user_name': user.first_name if user else 'Unknown',  # Assuming user has a 'name' attribute
+            'product_name': product.prod_name if product else 'Unknown',
+            'created_at': transaction.created_at,
+            'payment': transaction.payment
+        })
+
+    # Prepare the response with both product quantities and transaction details
+    result = {
+        'product_quantities': [{
+            'product_id': product.prod_id,
+            'product_name': product.prod_name,
+            'total_quantity': product_quantities[product.prod_id]
+        } for product in Product.query.all() if product.prod_id in product_quantities],
+        'transaction_details': transaction_details
+    }
+
+    return jsonify(result)
+
 @app.route('/fetchTransactions/<int:vendor_id>', methods=['GET'])
 def fetch_transactions(vendor_id):
     transactions = Transaction.query.filter_by(v_ID=vendor_id, status='processed').all()
@@ -1228,6 +1269,10 @@ def fetch_transactions(vendor_id):
         'status': transaction.status,
         'payment': transaction.payment,
     } for transaction in transactions])
+
+
+
+
 
 
 @app.route('/update_transaction_status', methods=['POST'])
@@ -1319,6 +1364,28 @@ def get_product_by_id():
     return jsonify({'error': 'Product not found'}), 404
 
 
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"message": "User not found"}), 404
+        
+        # Delete associated data (like addresses)
+        Address.query.filter_by(u_id=user.id).delete()
+        
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({"message": "User deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "Error deleting user", "error": str(e)}), 500
+
+
+
+
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -1342,8 +1409,6 @@ class User(db.Model):
         self.email_or_mobile = email_or_mobile
         self.password = password
         self.user_image = user_image
-
-
 
 
 class Address(db.Model):
@@ -1370,6 +1435,31 @@ class Address(db.Model):
         self.postal_code = postal_code
         self.latitude = latitude
         self.longitude = longitude
+
+
+@app.route('/api/addresses', methods=['GET'])
+def get_all_addresses():
+    try:
+        addresses = Address.query.join(User, Address.u_id == User.id).all()  # Join Address with User on u_id
+        addresses_data = [
+            {
+                'addr_id': address.addr_id,
+                'u_id': address.u_id,
+                'first_name': address.user.first_name,  # Fetch the first_name from the User model
+                'last_name':address.user.last_name,
+                'user_image':address.user.user_image,
+                'province': address.province,
+                'city': address.city,
+                'barangay': address.barangay,
+                'postal_code': address.postal_code,
+                'latitude': address.latitude,
+                'longitude': address.longitude,
+            }
+            for address in addresses
+        ]
+        return jsonify(addresses_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 

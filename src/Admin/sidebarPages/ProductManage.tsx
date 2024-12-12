@@ -103,7 +103,14 @@ const ProductManage: React.FC = () => {
       <h1 className="text-xl font-bold mb-4">Product Management</h1>
 
       {loading ? (
-        <p>Loading products...</p>
+          <div className="relative">
+          {/* Content here (e.g., filtered products) */}
+        
+          {/* Loading Modal */}
+          <div className="absolute mt-10 inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="w-16 h-16 border-4 border-t-4 border-gray-200 border-t-green-500 rounded-full animate-spin"></div>
+          </div>
+        </div>
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (
