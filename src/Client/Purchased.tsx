@@ -75,7 +75,7 @@ const TransactionsPage: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex items-center justify-center">
-                    ₱ {transaction.unit_price.toFixed(2)}
+                    ₱ {(transaction.unit_price - transaction.prod_disc_price).toFixed(2)}
                 </div>
                 <div className="flex items-center justify-center">{transaction.quantity}</div>
                 <div className="flex items-center justify-center">

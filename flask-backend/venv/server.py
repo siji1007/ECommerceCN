@@ -8,7 +8,17 @@ from werkzeug.utils import secure_filename
 import os
 import time
 from sqlalchemy.exc import SQLAlchemyError
+from base64 import b64encode
+import requests
+from dotenv import load_dotenv
 
+load_dotenv()
+
+PAYMONGO_SECRET_KEY = os.getenv("PAYMONGO_API_KEY")
+if not PAYMONGO_SECRET_KEY:
+    print("Error: PAYMONGO_API_KEY is not set!")
+
+PAYMONGO_BASE_URL = 'https://api.paymongo.com/v1'
 
 app = Flask(__name__)
 
@@ -1098,6 +1108,7 @@ def get_to_pay_transactions(user_id):
             'product_id': t.p_ID,
             'quantity': t.quantity,
             'unit_price': t.unit_price,
+            'prod_disc_price':t.product.prod_disc_price,
             'subtotal': t.subtotal,
             'created_at': t.created_at,
             'status': t.status,
@@ -1118,6 +1129,7 @@ def get_to_receive_transactions(user_id):
             'product_id': t.p_ID,
             'quantity': t.quantity,
             'unit_price': t.unit_price,
+            'prod_disc_price':t.product.prod_disc_price,
             'subtotal': t.subtotal,
             'created_at': t.created_at,
             'status': t.status,
@@ -1620,6 +1632,73 @@ def update_address(u_id):
 
 with app.app_context():
     db.create_all()
+
+
+@app.route('/api/create_gcash_payment', methods=['POST'])
+def create_gcash_payment():
+    try:
+        data = request.get_json()
+        print("Received data:", data)  # Log the received data
+        amount = data.get('amount')  # Amount should be in cents (e.g., ₱100 = 10000)
+
+        if not amount or amount <= 0:
+            return jsonify({'success': False, 'error': 'Invalid amount provided'}), 400
+
+        # Headers for PayMongo API request (Basic Authentication using secret key)
+        headers = {
+            'Authorization': 'Basic ' + b64encode(f'{PAYMONGO_SECRET_KEY}:'.encode()).decode('utf-8'),
+            'Content-Type': 'application/json'
+        }
+
+        # Create a payment intent for GCash
+        payload = {
+            "data": {
+                "attributes": {
+                    "amount": amount,
+                    "currency": "PHP",
+                    "payment_method": "gcash",
+                    "payment_method_allowed": ["gcash"],
+                    "description": "Thank you for choosing Ecommerce of Camarines Norte. We hope you have a great shopping experience, CamNortenos!",
+                    "remarks": "Default Remarks"
+                }
+            }
+        }
+
+        # Send request to PayMongo API to create payment intent
+        response = requests.post(f'{PAYMONGO_BASE_URL}/links', json=payload, headers=headers)
+
+        # Log the response for debugging
+        print("PayMongo Response Status Code:", response.status_code)
+        print("PayMongo Response Body:", response.text)
+
+        # Attempt to parse the response body as JSON
+        try:
+            response_json = response.json()
+        except ValueError as e:
+            print("Error parsing PayMongo response JSON:", e)
+            return jsonify({'success': False, 'error': 'Error parsing PayMongo response'}), 500
+
+        # Always try to get the checkout_url from the response body
+        payment_intent = response_json.get('data', {})
+        checkout_url = payment_intent.get('attributes', {}).get('checkout_url', None)
+        
+        # If we have a checkout_url, return it
+        if checkout_url:
+            print("Checkout URL:", checkout_url)
+            return jsonify({'success': True, 'paymentUrl': checkout_url})
+        else:
+            print("No checkout URL found in the response.")
+            return jsonify({'success': False, 'error': 'No checkout URL found.'}), 400
+
+    except Exception as e:
+        print("Error:", e)  # Log any exceptions
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True

@@ -66,40 +66,56 @@ const Payment: React.FC = () => {
   }
 
   const handleConfirmOrder = async () => {
-    const authData = localStorage.getItem('Auth');  // Get user ID from local storage
-  
-    // Add the vendorId to the orderData, which will be sent to the API
+    const authData = localStorage.getItem('Auth');
     const orderData = {
       userId: authData,
       selectedProductDetails: selectedProductDetails.map((product) => ({
         ...product,
-        vendorId: product.vendorId,  // Include vendor ID in each product
+        vendorId: product.vendorId,
       })),
-      paymentMethod: paymentMethod, // Include payment method in the order data
+      paymentMethod: paymentMethod,
     };
   
     try {
-      // Send the order data to the Flask API
-      const response = await axios.post(serverURL + '/api/create_transaction', orderData);
+      if (paymentMethod === 'POD') {
+        // Ensure amount is passed as a positive integer in cents
+        const amountInCents = orderTotal * 100;  // Convert total to cents
   
-      if (response.status === 201) {
-        let message = 'Your Order Details:\n\n';
-        selectedProductDetails.forEach((product) => {
-          message += `${product.name} - ₱${product.unitPrice.toFixed(2)} x ${product.quantity} = ₱${product.subtotal.toFixed(2)}\n`;
-          message += `Vendor ID: ${product.vendorId}\n`; 
+        const response = await axios.post(`${serverURL}/api/create_gcash_payment`, {
+          amount: amountInCents,  // This should be an integer
         });
   
-        message += `\nUserId: ${authData} \nTotal Payment: ₱${orderTotal.toFixed(2)}\nPayment Method: ${paymentMethod}`;
-        
-        // Display the message in alert
-        alert(message);
-        navigate(`/clientprofile/id=${authData}/purchased`)
+        if (response.data.success) {
+          const paymentUrl = response.data.paymentUrl;
+  
+          // Open the payment URL in a new tab
+          window.open(paymentUrl, '_blank');  // This opens the payment link in a new tab
+  
+          // Create a transaction in your backend with status as POD (Pay on Delivery)
+          await axios.post(`${serverURL}/api/create_transaction`, {
+            ...orderData,
+            status: 'POD',
+          });
+
+          navigate(`/clientprofile/id=${authData}/purchased`);
+        } else {
+          alert("Error with GCash payment. Please try again.");
+        }
+      } else {
+        const orderResponse = await axios.post(`${serverURL}/api/create_transaction`, orderData);
+        if (orderResponse.status === 201) {
+          alert("Your Order has been placed successfully.");
+          navigate(`/clientprofile/id=${authData}/purchased`);
+        }
       }
     } catch (error) {
-      console.error("Error while placing order: ", error);
+      console.error("Error processing order: ", error);
       alert("There was an issue processing your order. Please try again.");
     }
   };
+  
+  
+  
   
 
   return (

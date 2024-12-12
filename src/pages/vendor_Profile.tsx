@@ -141,7 +141,7 @@ const VendorProfile = () => {
                     <h3 className="text-lg font-bold text-gray-800">{product.prod_name}</h3>
                     <p className="text-sm text-gray-600 mt-2">{product.prod_descript}</p>
                     <p className="mt-2 font-semibold text-gray-800">
-                      <strong>Price:</strong> ₱{product.prod_disc_price || product.prod_price}
+                      <strong>Price:</strong> ₱{ product.prod_price -product.prod_disc_price}
                     </p>
                   </div>
                 </div>
