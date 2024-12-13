@@ -122,8 +122,26 @@ const NewOrders: React.FC = () => {
             });
     };
     
-    const handleCancel = (transactionId: number) => {
-        alert(`Cancel clicked for Transaction ID: ${transactionId}`);
+    const handleCancelled = (transactionId: number) => {
+        axios
+            .post(`${host}/update_transaction_status`, {
+                transaction_id: transactionId,
+                status: 'cancelled',
+            })
+            .then(() => {
+                alert(`Transaction ID ${transactionId} marked as cancelled`);
+                setTransactions((prevTransactions) =>
+                    prevTransactions.map((transaction) =>
+                        transaction.transaction_id === transactionId
+                            ? { ...transaction, status: 'cancelled' }
+                            : transaction
+                    )
+                );
+            })
+            .catch((err) => {
+                console.error('Error updating transaction status:', err);
+                alert(`Failed to update status for Transaction ID ${transactionId}`);
+            });
     };
 
     return (
@@ -218,7 +236,7 @@ const NewOrders: React.FC = () => {
                                     </button>
                                     <button
                                         className="bg-yellow-700 text-white px-4 py-2 rounded"
-                                        onClick={() => handleCancel(transaction.transaction_id)}
+                                        onClick={() => handleCancelled(transaction.transaction_id)}
                                     >
                                         Cancel
                                     </button>

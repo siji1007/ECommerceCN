@@ -1141,6 +1141,28 @@ def get_to_receive_transactions(user_id):
     ])
 
 
+@app.route('/api/transactions/<int:user_id>/cancelled', methods=['GET'])
+def get_to_cancelled_transactions(user_id):
+    transactions = Transaction.query.filter_by(u_ID=user_id, status='cancelled').all()
+    return jsonify([
+        {
+            'transaction_id': t.transaction_id,
+            'product_id': t.p_ID,
+            'quantity': t.quantity,
+            'unit_price': t.unit_price,
+            'prod_disc_price':t.product.prod_disc_price,
+            'subtotal': t.subtotal,
+            'created_at': t.created_at,
+            'status': t.status,
+            'product_image': t.product.prod_image_id,
+            'product_name': t.product.prod_name,
+            'product_category': t.product.prod_category
+        }
+        for t in transactions
+    ])
+
+
+
 
 
 @app.route('/api/create_transaction', methods=['POST'])
