@@ -5,10 +5,12 @@ import host_backend from '../host/host.txt?raw';
 import { useNavigate } from 'react-router-dom';
 import AdminButton from '../assets/profiles/admin.png'
 import CustomerButton from '../assets/profiles/buyer.png';
+import OtpModal from '../Auth/otp';
 
 
 const LoginPage: React.FC = () => {
     const navigate = useNavigate();
+    const [showOtpModal, setShowOtpModal] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [selectedAccountType, setSelectedAccountType] = useState<"User" | "Admin">("User");
     const [isSignUp, setIsSignUp] = useState(false);
@@ -21,6 +23,8 @@ const LoginPage: React.FC = () => {
     const [emailOrMobile, setEmailOrMobile] = useState('');
     const [password, setPassword] = useState('');
     const serverUrl = host_backend.trim();
+    const [generatedOtp, setGeneratedOtp] = useState('');  // Store OTP here
+    const [senderEmail, setSenderEmail] = useState<string>('');
 
 
 
@@ -132,49 +136,94 @@ const LoginPage: React.FC = () => {
     };
     
     
-    const handleSignUpSubmit = async (e: React.FormEvent) => {
+    const handleSignUpSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-    
+      
         if (selectedAccountType === "Admin") {
-            alert("Admin sign-up is not supported!");
-            return;
+          alert("Admin sign-up is not supported!");
+          return;
         }
+      
+        fetch(serverUrl + '/api/send-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email_or_mobile: emailOrMobile }),
+        })
+        .then(response => response.json())
+        .then(result => {
+          console.log('API Response:', result);
+      
+          if (result.success) {
+            setGeneratedOtp(result.otp);  // Save OTP received from backend
+            setShowOtpModal(true);  // Trigger modal state change
+        
+        
+            setSenderEmail(emailOrMobile); // Set the sender's email address
+         
+            
+          } else {
+            alert(result.message || 'Failed to send OTP');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while sending OTP. Please try again.');
+        });
+      };
+      
+      
+      
+      
+     
+      
     
-        // Customer Sign-Up Logic
+    
+    
+      // Handle OTP Verification
+      const handleVerifyOtp = (otp: string) => {
         const data = {
-            first_name: firstName,
-            last_name: lastName,
-            birth_month: month,
-            birth_day: day,
-            birth_year: year,
-            email_or_mobile: emailOrMobile,
-            password: password,
+          first_name: firstName,
+          last_name: lastName,
+          birth_month: month,
+          birth_day: day,
+          birth_year: year,
+          email_or_mobile: emailOrMobile,
+          password: password,
         };
-    
-        try {
-            const response = await fetch(serverUrl + "/api/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data),
-            });
-    
-            const result = await response.json();
-            if (response.ok) {
-                console.log("User registered successfully:", result);
-                alert("Sign-up successful! Please log in.");
-                toggleForm(); // Switch to login form
+      
+        // Send data to the register API
+        fetch(serverUrl + '/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              alert('Sign-up successful! Please log in.');
+              setShowOtpModal(false);
+              navigate('/login');
             } else {
-                console.error("Error registering user:", result.message);
-                alert(result.message || "An error occurred during sign-up.");
+              alert(result.message || 'An error occurred during sign-up.');
+              setShowOtpModal(false);
+              navigate('/login');
             }
-        } catch (error) {
-            console.error("Request failed", error);
-            alert("An error occurred during sign-up. Please try again.");
-        }
-    };
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+            alert('An error occurred during sign-up. Please try again.');
+          });
+      };
+      
     
+    
+      const handleCloseOtpModal = () => {
+        setShowOtpModal(false);
+      };
     
     return (
         <div className="flex flex-col h-auto pt-8 min-h-screen items-center justify-center px-4 sm:px-8">
@@ -315,6 +364,15 @@ const LoginPage: React.FC = () => {
                     
                     )}
                 </div>
+
+                {showOtpModal && (
+               <OtpModal 
+                    onClose={() => setShowOtpModal(false)} 
+                    onVerifyOtp={handleVerifyOtp} 
+                    generatedOtp={generatedOtp}
+                    senderEmail={senderEmail}  // Pass senderEmail prop to OtpModal
+                    />
+                )}
             </div>
         </div>
     );

@@ -70,7 +70,7 @@ const navigateCart = () => {
 
     return (
         <>
-            <nav className="fixed z-40 w-full h-19 bg-gradient-to-r from-white to-green-900 flex justify-between items-center px-4 text-white">
+            <nav className="fixed z-40 w-full h-19 bg-gradient-to-r from-white to-green-900 flex justify-between items-center px-4 text-white ">
                 <div className="flex">
                     <Link to="/">
                         <img src={logo} alt="Logo" className="h-16 w-16 object-contain" />

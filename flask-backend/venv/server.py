@@ -1,5 +1,7 @@
+from mailbox import Message
 from flask import Flask, jsonify, request, session
 from flask_cors import CORS
+from flask_mail import Mail, Message
 from requests import Session
 from connection import db, init_app
 import secrets
@@ -11,6 +13,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from base64 import b64encode
 import requests
 from dotenv import load_dotenv
+from datetime import datetime, timedelta, timezone
+import random
 
 load_dotenv()
 
@@ -22,13 +26,122 @@ PAYMONGO_BASE_URL = 'https://api.paymongo.com/v1'
 
 app = Flask(__name__)
 
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://192.168.1.7:5173", "https://192.168.1.7:8082"]}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://192.168.100.138:5173", "https://192.168.100.138:8082"]}})
 
 
 
 init_app(app)
 
 app.config['DEBUG'] = True
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'  
+app.config['MAIL_PORT'] = 587 
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'ecommercecn7@gmail.com'  # Replace with your email
+app.config['MAIL_PASSWORD'] = 'ztvspewrpwmagddl'  # Replace with your password
+app.config['MAIL_DEFAULT_SENDER'] = 'ecommercecn7@gmail.com'
+
+mail = Mail(app)
+
+
+
+import string
+
+
+# Temporary storage for OTP (this is just for demo purposes; use a DB in production)
+otp_storage = {}
+
+# Generate a random 4-digit OTP
+def generate_otp():
+    return str(random.randint(1000, 9999))  # Generate a 4-digit random number
+
+# Route to generate OTP
+@app.route('/api/generate-otp', methods=['POST'])
+def generate_otp_route():
+    otp = generate_otp()
+
+    # Store the OTP temporarily (for this demonstration we use a dictionary)
+    otp_storage['otp'] = otp
+
+    # Respond with the OTP (don't send OTP in production)
+    print(f"Generated OTP: {otp}")  # Log OTP for testing purposes
+    return jsonify({'otp': otp, 'message': 'OTP generated successfully'})
+
+# Route to verify OTP
+@app.route('/api/verify-otp', methods=['POST'])
+def verify_otp_route():
+    data = request.get_json()
+    otp = data.get('otp')
+
+    # Retrieve OTP from storage for comparison
+    stored_otp = otp_storage.get('otp')
+
+    if otp == stored_otp:
+        return jsonify({'message': 'OTP verified successfully!'}), 200
+    else:
+        return jsonify({'message': 'Invalid OTP!'}), 400
+
+
+
+
+@app.route('/api/send-otp', methods=['POST'])
+def send_otp():
+    data = request.get_json()
+    email_or_mobile = data.get('email_or_mobile')
+
+    if not email_or_mobile:
+        return jsonify({"success": False, "message": "Email or Mobile is required"}), 400
+
+    # Generate OTP and expiry time
+    otp = generate_otp()  # Generate OTP using the function
+    expiry_time = datetime.now(timezone.utc) + timedelta(minutes=10)  # OTP expires in 10 minutes
+
+    # Store OTP in the temporary storage (or a database in production)
+    otp_storage['otp'] = otp
+
+    try:
+    
+        html_content = f"""
+        <html>
+            <body>
+                <div style="text-align: center; padding: 10px;">
+                    <!-- Header Image -->
+                    <img src="https://cdn3.iconfinder.com/data/icons/social-media-2068/64/_shopping-1024.png" alt="Header Image" style="width: 100%; max-width: 600px; border-radius: 8px;">
+                    
+                    <!-- OTP Section -->
+                    <h2 style="font-size: 15px; color: #333; margin-top: 20px;">Your OTP Code</h2>
+                    <p style="font-size: 20px; font-weight: bold; color: #333;">{otp}</p>
+                    
+                    <!-- Description Section -->
+                    <p style="font-size: 16px; color: #666; margin-top: 20px;">
+                        Your OTP code is valid for the next 10 minutes. Please enter it in the verification form. <br><br>
+                        If you did not request this OTP, please disregard this message.
+                    </p>
+                </div>
+            </body>
+        </html>
+        """
+
+        # Correct usage of the Message class with HTML content
+        msg = Message(
+            subject="Your OTP Code", 
+            recipients=[email_or_mobile], 
+            html=html_content  # Use the HTML content for the email body
+        )
+
+        # Send the email
+        mail.send(msg)
+
+        # Log OTP and expiry time
+        print(f"Generated OTP: {otp}, Expiry Time: {expiry_time}")
+
+        return jsonify({"success": True, "message": "OTP sent successfully", "otp": otp}), 200
+
+    except Exception as e:
+        # Log the exception to get more information
+        print(f"Error sending OTP: {e}")
+        return jsonify({"success": False, "message": "Failed to send OTP", "error": str(e)}), 500
 
 
 class SessionCookieUnauth(db.Model):
@@ -255,7 +368,29 @@ class Vendor(db.Model):
     vendor_status = db.Column(db.String(50), default='Pending')
     document_img_src = db.Column(db.String(255))
    
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(255), nullable=False)
+    last_name = db.Column(db.String(255), nullable=False)
+    birth_month = db.Column(db.String(50), nullable=False)
+    birth_day = db.Column(db.String(50), nullable=False)
+    birth_year = db.Column(db.String(50), nullable=False)
+    gender = db.Column(db.String(10))
+    email_or_mobile = db.Column(db.String(255), nullable=False, unique=True)
+    password = db.Column(db.String(255), nullable=False)
+    user_image = db.Column(db.String(255))
 
+    def __init__(self, first_name, last_name, birth_month, birth_day, birth_year, gender, email_or_mobile, password, user_image):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.birth_month = birth_month
+        self.birth_day = birth_day
+        self.birth_year = birth_year
+        self.gender = gender
+        self.email_or_mobile = email_or_mobile
+        self.password = password
+        self.user_image = user_image
 
 @app.route('/api/fetchVendors', methods=['GET'])
 def fetchvendors():
@@ -454,16 +589,22 @@ def register():
 
     # Validate required fields
     if not all(key in data for key in ['first_name', 'last_name', 'birth_month', 'birth_day', 'birth_year', 'email_or_mobile', 'password']):
-        return jsonify({'message': 'Missing required fields'}), 400
+        return jsonify({'success': False, 'message': 'Missing required fields'}), 400
 
-    # Extract data
+    email_or_mobile = data['email_or_mobile']
+
+    # Check if the email or mobile already exists
+    existing_user = User.query.filter_by(email_or_mobile=email_or_mobile).first()
+    if existing_user:
+        return jsonify({'success': False, 'message': 'Email or mobile number already in use'}), 400
+
+    # Extract other data
     first_name = data['first_name']
     last_name = data['last_name']
     birth_month = data['birth_month']
     birth_day = data['birth_day']
     birth_year = data['birth_year']
     gender = data.get('gender', '')  # Optional gender
-    email_or_mobile = data['email_or_mobile']
     password = data['password']
 
     # Set user_image to None (will be saved as NULL in the database)
@@ -486,10 +627,11 @@ def register():
     try:
         db.session.add(user)
         db.session.commit()
-        return jsonify({'message': 'User registered successfully'}), 201
+        return jsonify({'success': True, 'message': 'User registered successfully'}), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': f'Error: {str(e)}'}), 500
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
 
 
 
@@ -1512,29 +1654,7 @@ def delete_user(user_id):
 
 
 
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(255), nullable=False)
-    last_name = db.Column(db.String(255), nullable=False)
-    birth_month = db.Column(db.String(50), nullable=False)
-    birth_day = db.Column(db.String(50), nullable=False)
-    birth_year = db.Column(db.String(50), nullable=False)
-    gender = db.Column(db.String(10))
-    email_or_mobile = db.Column(db.String(255), nullable=False, unique=True)
-    password = db.Column(db.String(255), nullable=False)
-    user_image = db.Column(db.String(255))
 
-    def __init__(self, first_name, last_name, birth_month, birth_day, birth_year, gender, email_or_mobile, password, user_image):
-        self.first_name = first_name
-        self.last_name = last_name
-        self.birth_month = birth_month
-        self.birth_day = birth_day
-        self.birth_year = birth_year
-        self.gender = gender
-        self.email_or_mobile = email_or_mobile
-        self.password = password
-        self.user_image = user_image
 
 
 class Address(db.Model):
