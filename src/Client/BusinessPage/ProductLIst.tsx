@@ -31,26 +31,26 @@ const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [vendorStatus, setVendorStatus] = useState<string>(''); // Store vendor status
+  const [vendorStatus, setVendorStatus] = useState<string>(''); 
   const hosting = serverURL.trim();
   const reactHost = ReactHost.trim();
-  const [modalProduct, setModalProduct] = useState<Product | null>(null); // State to store the selected product
-  const [transactions, setTransactions] = useState<any[]>([]); // Store fetched transactions
-  const [weeklySubtotals, setWeeklySubtotals] = useState<any[]>([]); // Store weekly subtotals
-  const [vendorId, setVendorId] = useState(null); // State to store vendorId
-  const [filterPeriod, setFilterPeriod] = useState<'daily' | 'weekly' | 'monthly'>('weekly'); // State for time filter
+  const [modalProduct, setModalProduct] = useState<Product | null>(null); 
+  const [transactions, setTransactions] = useState<any[]>([]); 
+  const [weeklySubtotals, setWeeklySubtotals] = useState<any[]>([]); 
+  const [vendorId, setVendorId] = useState(null); 
+  const [filterPeriod, setFilterPeriod] = useState<'daily' | 'weekly' | 'monthly'>('weekly'); 
   const [transactionTotals, setTransactionTotals] = useState<any>({});
 
   const [error, setError] = useState(null);
 
   const id = localStorage.getItem('Auth');
 
-  // Handle filter change (daily, weekly, monthly)
+
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFilterPeriod(e.target.value as 'daily' | 'weekly' | 'monthly');
 };
 
-// Fetch vendor data and transactions
+
 useEffect(() => {
   const fetchVendorData = async () => {
     try {
@@ -76,31 +76,31 @@ useEffect(() => {
           const validProducts = productsResponse.data.products.filter(
             (product: Product) => product.prod_name && product.prod_category
           );
-          setProducts(validProducts);  // This will update the products state
+          setProducts(validProducts);
         }
 
-        // After products are set, fetch transactions
+     
         const transactionsResponse = await axios.get(`${hosting}/fetchTransactions/${vendorId}`);
         const filteredTransactions = transactionsResponse.data.filter(
           (transaction: any) => transaction.status === 'processed'
         );
 
-        // Map transactions to product names only after the products are fetched
+      
         const transactionsWithProductNames = filteredTransactions.map((transaction: any) => {
           // Find the matching product by p_ID (prod_id)
           const product = products.find((p) => p.prod_id === transaction.p_ID);
           return { 
             ...transaction, 
-            prod_name: product ? product.prod_name : 'Unknown' // Set product name or 'Unknown'
+            prod_name: product ? product.prod_name : 'Unknown' 
           };
         });
 
-        setTransactions(transactionsWithProductNames);  // Set transactions with product names
+        setTransactions(transactionsWithProductNames);  
 
-        // Calculate weekly subtotals after fetching transactions
+      
         calculateWeeklySubtotals(transactionsWithProductNames);
 
-        // Optionally show processed total alert
+    
         showProcessedTotalAlert(transactionsWithProductNames);
       }
     } catch (error) {
@@ -109,43 +109,42 @@ useEffect(() => {
   };
 
   fetchVendorData();
-}, [hosting, id, products]);  // Add 'products' to the dependency list to rerun when products change
- // Now includes products as a dependency
+}, [hosting, id, products]);  
 
 
 
-// Calculate weekly subtotals for the last 7 days (starting from Monday)
+
+
 const calculateWeeklySubtotals = (transactions: any[]) => {
-  const weekData: number[] = new Array(7).fill(0); // Initialize sales data for each day (set to 0 initially)
+  const weekData: number[] = new Array(7).fill(0); 
   const today = new Date();
-  const oneDay = 24 * 60 * 60 * 1000; // One day in milliseconds
+  const oneDay = 24 * 60 * 60 * 1000; 
   
-  // Set the start of the week (Monday, December 9, 2024)
-  const startOfWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay() + 1); // This will give the previous Monday
-  
-  // Ensure that we are calculating for the week starting December 9th
-  const weekStart = new Date('2024-12-09'); // Hardcoded to start on Monday, December 9th, 2024
-  const weekEnd = new Date('2024-12-14'); // End on Sunday, December 14th, 2024
 
-  // Loop through the transactions and sum up the subtotals for the past 7 days (Monday-Sunday)
+  const startOfWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay() + 1); 
+  
+
+  const weekStart = new Date('2024-12-09'); 
+  const weekEnd = new Date('2024-12-15'); 
+
+
   transactions.forEach((transaction) => {
     const transactionDate = new Date(transaction.created_at);
 
-    // Check if the transaction falls within the week of December 9-14, 2024
-    if (transactionDate >= weekStart && transactionDate <= weekEnd) {
-      const daysAgo = Math.floor((transactionDate.getTime() - weekStart.getTime()) / oneDay); // Days from Monday
+    if (transactionDate >= startOfWeek && transactionDate <= weekEnd) {
+      const daysAgo = Math.floor((transactionDate.getTime() - weekStart.getTime()) / oneDay); 
 
       if (daysAgo >= 0 && daysAgo < 7) {
-        weekData[daysAgo] += transaction.subtotal; // Add subtotal to the corresponding day
+        weekData[daysAgo] += transaction.subtotal; 
       }
     }
   });
 
-  // Store the weekly data to state
+
   setWeeklySubtotals(weekData);
 };
 
-// Prepare data for the chart
+
 const LinechartData = {
   labels: weeklySubtotals.length
     ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -162,19 +161,14 @@ const LinechartData = {
 };
 
 
-// Calculate the top-selling products by quantity
+
 const calculateTopProducts = (transactions: any[]) => {
-  const productQuantities: { [prod_id: number]: number } = {}; // Store quantities sold by product
-
-  // Loop through transactions to count the quantity sold for each product
+  const productQuantities: { [prod_id: number]: number } = {};
   transactions.forEach((transaction) => {
-    const transactionItems = transaction.items || []; // Assuming transaction has an array of items
-
+    const transactionItems = transaction.items || []; 
     transactionItems.forEach((item: any) => {
       const productId = item.prod_id;
       const quantity = item.quantity;
-
-      // Add quantity to the corresponding product
       if (productQuantities[productId]) {
         productQuantities[productId] += quantity;
       } else {
@@ -183,102 +177,98 @@ const calculateTopProducts = (transactions: any[]) => {
     });
   });
 
-  // Create an array of product quantities sorted by quantity sold (descending)
+
   const sortedProducts = Object.keys(productQuantities)
     .map((prod_id) => ({
       prod_id: parseInt(prod_id),
       quantity: productQuantities[prod_id],
     }))
-    .sort((a, b) => b.quantity - a.quantity); // Sort by quantity in descending order
+    .sort((a, b) => b.quantity - a.quantity); 
 
   return sortedProducts;
 };
 
 
-// Function to show processed totals with product names
+
 const showProcessedTotalAlert = (transactions: any[]) => {
   const transactionTotals: any = {};
 
-  // Sum subtotals for each unique transaction ID
+
   transactions.forEach((transaction) => {
     const transactionId = transaction.transaction_id;
     const subtotal = transaction.subtotal;
 
-    // If this transaction ID is already in the totals object, add the subtotal
     if (transactionTotals[transactionId]) {
       transactionTotals[transactionId].subtotal += subtotal;
     } else {
-      // Initialize the transaction total with the current subtotal and date
+  
       const transactionDate = new Date(transaction.created_at);
       transactionTotals[transactionId] = {
         subtotal: subtotal,
         date: transactionDate,
-        productName: transaction.prod_name, // Store the product name here
-        quantity: transaction.quantity, // Store the quantity here
+        productName: transaction.prod_name, 
+        quantity: transaction.quantity, 
       };
     }
   });
 
-  // Update the state with the transactionTotals
+
   setTransactionTotals(transactionTotals);
 
-  // Display an alert for each unique transaction ID with its total processed subtotal, the date, and product name
+
   Object.keys(transactionTotals).forEach((transactionId) => {
     const total = transactionTotals[transactionId];
-    const formattedDate = total.date.toLocaleDateString(); // Format the date
-    // Show alert including the product name
-    // console.log(
-    //   `Transaction ID: ${transactionId} - Product: ${total.productName} - Total Processed Subtotal: ${total.subtotal} - Date: ${formattedDate}`
-    // );
+    const formattedDate = total.date.toLocaleDateString(); 
+    
   });
 };
 
 
 
 const prepareTopProductsChartData = () => {
-  // Step 1: Calculate top products based on transactions (already filtered in transactionTotals)
+
   const topProducts = calculateTopProducts(transactions);
 
-  // Step 2: Aggregate the quantities for each product and store in a map
+
   const aggregatedProductData: { [prod_name: string]: { quantity: number; prod_id: number } } = {};
 
   transactions.forEach((transaction) => {
     const productName = transaction.prod_name;
     const quantity = transaction.quantity;
 
-    // If the product already exists in the aggregated data, add its quantity
+ 
     if (aggregatedProductData[productName]) {
       aggregatedProductData[productName].quantity += quantity;
     } else {
-      // Otherwise, initialize with the current quantity
+     
       aggregatedProductData[productName] = {
         quantity: quantity,
-        prod_id: transaction.prod_id, // Store the prod_id as well for reference
+        prod_id: transaction.prod_id, 
       };
     }
   });
 
-  // Step 3: Convert the aggregated data to an array and sort by quantity
+
   const aggregatedProducts = Object.keys(aggregatedProductData)
     .map((prod_name) => ({
       prod_name: prod_name,
       quantity: aggregatedProductData[prod_name].quantity,
       prod_id: aggregatedProductData[prod_name].prod_id,
     }))
-    .sort((a, b) => b.quantity - a.quantity); // Sort by quantity in descending order
+    .sort((a, b) => b.quantity - a.quantity); 
 
-  // Step 4: Slice the top products (you can adjust the number to show more/less)
-  const topProductIds = aggregatedProducts.slice(0, 5); // Display top 5 products
+ 
+  const topProductIds = aggregatedProducts.slice(0, 5); 
 
-  // Step 5: Map the top products to labels and data for the chart
+ 
   const labels = topProductIds.map((product) => product.prod_name);
   const data = topProductIds.map((product) => product.quantity);
 
-  // Log the labels and data to ensure they are correct
+
   console.log('Labels for Chart:', labels);
   console.log('Data for Chart:', data);
 
-  // Step 6: Return the chart data
+
   return {
     labels: labels,
     datasets: [

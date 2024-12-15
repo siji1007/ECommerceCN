@@ -606,14 +606,41 @@ const ClientDashboard: React.FC = () =>{
           }`}
           >
           <div className="flex flex-col items-center justify-center mb-8">
-            <img
-              src={image ? host_frontend + image : Profile}
-              alt="Profile"
-              className="w-24 h-24 rounded-full mb-4 border-4 border-green-500 object-cover"
-            />
+              {vendorStatus === 'Verified' && (
+              <p className='text-green-800 font-semibold'>Verified Business</p>
+            )}
+          <div className="relative w-24 h-24 mb-4">
+              <img
+                src={image ? host_frontend + image : Profile}
+                alt="Profile"
+                className={`w-24 h-24 rounded-full border-4 object-cover ${
+                  vendorStatus === 'Verified' ? 'border-green-500 animate-glowingBorder' : 'border-gray-300'
+                }`}
+              />
+                    {vendorStatus === 'Verified' && (
+                <div className="absolute top-0 right-0 bg-green-500 w-6 h-6 rounded-full flex items-center justify-center ">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 text-white"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 5.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+                    )}
+              
+            </div>
+          
+
             <h2 className="text-lg text-black font-semibold text-center">
               {firstName + ' ' + lastName}
             </h2>
+         
             <p className="text-black text-sm">{email}</p>
           </div>
 
@@ -675,19 +702,21 @@ const ClientDashboard: React.FC = () =>{
                 <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
                   Contract Details
                 </button>
-                <Link to="business-form">
-                  <button
-                    className={`w-full py-2 px-4 text-left text-black font-semibold ${
-                      isStart
-                        ? 'bg-green-600 text-white'
-                        : 'hover:bg-green-600 hover:text-white'
-                    } rounded`}
-                    onClick={StartBusiness}
-                  >
-                    Start Selling
-                  </button>
-                </Link>
-                {vendorStatus === 'verified' && (
+                {vendorStatus !== 'Verified' && (
+                    <Link to="business-form">
+                      <button
+                        className={`w-full py-2 px-4 text-left text-black font-semibold ${
+                          isStart
+                            ? 'bg-green-600 text-white'
+                            : 'hover:bg-green-600 hover:text-white'
+                        } rounded`}
+                        onClick={StartBusiness}
+                      >
+                        Start Selling
+                      </button>
+                    </Link>
+                  )}
+                {vendorStatus === 'Verified' && (
               <>
                 <button
                   className={`w-full py-2 px-4 text-left text-black font-semibold ${

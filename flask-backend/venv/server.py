@@ -537,16 +537,16 @@ def UploadDocument():
     
     return jsonify({"message": "File type not allowed"}), 400
 
-# Form submission route for vendor data
+
 @app.route('/submit-form-vendor/<int:user_id>', methods=['POST'])
 def submit_form(user_id):
-    form_data = request.form  # Parse form data
+    form_data = request.form  
     print("Received form data:", form_data)
 
     if not user_id:
         return jsonify({"message": "User ID is required!"}), 400
 
-    # Fetch user email as default for businessEmail if not provided
+
     user = User.query.filter_by(id=user_id).first()
     if not user:
         return jsonify({"message": "User not found!"}), 404
@@ -555,26 +555,35 @@ def submit_form(user_id):
 
     # Check if the vendor already exists
     existing_vendor = Vendor.query.filter_by(vendor_email=business_email).first()
-    
+
     if existing_vendor:
-        # If vendor exists, update the vendor status to "Pending"
-        existing_vendor.vendor_status = 'Pending'
-        db.session.commit()
-        return jsonify({"message": "Vendor status updated to Pending."}), 200
+        # If vendor exists, update vendor details and status
+        existing_vendor.vendor_name = form_data.get('businessName', existing_vendor.vendor_name)
+        existing_vendor.vendor_contact_number = form_data.get('businessContact', existing_vendor.vendor_contact_number)
+        existing_vendor.vendor_email = form_data.get('businessEmail', existing_vendor.vendor_email)
+        existing_vendor.vendor_classification = form_data.get('businessCategory', existing_vendor.vendor_classification)
+        existing_vendor.vendor_status = 'Pending'  # Update status to 'Pending'
+
+        try:
+            db.session.commit()
+            return jsonify({"message": "Vendor information and status updated successfully!"}), 200
+        except Exception as e:
+            db.session.rollback()  # Rollback in case of error
+            print(f"Error updating data: {e}")
+            return jsonify({"message": "An error occurred while updating the vendor information!"}), 500
 
     # If vendor does not exist, create a new vendor
     new_vendor = Vendor(
-        user_id=user_id,  # Use the user_id from the URL
+        user_id=user_id,
         vendor_name=form_data['businessName'],
         vendor_contact_number=form_data['businessContact'],
         vendor_email=form_data['businessEmail'],
         vendor_classification=form_data['businessCategory'],
         created_at=datetime.utcnow(),
-        vendor_status='Pending',  # New vendor is automatically set to 'Pending'
-        document_img_src=global_document_url  # Use the document URL obtained from the upload
+        vendor_status='Pending',  
+        document_img_src=global_document_url  
     )
 
-    # Add the new vendor to the session and commit to the database
     try:
         db.session.add(new_vendor)
         db.session.commit()
@@ -583,6 +592,7 @@ def submit_form(user_id):
         db.session.rollback()  # Rollback in case of error
         print(f"Error inserting data: {e}")
         return jsonify({"message": "An error occurred while submitting the form!"}), 500
+
 
 
 

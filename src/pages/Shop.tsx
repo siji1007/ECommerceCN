@@ -162,7 +162,7 @@ const ShopPage: React.FC = () => {
                     </button>
 
                   <div className="flex justify-between items-center mt-2">
-                    <span className="text-green-600 font-bold">{"₱ " + product.prod_price}</span>
+                    <span className="text-green-600 font-bold">{"₱ " + (product.prod_price - product.prod_disc_price)}</span>
                     <p className="text-yellow-500">
                       {'⭐'.repeat(Math.round(2))} {/* Star rating */}
                     </p>
