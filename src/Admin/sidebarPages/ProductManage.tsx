@@ -22,10 +22,11 @@ const ProductManage: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const ServerURl = host.trim();
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(host + "/FetchProducts");
+      const response = await axios.get(ServerURl + "/FetchProducts");
       if (response.data.products) {
         setProducts(response.data.products);
       } else {
@@ -76,7 +77,7 @@ const ProductManage: React.FC = () => {
         )
       );
       // Send the updated product data to the backend
-      fetch(host+`/updateProduct/${selectedProduct.prod_id}`, {
+      fetch(ServerURl+`/updateProduct/${selectedProduct.prod_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

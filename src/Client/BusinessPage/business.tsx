@@ -9,10 +9,12 @@ const Business: React.FC = () => {
   const [step, setStep] = useState(1); // To track which section to display
   const [isEditing, setIsEditing] = useState(false); 
   const navigate = useNavigate();
+  const [vendorStatus, setVendorStatus] = useState<string>('');
+  const [vendorId, setVendorId] = useState(null); 
 
 
   let url = window.location.href;
-  let match = url.match(/id=(\d+)/);  // This will match 'id=2' or similar
+  let match = url.match(/id=(\d+)/);  
   
   const id = match ? match[1] : null;
   
@@ -168,13 +170,48 @@ const Business: React.FC = () => {
   }, [id]);
 
 
+  useEffect(() => {
+    const fetchVendorStatus = async () => {
+      const vendorStatusResponse = await fetch(`${serverHost}/checkVendorStatus/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
   
+      const vendorStatusResult = await vendorStatusResponse.json();
+  
+      if (vendorStatusResponse.ok) {
+        const vendorStatus = vendorStatusResult.message;
+        const vendorId = vendorStatusResult.vendor_id;
+        
+  
+        setVendorStatus(vendorStatus);
+        setVendorId(vendorId);
 
-
+      }
+    };
+  
+   
+    fetchVendorStatus();
+  }, [id]);
+  
   
   return (
     <div className="p-2">
 
+    {vendorStatus === 'Pending' && (
+        <div className="text-yellow-600 font-semibold ">
+          You have a pending application.
+        </div>
+      )}
+      {vendorStatus === 'Rejected' && (
+        <div className="text-red-600 font-semibold">
+          You're rejected.
+        </div>
+      )}
+      {vendorStatus === 'Verified' && (
+      <>
       {/* Shop Information Section */}
       {step === 1 && (
         <div className="mb-6 shadow p-4 bg-white rounded">
@@ -247,7 +284,7 @@ const Business: React.FC = () => {
               <label htmlFor="businessContact" className="block text-sm font-medium mb-1">
                 Business Contact Number
               </label>
-              <input type="number" id="businessContact" name="businessContact" value={formData.businessContact} onChange={(e) => setFormData({ ...formData, businessContact: e.target.value })} className="w-full p-2 border border-gray-300 rounded" placeholder="Enter your business category" />
+              <input type="number" id="businessContact" name="businessContact" value={formData.businessContact} onChange={(e) => setFormData({ ...formData, businessContact: e.target.value })} className="w-full p-2 border border-gray-300 rounded" placeholder="Enter your business contact number" />
 
             </div>
           </div>
@@ -401,7 +438,10 @@ const Business: React.FC = () => {
           {step === 1 ? 'Next' : step === 2 ? 'Next' : 'Submit'}
         </button>
       </div>
+      </>
+       )}
     </div>
+     
   );
 };
 

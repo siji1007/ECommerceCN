@@ -57,6 +57,8 @@ const ClientDashboard: React.FC = () =>{
     const [image, setImage] = useState<string | null>(null);
     const [uploading, setUploading] = useState<boolean>(false); 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [vendorStatus, setVendorStatus] = useState<string>('');
+    const [vendorId, setVendorId] = useState(null); // State to store vendorId
    
     const [position, setPosition] = useState<[number, number] | null>(null);
     const [zoom, setZoom] = useState(13); // Default zoom level
@@ -560,7 +562,29 @@ const ClientDashboard: React.FC = () =>{
     };
 
 
- 
+
+    useEffect(() => {
+      const fetchVendorStatus = async () => {
+        const vendorStatusResponse = await fetch(`${serverUrl}/checkVendorStatus/${id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+    
+        const vendorStatusResult = await vendorStatusResponse.json();
+    
+        if (vendorStatusResponse.ok) {
+          const vendorStatus = vendorStatusResult.message;
+          const vendorId = vendorStatusResult.vendor_id;
+    
+          setVendorStatus(vendorStatus);
+          setVendorId(vendorId);
+        }
+      };
+    
+      fetchVendorStatus();
+    }, [id]);
 
     return (  
       <div className="flex w-full h-screen">
@@ -575,134 +599,137 @@ const ClientDashboard: React.FC = () =>{
               <FaBars className="text-black" size={24} />
             )}
           </button>
-  {/* Sidebar Section */}
-  <aside
-    className={`border-r  mt-5 space-y-4 pt-3  flex-shrink-0 transition-transform duration-300 ${
-      isSidebarOpen ? 'w-60 translate-x-0' : 'w-0 -translate-x-60'
-    }`}
-    >
-    <div className="flex flex-col items-center justify-center mb-8">
-      <img
-        src={image ? host_frontend + image : Profile}
-        alt="Profile"
-        className="w-24 h-24 rounded-full mb-4 border-4 border-green-500 object-cover"
-      />
-      <h2 className="text-lg text-black font-semibold text-center">
-        {firstName + ' ' + lastName}
-      </h2>
-      <p className="text-black text-sm">{email}</p>
-    </div>
-
-    <div className="w-full p-2 flex flex-col h-full mb-10">
-      {/* Sidebar buttons */}
-      <Link to={`/clientprofile/id=${id}`}>
-        <button
-          className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
-            isActive
-              ? 'bg-green-600 text-white'
-              : ' text-black hover:bg-green-600 hover:text-white'
+  
+        <aside
+          className={`border-r  mt-5 space-y-4 pt-3  flex-shrink-0 transition-transform duration-300 ${
+            isSidebarOpen ? 'w-60 translate-x-0' : 'w-0 -translate-x-60'
           }`}
-        >
-          <AiFillProfile className="h-5 w-5 mr-2" />
-          Personal Information
-        </button>
-      </Link>
+          >
+          <div className="flex flex-col items-center justify-center mb-8">
+            <img
+              src={image ? host_frontend + image : Profile}
+              alt="Profile"
+              className="w-24 h-24 rounded-full mb-4 border-4 border-green-500 object-cover"
+            />
+            <h2 className="text-lg text-black font-semibold text-center">
+              {firstName + ' ' + lastName}
+            </h2>
+            <p className="text-black text-sm">{email}</p>
+          </div>
 
-      <Link to="shop-cart">
-        <button
-          className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
-            MyCartActive
-              ? 'bg-green-600 text-white'
-              : ' text-black hover:bg-green-600 hover:text-white'
-          }`}
-        >
-          <FaShoppingCart className="h-5 w-5 mr-2" />
-          My Cart
-        </button>
-      </Link>
+          <div className="w-full p-2 flex flex-col h-full mb-10">
+            {/* Sidebar buttons */}
+            <Link to={`/clientprofile/id=${id}`}>
+              <button
+                className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
+                  isActive
+                    ? 'bg-green-600 text-white'
+                    : ' text-black hover:bg-green-600 hover:text-white'
+                }`}
+              >
+                <AiFillProfile className="h-5 w-5 mr-2" />
+                Personal Information
+              </button>
+            </Link>
 
-      <Link to="purchased">
-        <button
-          className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
-            MyPurchasedisActive
-              ? 'bg-green-600 text-white'
-              : ' text-black hover:bg-green-600 hover:text-white'
-          }`}
-        >
-          <BiSolidPurchaseTag className="h-5 w-5 mr-2" />
-          My Purchased
-        </button>
-      </Link>
+            <Link to="shop-cart">
+              <button
+                className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
+                  MyCartActive
+                    ? 'bg-green-600 text-white'
+                    : ' text-black hover:bg-green-600 hover:text-white'
+                }`}
+              >
+                <FaShoppingCart className="h-5 w-5 mr-2" />
+                My Cart
+              </button>
+            </Link>
 
-      <button
-        className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center"
-        onClick={toggleDropdown}
-      >
-        <IoStorefrontSharp className="h-5 w-5 mr-2" />
-        Business
-      </button>
+            <Link to="purchased">
+              <button
+                className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
+                  MyPurchasedisActive
+                    ? 'bg-green-600 text-white'
+                    : ' text-black hover:bg-green-600 hover:text-white'
+                }`}
+              >
+                <BiSolidPurchaseTag className="h-5 w-5 mr-2" />
+                My Purchased
+              </button>
+            </Link>
 
-      {/* Conditionally rendered dropdown */}
-      {isDropdownOpen && (
-        <div className="ml-4 mb-4">
-          <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
-            Tutorial
-          </button>
-          <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
-            Contract Details
-          </button>
-          <Link to="business-form">
             <button
-              className={`w-full py-2 px-4 text-left text-black font-semibold ${
-                isStart
-                  ? 'bg-green-600 text-white'
-                  : 'hover:bg-green-600 hover:text-white'
-              } rounded`}
-              onClick={StartBusiness}
+              className="w-full py-2 px-4 mb-4 text-left text-black font-semibold hover:bg-green-600 rounded flex items-center"
+              onClick={toggleDropdown}
             >
-              Start Selling
+              <IoStorefrontSharp className="h-5 w-5 mr-2" />
+              Business
             </button>
-          </Link>
-          <button
-            className={`w-full py-2 px-4 text-left text-black font-semibold ${
-              isProducts
-                ? 'bg-green-600 text-white'
-                : 'hover:bg-green-600 hover:text-white'
-            } rounded`}
-            onClick={navigateToProductList}
-          >
-            Products
-          </button>
 
-          <button
-            className={`w-full py-2 px-4 text-left text-black font-semibold ${
-              isNeworder
-                ? 'bg-green-600 text-white'
-                : 'hover:bg-green-600 hover:text-white'
-            } rounded`}
-            onClick={navigateNewOrder}
-          >
-            New Order
-          </button>
-        </div>
-      )}
+            {/* Conditionally rendered dropdown */}
+            {isDropdownOpen && (
+              <div className="ml-4 mb-4">
+                <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
+                  Tutorial
+                </button>
+                <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
+                  Contract Details
+                </button>
+                <Link to="business-form">
+                  <button
+                    className={`w-full py-2 px-4 text-left text-black font-semibold ${
+                      isStart
+                        ? 'bg-green-600 text-white'
+                        : 'hover:bg-green-600 hover:text-white'
+                    } rounded`}
+                    onClick={StartBusiness}
+                  >
+                    Start Selling
+                  </button>
+                </Link>
+                {vendorStatus === 'verified' && (
+              <>
+                <button
+                  className={`w-full py-2 px-4 text-left text-black font-semibold ${
+                    isProducts
+                      ? 'bg-green-600 text-white'
+                      : 'hover:bg-green-600 hover:text-white'
+                  } rounded`}
+                  onClick={navigateToProductList}
+                >
+                  Products
+                </button>
+                <button
+                  className={`w-full py-2 px-4 text-left text-black font-semibold ${
+                    isNeworder
+                      ? 'bg-green-600 text-white'
+                      : 'hover:bg-green-600 hover:text-white'
+                  } rounded`}
+                  onClick={navigateNewOrder}
+                >
+                  New Order
+                </button>
+              </>
+                )}
+              </div>
+            )}
 
-      <Link to="settings">
-        <button
-          className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
-            MySettingsActive
-              ? 'bg-green-600 text-white'
-              : ' text-black hover:bg-green-600 hover:text-white'
-          }`}
-        >
-          <FaCog className="h-5 w-5 mr-2" />
-          Settings
-        </button>
-      </Link>
-    </div>
-  </aside>
+            <Link to="settings">
+              <button
+                className={`w-full py-2 px-4 mb-4 text-left font-semibold rounded flex items-center ${
+                  MySettingsActive
+                    ? 'bg-green-600 text-white'
+                    : ' text-black hover:bg-green-600 hover:text-white'
+                }`}
+              >
+                <FaCog className="h-5 w-5 mr-2" />
+                Settings
+              </button>
+            </Link>
+          </div>
+        </aside>
   {/* Main Content */}
-  <main className={`flex-1 transition-all duration-300 mt-3 ${isSidebarOpen ? 'ml-0' : 'ml-10 mt-5'} min-h-screen overflow-y-auto`}>
+        <main className={`flex-1 transition-all duration-300 mt-3 ${isSidebarOpen ? 'ml-0' : 'ml-10 mt-5'} min-h-screen overflow-y-auto`}>
                 {isBusinessForm ? (
                 <Business />
                 ) : isProductList ? (

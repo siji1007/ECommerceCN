@@ -26,7 +26,7 @@ PAYMONGO_BASE_URL = 'https://api.paymongo.com/v1'
 
 app = Flask(__name__)
 
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://192.168.100.138:5173", "https://192.168.100.138:8082"]}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://192.168.1.7:5173", "https://192.168.1.7:8082"]}})
 
 
 
