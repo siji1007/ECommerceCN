@@ -3,13 +3,15 @@ import { FaEdit } from 'react-icons/fa';
 import axios from 'axios';
 import hosting from "../../host/host.txt?raw";
 import { useNavigate } from 'react-router-dom';
+import PendingBg from '../../assets/OtherImages/pendingbg.png';
+import RejectedBg from '../../assets/OtherImages/RejectedBg.png';
 
 const Business: React.FC = () => {
   const serverHost = hosting.trim();
   const [step, setStep] = useState(1); // To track which section to display
   const [isEditing, setIsEditing] = useState(false); 
   const navigate = useNavigate();
-  const [vendorStatus, setVendorStatus] = useState<string>('');
+  const [vendorStatus, setVendorStatus] = useState<string | null>('');
   const [vendorId, setVendorId] = useState(null); 
 
 
@@ -81,48 +83,47 @@ const Business: React.FC = () => {
 
   const handleNext = async (e) => {
     e.preventDefault();
-    
+  
     if (step === 1) {
       // Validate the form data before moving to the next step (except image_src)
       const isFormValid = Object.entries(formData)
         .filter(([key]) => key !== 'image_src') // Exclude image_src from validation
         .every(([key, value]) => value.trim() !== '');
-    
+  
       if (!isFormValid) {
         alert('Please fill in all required fields.');
         return; // Stop if validation fails
       }
-    
+  
       // Proceed to step 2 after validation
       setStep(2);
     } else if (step === 2) {
       setStep(3);
       // At Step 2, handle the file upload and proceed to Step 3
-      
     } else if (step === 3) {
       const formDataToSend = new FormData();
-      
+  
       // Append form data (including the image_src that was updated after file upload)
       Object.entries(formData).forEach(([key, value]) => {
         formDataToSend.append(key, value);
       });
-      
+  
       try {
         const userId = id;
         const response = await axios.post(`${serverHost}/submit-form-vendor/${userId}`, formDataToSend, {
           headers: { 'Content-Type': 'multipart/form-data' }, // Set content type for file upload
         });
+  
         console.log(response.data.message); // Log success message
         alert('Form data sent to server!');
-        navigate(`/clientprofile/id=${id}/product-list`);
-      
-        // Proceed to step 3 after successful upload
+        setVendorStatus('Pending');
       } catch (error) {
         console.error('Error submitting form:', error);
         alert('Failed to submit form.');
       }
     }
   };
+  
   
   
     
@@ -170,47 +171,48 @@ const Business: React.FC = () => {
   }, [id]);
 
 
-  useEffect(() => {
-    const fetchVendorStatus = async () => {
+useEffect(() => {
+  const fetchVendorStatus = async () => {
+    try {
       const vendorStatusResponse = await fetch(`${serverHost}/checkVendorStatus/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-  
+
       const vendorStatusResult = await vendorStatusResponse.json();
-  
+
       if (vendorStatusResponse.ok) {
+        // If response is successful, set the vendor status and id
         const vendorStatus = vendorStatusResult.message;
         const vendorId = vendorStatusResult.vendor_id;
-        
-  
+
         setVendorStatus(vendorStatus);
         setVendorId(vendorId);
-
+      } else if (vendorStatusResponse.status === 404) {
+        // If vendorStatus is not found (404), set vendorStatus to null
+        setVendorStatus('start');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching vendor status:', error);
+      setVendorStatus('start');  // In case of any error, set vendorStatus to null
+    }
+  };
+
+  fetchVendorStatus();
+}, [id]);  // Dependency on `id` to refetch if it changes
+
   
-   
-    fetchVendorStatus();
-  }, [id]);
+
+  const applyAgain = () => {
+    setVendorStatus("start"); // Set the status to null to display the form
+  };
   
   
   return (
     <div className="p-2">
-
-    {vendorStatus === 'Pending' && (
-        <div className="text-yellow-600 font-semibold ">
-          You have a pending application.
-        </div>
-      )}
-      {vendorStatus === 'Rejected' && (
-        <div className="text-red-600 font-semibold">
-          You're rejected.
-        </div>
-      )}
-      {vendorStatus === 'Verified' && (
+       {vendorStatus === 'start' && (
       <>
       {/* Shop Information Section */}
       {step === 1 && (
@@ -440,6 +442,34 @@ const Business: React.FC = () => {
       </div>
       </>
        )}
+
+    {vendorStatus === 'Pending' && (
+       <div className="text-yellow-600 font-semibold flex justify-center items-center h-full">
+        <div className="flex flex-col items-center">
+          <img src={PendingBg} alt="Pending background" className="mb-4" />
+          <p className="text-center">
+            Your application is currently under review by the administrator. This process may take some time.
+          </p>
+        </div>
+      </div>
+     
+      )}
+      {vendorStatus === 'Rejected' && (
+      <div className="text-yellow-600 font-semibold flex justify-center items-center h-full">
+      <div className="flex flex-col items-center">
+        <img src={RejectedBg} alt="Rejected background" className="mb-4" />
+        <p className="text-center text-red-500 mb-4">
+          Sorry, your application has been reviewed and unfortunately, it has been rejected. Please contact the administrator for further details or assistance.
+          <button className="text-blue-500 underline font-semibold hover:text-blue-700 ml-2" onClick={applyAgain}>
+          Apply Again.
+          </button>
+        </p>
+       
+      </div>
+    </div>
+    
+      )}
+
     </div>
      
   );

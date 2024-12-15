@@ -553,14 +553,16 @@ def submit_form(user_id):
 
     business_email = form_data.get('businessEmail', user.email_or_mobile)
 
+    # Check if the vendor already exists
     existing_vendor = Vendor.query.filter_by(vendor_email=business_email).first()
+    
     if existing_vendor:
-        return jsonify({"message": "Email already exists. Please use a different email address."}), 400
+        # If vendor exists, update the vendor status to "Pending"
+        existing_vendor.vendor_status = 'Pending'
+        db.session.commit()
+        return jsonify({"message": "Vendor status updated to Pending."}), 200
 
-    # Check if file is included in the form request
-   
-
-    # Create a new vendor instance with form data and the uploaded document URL
+    # If vendor does not exist, create a new vendor
     new_vendor = Vendor(
         user_id=user_id,  # Use the user_id from the URL
         vendor_name=form_data['businessName'],
@@ -568,7 +570,7 @@ def submit_form(user_id):
         vendor_email=form_data['businessEmail'],
         vendor_classification=form_data['businessCategory'],
         created_at=datetime.utcnow(),
-        vendor_status='Pending',
+        vendor_status='Pending',  # New vendor is automatically set to 'Pending'
         document_img_src=global_document_url  # Use the document URL obtained from the upload
     )
 
@@ -581,6 +583,7 @@ def submit_form(user_id):
         db.session.rollback()  # Rollback in case of error
         print(f"Error inserting data: {e}")
         return jsonify({"message": "An error occurred while submitting the form!"}), 500
+
 
 
 @app.route('/api/register', methods=['POST'])
