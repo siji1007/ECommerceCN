@@ -4,13 +4,20 @@
 //   -add section for advertisement 
 //   -cart button  function
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ImageSlider from "../components/slider";
 import host from '../host/host.txt?raw';
 import ErrorBoundary from '../components/ErrorBoundary';
-import { FaBookmark, FaShoppingCart } from 'react-icons/fa';
+import { FaBookmark, FaShoppingCart, FaArrowLeft, FaArrowRight} from 'react-icons/fa';
 import ProductModal from '../components/productModal'; 
 import ReactHost from '../host/ReactHost.txt?raw';
+
+
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import Slider from "react-slick";
+
+
 
 const images = [
   "src/assets/slide1.jpg",
@@ -32,6 +39,15 @@ const ShopPage: React.FC = () => {
   const serverURL = host.trim();
   const reactHost = ReactHost.trim();
 
+  const sliderRef = useRef<Slider>(null); // Ref for accessing the Slider instance
+
+  const handleLeftClick = () => {
+    sliderRef.current?.slickPrev(); // Move to the previous slide
+  };
+
+  const handleRightClick = () => {
+    sliderRef.current?.slickNext(); // Move to the next slide
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,6 +122,11 @@ const ShopPage: React.FC = () => {
               placeholder="Search for products..."
               className="border rounded-lg w-[90vw] md:w-[70%] lg:w-[50vh] p-3 text-black bg-white"
               value={searchTerm}
+              onKeyDown={event => {
+                if (event.key === 'Enter') {
+                  handleSearch()
+                }
+              }}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
               <button onClick={handleSearch} className="p-2 bg-green-900 text-white ">
@@ -133,7 +154,22 @@ const ShopPage: React.FC = () => {
           ) : filteredProducts.length === 0 ? (
             <h2>No available products. Try adding some!</h2>
           ) : (
-            <div className="flex flex-wrap gap-4">
+            <div className="relative">
+
+            <Slider
+              ref={sliderRef}
+              dots={true}
+              infinite={filteredProducts.length > 6}
+              speed={500}
+              slidesToShow={7}
+              slidesToScroll={1}
+              responsive={[
+                { breakpoint: 1440, settings: { slidesToShow: 5 } },
+                { breakpoint: 1024, settings: { slidesToShow: 3 } },
+                { breakpoint: 640, settings: { slidesToShow: 2 } },
+                { breakpoint: 480, settings: { slidesToShow: 1 } },
+              ]}
+            >
               {filteredProducts.map((product: any) => (
               
                 <div
@@ -174,8 +210,21 @@ const ShopPage: React.FC = () => {
                   </p>
                 </div>
               ))}
+            </Slider>
+            {/* Left and Right Buttons */}
+            <button
+            onClick={handleLeftClick}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 p-2 bg-green-600 text-white rounded-full"
+            >
+              <FaArrowLeft />
+            </button>
+            <button
+              onClick={handleRightClick}
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 bg-green-600 text-white rounded-full"
+            >
+              <FaArrowRight />
+            </button>
             </div>
-
           )}
         </div>
         

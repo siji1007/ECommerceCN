@@ -3,6 +3,8 @@ import { FaShoppingCart } from 'react-icons/fa';
 import ModalLogin from '../components/Modal_login';
 import { useNavigate } from 'react-router-dom';
 import host from '../host/host.txt?raw';
+import Carousel from 'react-multi-carousel';
+
 
 interface ProductModalProps {
   isOpen: boolean;

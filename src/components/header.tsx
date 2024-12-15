@@ -10,9 +10,14 @@ const Header: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [fullName, setFullName] = useState('');
+    const [userImage, setUserImage] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false); // State for dropdown visibility
     const navigate = useNavigate();
     const serverUrl = host.trim();
+
+
+    
+    
 
     const location = useLocation(); // Get the current location
 
@@ -24,17 +29,24 @@ const Header: React.FC = () => {
 
     // useEffect to read from localStorage when the component mounts
     useEffect(() => {
-      const storedFullName = localStorage.getItem('userFullName');
- 
-      if (storedFullName) {
-        setFullName(storedFullName); // Set the state with the stored name
-      }
+        const storedUserImage = localStorage.getItem(`userImage`)
+
+        if (storedUserImage) {
+            setUserImage(storedUserImage)
+        }
+
+        const storedFullName = localStorage.getItem('userFullName');
+
+        if (storedFullName) {
+            setFullName(storedFullName); // Set the state with the stored name
+        }
     }, []);
 
     // Logout function to clear the session and redirect to home page
     const handleLogout = () => {
         // Clear user information from localStorage
-        localStorage.removeItem('userFullName');  // Remove userFullName from localStorage
+        localStorage.removeItem('userFullName');
+        localStorage.removeItem('userImage');  // Remove userFullName from localStorage
         localStorage.removeItem('Auth');  // Remove Auth from localStorage (if you store the user session here)
     
         // Optionally, send a request to the server to log out or invalidate the session
@@ -50,7 +62,8 @@ const Header: React.FC = () => {
             if (data.success) {
                 console.log('Logout successful');
                 setDropdownOpen(false);  
-                setFullName('');  
+                setFullName('');
+                setUserImage('');  
                
             } else {
                 console.error('Logout failed');
@@ -60,6 +73,7 @@ const Header: React.FC = () => {
             console.error('Error during logout:', error);
             setDropdownOpen(false);
             setFullName('');
+            setUserImage('');
             setIsModalOpen(true);
         });
     };
@@ -101,11 +115,10 @@ const navigateCart = () => {
                             <div 
                                 className="flex items-center space-x-2 cursor-pointer"
                                 onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown on click
-                                onMouseEnter={() => setDropdownOpen(true)}  // Open dropdown on hover
-                               
+                                onMouseEnter={() => setDropdownOpen(true)}
                             >
-                                <FaUser />
-                                <div className="ml-2">Profile</div>
+                                <img src={userImage} alt="userImage" className="h-8 w-8 rounded-full"></img>
+                                <div className="ml-2">{userImage /*Debugging purpose*/ }</div>
                             </div>
                         ) : (
                             <Link to="/login" onClick={toggleModal} className="flex items-center space-x-2">
@@ -116,7 +129,9 @@ const navigateCart = () => {
 
                         {/* Dropdown Menu */}
                         {dropdownOpen && (
-                            <div className="absolute top-full mt-2 bg-white text-black rounded shadow-lg p-4 w-40">
+                            <div 
+                            onMouseLeave={() => setDropdownOpen(false)}
+                            className=" z-90 absolute top-full mt-2 bg-white text-black rounded shadow-lg p-4 w-40">
                                  <Link 
                                 to={`/clientprofile/id=${storeAuth}`} 
                                 className="block px-4 py-2 hover:bg-gray-200"
@@ -149,6 +164,18 @@ const navigateCart = () => {
                         ×
                     </button>
                     <ul className="flex flex-col mt-20 space-y-6 p-6 text-white">
+                    <div
+                         onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown on click
+                         className="flex"
+                        >
+                            <img src={userImage} alt="userImage" className="h-8 w-8 rounded-full"></img>
+                            {fullName ? (
+                            <h1 className='ml-5'>Welcome, {fullName}!</h1>
+                        ) : (
+                            <h1></h1>
+                        )}
+                        </div>
+                    
                         <li><Link to="/" onClick={toggleMenu} className="hover:text-gray-300">Home</Link></li>
                         <li><Link to="/shop" onClick={toggleMenu} className="hover:text-gray-300">Shop</Link></li>
                         <li><Link to="/vendor" onClick={toggleMenu} className="hover:text-gray-300">Vendor</Link></li>
@@ -157,9 +184,7 @@ const navigateCart = () => {
 
                     {/* Profile Icon */}
                     <div className="absolute bottom-8 right-8 text-4xl cursor-pointer">
-                        <Link onClick={toggleModal} className="text-white hover:text-gray-300" to={'/login'}>
-                            <FaUser />
-                        </Link>
+                        
                     </div>
                 </div>
             </nav>

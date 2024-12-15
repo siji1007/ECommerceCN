@@ -48,8 +48,10 @@ function App() {
           console.log('Session cookie:', data.session_cookie);
           console.log('Full name:', data.full_name);  // Display the full name
           localStorage.setItem('userFullName', data.full_name);  // Store the full name in localStorage
+          localStorage.setItem('userImage', data.user_img)
         } else {
-          localStorage.removeItem('userFullName');  // Remove userFullName if no session
+          localStorage.removeItem('userFullName');
+          localStorage.removeItem('userImage');  // Remove userFullName if no session
           localStorage.removeItem('Auth');
           const navigate = useNavigate();
           navigate('/login');
@@ -110,6 +112,7 @@ function App() {
         </Routes>
       </div>
       {/* <Footer /> */}
+      <Footer />
     </Router>
   );
 }

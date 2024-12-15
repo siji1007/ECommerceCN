@@ -26,7 +26,7 @@ PAYMONGO_BASE_URL = 'https://api.paymongo.com/v1'
 
 app = Flask(__name__)
 
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://192.168.100.138:5173", "https://192.168.100.138:8082"]}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://192.168.100.98:5173", "https://192.168.100.98:8082"]}})
 
 
 
@@ -304,7 +304,7 @@ def get_users():
 
 
 
-PROFILE_IMAGES_FOLDER = r"C:\Users\XtiaN\ECommerceCN\src\assets\profiles"
+PROFILE_IMAGES_FOLDER = r"C:\Users\Fox\Documents\GitHub\ECommerceCN\src\assets\profiles"
 
 # Ensure the directory exists, create it if it doesn't
 if not os.path.exists(PROFILE_IMAGES_FOLDER):
@@ -467,7 +467,7 @@ def update_vendor_status():
         return jsonify({'error': str(e)}), 500
 
 
-VENDOR_DOCUMENTS_FOLDER = r"C:\Users\XtiaN\ECommerceCN\src\assets\documentsImages"
+VENDOR_DOCUMENTS_FOLDER = r"C:\Users\Fox\Documents\GitHub\ECommerceCN\src\assets\documentsImages"
 
 # Ensure the directory exists, create it if it doesn't
 if not os.path.exists(VENDOR_DOCUMENTS_FOLDER):
@@ -913,7 +913,7 @@ def add_product():
 
 
 # Folder where you want to store uploaded images
-UPLOAD_FOLDER = r'C:/Users/XtiaN//ECommerceCN/src/assets/product_images' 
+UPLOAD_FOLDER = r'C:\Users\Fox\Documents\GitHub\ECommerceCN\src\assets\product_images' 
 #                 C:\Users\XtiaN\ECommerceCN\src\assets\product_images
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -1847,8 +1847,8 @@ if __name__ == '__main__':
     ,host="0.0.0.0",
     port=8082,
     ssl_context=(
-        "C:\\Users\\XtiaN\\ECommerceCN\\flask-backend\\cert.pem",
-        "C:\\Users\\XtiaN\\ECommerceCN\\flask-backend\\key.pem"
+        "C:\\Users\\Fox\\Documents\\GitHub\\ECommerceCN\\flask-backend\\cert.pem",
+        "C:\\Users\\Fox\\Documents\\GitHub\\ECommerceCN\\flask-backend\\key.pem"
     )
 )
 

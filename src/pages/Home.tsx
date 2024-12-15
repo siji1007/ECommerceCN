@@ -96,14 +96,10 @@ const HomePage: React.FC = () => {
         {/* Content Section */}
         <div className="relative w-full lg:w-11/12 text-left">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 text-center py-16">
-            Why Visit Us?
+            Why Shop Here?
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-gray-300">
-            Camarines Norte is a captivating destination offering pristine beaches, rich history,
-            and natural beauty. Discover Calaguas Island, known for its powdery white sands and turquoise waters,
-            perfect for relaxation or adventure. Surfers flock to Bagasbas Beach for its consistent waves. Dive into history at Paracale, the "Gold Town,"
-            and visit the First Rizal Monument, a unique tribute to the national hero. Nature lovers can trek to hidden gems like Malatap Falls and Mananap Falls, 
-            offering refreshing escapes. Camarines Norte’s blend of adventure, tranquility, and culture makes it a must-visit for travelers seeking an authentic and unforgettable experience.
+          At Camarines Norte Shop Hub, we offer a unique selection of local products, handcrafted goods, and exclusive deals that you won’t find anywhere else. By shopping with us, you support local artisans and businesses, contributing to the growth of the community. We prioritize quality, ensuring that every product meets high standards, from fashion to home decor and specialty items. With a user-friendly shopping experience, secure checkout, and fast delivery, Camarines Norte Shop Hub makes it easy and enjoyable to shop. Discover something special today and experience the heart of Camarines Norte through our curated offerings.
           </p>
         </div>
       </div>
@@ -117,10 +113,11 @@ const HomePage: React.FC = () => {
         {/* Content Section */}
         <div className="relative w-full lg:w-7/12 text-left z-60 m-10">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-left">
-            Bantayog Festival
+            Made with Heart
           </h1>
           <p className="text-lg sm:text-xl md:text-1xl text-black">
-          The Bantayog Festival bursts to life in Camarines Norte, Philippines, with vibrant colors, rhythmic beats, and an undeniable spirit of pride and unity. Named after the iconic Bantayog Monument, the celebration honors the nation's heroes, particularly the first Rizal Monument in Daet. Streets transform into a spectacle of intricate costumes and spirited performers, weaving tales of heritage through dynamic dances. The aroma of local delicacies fills the air, while handcrafted goods showcase the artistry of the province. With cultural exhibits, lively parades, and heartfelt tributes, the festival immerses visitors in a celebration that is as enriching as it is unforgettable.
+          
+At Camarines Norte Shop Hub, every product is made with heart. We carefully select high-quality materials and work with skilled artisans to create unique, reliable items. Our commitment to craftsmanship ensures that every piece is not only functional but also a reflection of dedication and passion. When you shop with us, you're not just purchasing a product; you're supporting a labor of love that prioritizes quality and customer satisfaction. From thoughtful designs to exceptional service, every step of our process is driven by a genuine desire to deliver the best for you.
           </p>
         </div>
 
@@ -142,14 +139,10 @@ const HomePage: React.FC = () => {
         {/* Content Section */}
         <div className="relative w-full lg:w-7/12 text-left z-60 m-10">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-left">
-            First Jose Rizal Monument
+            Quality Products
           </h1>
           <p className="text-lg sm:text-xl md:text-1xl text-black">
-            Camarines Norte is a captivating destination offering pristine beaches, rich history,
-            and natural beauty. Discover Calaguas Island, known for its powdery white sands and turquoise waters,
-            perfect for relaxation or adventure. Surfers flock to Bagasbas Beach for its consistent waves. Dive into history at Paracale, the "Gold Town," 
-            and visit the First Rizal Monument, a unique tribute to the national hero. Nature lovers can trek to hidden gems like Malatap Falls and Mananap Falls,
-            offering refreshing escapes. Camarines Norte’s blend of adventure, tranquility, and culture makes it a must-visit for travelers seeking an authentic and unforgettable experience.
+          At Camarines Norte Shop Hub, we offer products crafted with care and attention to detail. Each item is made with the highest quality materials to ensure durability and exceptional performance. Our products are carefully selected, working with trusted manufacturers and artisans to create designs that stand out. We focus on providing a seamless shopping experience, with excellent customer service to ensure satisfaction with every purchase. Whether you’re looking for everyday essentials or unique gifts, our wide selection caters to all needs. Shop with us for quality, reliability, and products made with heart and precision.
           </p>
         </div>        
       </div>
@@ -157,20 +150,7 @@ const HomePage: React.FC = () => {
 
 
       {/* ToC Section */}
-      <div className="relative z-60 flex flex-col lg:flex-row w-full h-[80vh] bg-center text-center justify-center">
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-green-900"></div>
-        <div className="relative p-4 sm:p-8 w-full text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-            Top Tourist Landmarks
-          </h1>
 
-          {/* Landmarks */}
-          <div className="flex flex-col lg:flex-row lg:justify-center lg:items-center">
-            
-          </div>
-        </div>
-      </div>
 
       {/* Hotel*/}
       <div className="relative z-60 flex flex-col lg:flex-row w-full h-[60vh] bg-center text-center justify-center">
