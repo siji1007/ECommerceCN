@@ -225,18 +225,18 @@ const handleCartNow = async (product, quantity) => {
 
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 ">
-      <div className="bg-white p-6 rounded-lg w-3/4 max-w-5xl relative overflow-hidden">
+      <div className="bg-white p-6 rounded-lg w-11/12 lg:w-3/4 max-w-5xl relative overflow-hidden">
         <button onClick={onClose} className="absolute top-2 right-2 text-gray-600">
           X
         </button>
 
-        <div className="flex h-[70vh] overflow-hidden">
+        <div className="flex flex-col lg:flex-row h-auto overflow-scroll lg:overflow-hidden">
           {/* Left Section: Product Name, Image, and Description */}
-          <div className="w-2/3 pr-4 overflow-auto">
+          <div className="w-full lg:w-2/3 pr-4 overflow-auto">
             <h2 className="text-xl font-bold mb-4">{product.prod_name}</h2>
 
             {/* Image container with discount */}
-            <div className="relative w-full h-[50vh] mb-4">
+            <div className="relative w-full h-[30vh] lg:h-[50vh] mb-4">
               {/* Discount Label */}
               <div className="absolute top-0 left-0 bg-green-500 text-white font-bold py-1 px-2 rounded">
                 {`-${((product.prod_disc_price / product.prod_price) * 100).toFixed(2)}%`}
@@ -276,7 +276,7 @@ const handleCartNow = async (product, quantity) => {
 
 
           {/* Right Section: Product Price and Comment Section */}
-          <div className="w-1/3 pl-4 flex flex-col justify-between overflow-auto">
+          <div className="w-full lg:w-1/3 pl-4 flex flex-col justify-between overflow-auto">
             <section className="flex justify-between items-center border-b">
               <section className="flex items-center">
                 <img src="src/assets/profiles/Profile.jpg" alt="" className="mr-1 h-5 w-5" />
@@ -315,12 +315,12 @@ const handleCartNow = async (product, quantity) => {
 
               {/* Add to Cart and Buy Now Buttons */}
               <div className="flex justify-between">
-                <button onClick={() => handleCartNow(product, quantity)} className="border text-green-800 rounded-lg px-6 py-2 text-sm flex items-center">
+                <button onClick={() => handleCartNow(product, quantity)} className="border text-green-800 rounded-lg px-[3vw] lg:px-2 py-2 text-sm flex items-center">
                   <FaShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart
                 </button>
 
-                <button onClick={() => handleBuyNow(product, quantity)} className="bg-green-600 text-white rounded-lg text-sm px-6 py-2 flex items-center">
+                <button onClick={() => handleBuyNow(product, quantity)} className="bg-green-600 text-white rounded-lg text-sm px-[3vw] lg:px-2 py-2 flex items-center">
                   <FaShoppingCart className="h-5 w-5 mr-2" />
                   Buy Now
                 </button>

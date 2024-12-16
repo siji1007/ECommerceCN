@@ -43,7 +43,7 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, autoSlideInterval = 3
   };
 
   return (
-    <div className="relative w-full mx-auto">
+    <div className="relative w-full lg:w-[90%]">
       {/* Slider Wrapper */}
       <div
         className="relative w-full overflow-hidden h-[30vh] lg:h-[50vh] rounded-lg"

@@ -303,8 +303,8 @@ const handleIncreaseQuantity = async (id: number) => {
         </div>
       ) : (
         <>
-          <h1 className='text-2xl font-semibold p-2'>My Cart</h1>
-          <div className="grid grid-cols-5 gap-4 mb-4 w-full m-2">
+          <h1 className='text-xl sm:text-2xl font-semibold p-2'>My Cart</h1>
+          <div className="grid grid-cols-5 gap-4 mb-4 w-full m-2 text-xs sm:text-sm">
             <div className="font-semibold">
               <input
                 type="checkbox"
@@ -329,14 +329,17 @@ const handleIncreaseQuantity = async (id: number) => {
                   onChange={() => handleSelectProduct(product.id)}
                   className="mr-2"
                 />
-                <img src={product.image} alt={product.title} className="w-16 h-16 object-cover" />
-                <div className="ml-4">
-                  <h1 className="text-lg font-semibold">{product.title}</h1>
+                <div className='flex flex-col sm:flex-row'>
+                  <img src={product.image} alt={product.title} className="w-16 h-16 object-cover" />
+                  <div className="sm:ml-4">
+                  <h1 className="text-xs sm:text-lg font-semibold">{product.title}</h1>
                   <p className="text-sm text-gray-500">{product.category}</p>
                 </div>
+                </div>
+                
               </div>
 
-              <div className="items-center justify-center flex-col flex">
+              <div className="items-center justify-center flex-col flex text-sm sm:text-lg">
                 <span>{product.unitPrice ? `₱ ${(product.unitPrice - product.DicountedPrice).toFixed(2)}` : 'Price not available'}</span>
                
               </div>
@@ -364,7 +367,9 @@ const handleIncreaseQuantity = async (id: number) => {
                   className="px-4 py-2 bg-red-600 text-white rounded"
                   onClick={() => handleDeleteItem(product.id)}
                 >
-                  Delete
+                  <span className="block sm:hidden">X</span>
+
+                  <span className="hidden sm:block">Delete</span>
                 </button>
               </div>
               <h1>{product.vendor_name}</h1>
