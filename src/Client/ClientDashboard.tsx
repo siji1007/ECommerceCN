@@ -19,7 +19,9 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import axios from 'axios';
-import mypurchased from './Purchased';
+import Modal from './ModalMessage';
+import ContractDetails from './BusinessPage/ContractDetails';
+
 
 
 const DefaultIcon = L.Icon.Default.prototype as any; // TypeScript workaround
@@ -39,8 +41,7 @@ const ClientDashboard: React.FC = () =>{
     const [birthYear, setBirthyear] =  useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [user, setUser] = useState<{ first_name: string } | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [profile, setProfile] =  useState<string>('');
+
     const [isBusinessForm, setIsBusinessForm] = useState(false);
     const [isProductList, setIsProductList] = useState(false);
     const [isProductAdd, setIsProductAdd] = useState(false);
@@ -48,6 +49,7 @@ const ClientDashboard: React.FC = () =>{
     const [isSettings, setSettings] = useState(false);
     const [isNeworder, setNeworders] = useState(false);
     const [isPurchased, setPurchased] = useState(false);
+    const [isContract, setContract] = useState(false);
     const [isDisabledPesonalInfo, setIsDisabledPersonalInfo] = useState(true);
     const [isDisabledAddress, setIsDisabledAddress] = useState(true);
     const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false); 
@@ -59,9 +61,11 @@ const ClientDashboard: React.FC = () =>{
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [vendorStatus, setVendorStatus] = useState<string>('');
     const [vendorId, setVendorId] = useState(null); // State to store vendorId
-   
+    
     const [position, setPosition] = useState<[number, number] | null>(null);
     const [zoom, setZoom] = useState(13); // Default zoom level
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
 
     const [locationDetails, setLocationDetails] = useState<{
       state?: string;
@@ -306,12 +310,16 @@ const ClientDashboard: React.FC = () =>{
         navigate(`/clientprofile/id=${id}/neworders`);
       };
 
+      
+      const navigateContract = () => {
+        navigate(`/clientprofile/id=${id}/contract-details`);
+      };
+
     
 
       const handleGenderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setGender(e.target.value);  // Update the gender state when a radio button is selected
       };
-
 
     
     
@@ -324,6 +332,8 @@ const ClientDashboard: React.FC = () =>{
     const MyCartActive = location.pathname === `/clientprofile/id=${id}/shop-cart`;
     const MySettingsActive = location.pathname === `/clientprofile/id=${id}/settings`; 
     const MyPurchasedisActive = location.pathname === `/clientprofile/id=${id}/purchased`; 
+    const MyContractisActive = location.pathname === `/clientprofile/id=${id}/contract-details`; 
+
 
 
     useEffect(() => {
@@ -332,19 +342,21 @@ const ClientDashboard: React.FC = () =>{
       const businessFormIncluded = path.includes('business-form');
       const productListIncluded = path.includes('product-list');
       const productAddIncluded = path.includes('products-add');
-      const MyCartIncluded = path.includes('shop-cart')
-      const MySettingsIncluded = path.includes('settings')
-      const NewOrdersIncluded = path.includes('neworders')
-      const MyPurchased = path.includes("purchased")
+      const MyCartIncluded = path.includes('shop-cart');
+      const MySettingsIncluded = path.includes('settings');
+      const NewOrdersIncluded = path.includes('neworders');
+      const MyPurchased = path.includes("purchased");
+      const MyContract = path.includes('contract-details');
 
       setIsBusinessForm(businessFormIncluded);
       setIsProductList(productListIncluded);
       setIsProductAdd(productAddIncluded);
-      setIsDropdownOpen(businessFormIncluded || productListIncluded || productAddIncluded || NewOrdersIncluded);
+      setIsDropdownOpen(businessFormIncluded || productListIncluded || productAddIncluded || NewOrdersIncluded || MyContract);
       setMyCart(MyCartIncluded);
       setSettings(MySettingsIncluded);
-      setNeworders(NewOrdersIncluded)
+      setNeworders(NewOrdersIncluded);
       setPurchased(MyPurchased);
+      setContract(MyContract);
 
 
  
@@ -371,87 +383,77 @@ const ClientDashboard: React.FC = () =>{
 
 
     const handleInputClickPersonalInfo = () => {
-        setIsDisabledPersonalInfo(false); 
-        setIsEditingPersonalInfo(true); 
-        alert("Edit Personal Information");
+      setIsDisabledPersonalInfo(false);
+      setIsEditingPersonalInfo(true);
+    };
+
+    const handleSaveClickPersonalInfo = () => {
+      // Disable editing
+      setIsDisabledPersonalInfo(true);
+      setIsEditingPersonalInfo(false);
+  
+      // Create the months array to map numeric month to string (A Letter Month)
+      const months = [
+        { name: 'January', value: 1 },
+        { name: 'February', value: 2 },
+        { name: 'March', value: 3 },
+        { name: 'April', value: 4 },
+        { name: 'May', value: 5 },
+        { name: 'June', value: 6 },
+        { name: 'July', value: 7 },
+        { name: 'August', value: 8 },
+        { name: 'September', value: 9 },
+        { name: 'October', value: 10 },
+        { name: 'November', value: 11 },
+        { name: 'December', value: 12 }
+      ];
+  
+      // Find the selected month as a string
+      const selectedMonthName = months.find(month => month.value === parseInt(birthMonth)).name;
+  
+      // Collect values from the input fields
+      const personalInfo = {
+        firstName,
+        lastName,
+        email,
+        gender,
+        birthMonth: selectedMonthName,  // Use the string month name
+        birthDay,
+        birthYear
       };
-    
-      const handleSaveClickPersonalInfo = () => {
-        // Disable editing
-        setIsDisabledPersonalInfo(true); 
-        setIsEditingPersonalInfo(false); 
-        
-        // Create the months array to map numeric month to string (A Letter Month)
-        const months = [
-          { name: "January", value: 1 },
-          { name: "February", value: 2 },
-          { name: "March", value: 3 },
-          { name: "April", value: 4 },
-          { name: "May", value: 5 },
-          { name: "June", value: 6 },
-          { name: "July", value: 7 },
-          { name: "August", value: 8 },
-          { name: "September", value: 9 },
-          { name: "October", value: 10 },
-          { name: "November", value: 11 },
-          { name: "December", value: 12 }
-        ];
-      
-        // Find the selected month as a string
-        const selectedMonthName = months.find(month => month.value === parseInt(birthMonth)).name;
-      
-        // Collect values from the input fields
-        const personalInfo = {
-          firstName,
-          lastName,
-          email,
-          gender,
-          birthMonth: selectedMonthName,  // Use the string month name
-          birthDay,
-          birthYear
-        };
-      
-        // Show the values in an alert (optional for debugging)
-        alert(
-          `Personal Information Saved:\n
-          First Name: ${personalInfo.firstName}\n
-          Last Name: ${personalInfo.lastName}\n
-          Email: ${personalInfo.email}\n
-          Gender: ${personalInfo.gender}\n
-          Birth Date: ${personalInfo.birthMonth} ${personalInfo.birthDay}, ${personalInfo.birthYear}`
-        );
-      
-        // Send the data to the backend via an API call (POST request)
-        fetch(host_backend+'/update-user-info', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: id,  // Include the user ID for the backend to identify which user to update
-            personalInfo: personalInfo
-          })
+  
+ 
+      axios
+        .put(`${host_backend}/update-user/${id}`, {
+          personalInfo: personalInfo
         })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
+        .then((response) => {
+          if (response.data.success) {
             console.log('User information updated successfully.');
+            setModalMessage('User information updated successfully!');
+            setShowModal(true); // Show success modal
+
+               // Close the modal automatically after 2 seconds
+        setTimeout(() => {
+          setShowModal(false);
+        }, 2000); // 2000ms = 2 sec
           } else {
-            console.error('Error updating user information:', data.message);
+            console.error('Error updating user information:', response.data.message);
+            setModalMessage('Error updating user information.');
+            setShowModal(true); // Show error modal
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Error:', error);
+          setModalMessage('Failed to update user information.');
+          setShowModal(true); // Show error modal
         });
-      };
-      
-      
+    };
     
       const handleInputClickAddress = () =>{
         setIsDisabledAddress(false);
         setIsEditingAddress(true);
 
-        alert("Edit Personal Address");
       };
 
 
@@ -473,47 +475,56 @@ const ClientDashboard: React.FC = () =>{
   
       // Construct the address object with the current values, including latitude and longitude
       const addressData = {
-          u_id,
-          province: locationDetails.state || "Not specified",
-          city: locationDetails.city || "Not specified",
-          barangay: locationDetails.road || "Not specified",
-          postal_code: locationDetails.postcode || "Not specified",
-          latitude: position ? position[0] : "Not available",
-          longitude: position ? position[1] : "Not available",
+        u_id,
+        province: locationDetails.state || "Not specified",
+        city: locationDetails.city || "Not specified",
+        barangay: locationDetails.road || "Not specified",
+        postal_code: locationDetails.postcode || "Not specified",
+        latitude: position ? position[0] : "Not available",
+        longitude: position ? position[1] : "Not available",
       };
   
       // Check if the address exists by making a GET request to the backend
       axios.get(`${host_backend}/api/addresses/${u_id}`)
-          .then((response) => {
-              // If the address exists, update it using PUT
-              if (response.data.exists) {
-                  axios.put(`${host_backend}/api/addresses/${u_id}`, addressData)
-                      .then(() => {
-                          alert("Address updated successfully!");
-                      })
-                      .catch((error) => {
-                          console.error("Error updating address:", error);
-                          alert("Error updating address.");
-                      });
-              }
-          })
-          .catch((error) => {
-              // If address doesn't exist (404), create a new address
-              if (error.response && error.response.status === 404) {
-                  axios.post(`${host_backend}/api/addresses`, addressData)
-                      .then(() => {
-                          alert("Address saved successfully!");
-                      })
-                      .catch((error) => {
-                          console.error("Error saving address:", error);
-                          alert("Error saving address.");
-                      });
-              } else {
-                  console.error("Error checking address existence:", error);
-                  alert("Error checking address existence.");
-              }
-          });
-  };
+        .then((response) => {
+          // If the address exists, update it using PUT
+          if (response.data.exists) {
+            axios.put(`${host_backend}/api/addresses/${u_id}`, addressData)
+              .then(() => {
+                setModalMessage('Address updated successfully!');
+            
+                setShowModal(true); // Show the modal
+                setTimeout(() => setShowModal(false), 2000); // Auto close the modal after 2 seconds
+              })
+              .catch((error) => {
+                console.error('Error updating address:', error);
+                setModalMessage('Error updating address.');
+     
+                setShowModal(true); // Show the modal
+              });
+          }
+        })
+        .catch((error) => {
+          // If address doesn't exist (404), create a new address
+          if (error.response && error.response.status === 404) {
+            axios.post(`${host_backend}/api/addresses`, addressData)
+              .then(() => {
+                setModalMessage('Address saved successfully!');
+                setShowModal(true); 
+                setTimeout(() => setShowModal(false), 2000); // Auto close the modal after 2 seconds
+              })
+              .catch((error) => {
+                console.error('Error saving address:', error);
+                setModalMessage('Error saving address.');
+                setShowModal(true); // Show the modal
+              });
+          } else {
+            console.error('Error checking address existence:', error);
+            setModalMessage('Error checking address existence.');
+            setShowModal(true); // Show the modal
+          }
+        });
+    };
   
   const handleMarkerDragEnd = async (event: any) => {
       const marker = event.target;
@@ -592,7 +603,6 @@ const ClientDashboard: React.FC = () =>{
             className="fixed top-20 left-4 z-50"
             onClick={toggleSidebarVisibility}
           >
-            {/* Show Hamburger icon when sidebar is closed, Arrow icon when sidebar is open */}
             {isSidebarOpen ? (
               <FaArrowLeft className="text-black" size={24} />
             ) : (
@@ -699,9 +709,17 @@ const ClientDashboard: React.FC = () =>{
                 <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
                   Tutorial
                 </button>
-                <button className="w-full py-2 px-4 text-left text-black font-semibold hover:bg-green-600 hover:text-white rounded">
-                  Contract Details
-                </button>
+                
+                  <button  className={`w-full py-2 px-4 text-left text-black font-semibold ${
+                          MyContractisActive
+                            ? 'bg-green-600 text-white'
+                            : 'hover:bg-green-600 hover:text-white'
+                        } rounded`}
+                        onClick={navigateContract}
+                      >
+                    Contract Details
+                  </button>
+            
                 {vendorStatus !== 'Verified' && (
                     <Link to="business-form">
                       <button
@@ -773,6 +791,8 @@ const ClientDashboard: React.FC = () =>{
                 <Neworder/>
               ) : isPurchased ? (
                 <MyPurchased/>
+              ) : isContract ? (
+                <ContractDetails/>
                 ):(
                     <>
 
@@ -988,10 +1008,6 @@ const ClientDashboard: React.FC = () =>{
                                 onChange={(e) => setLocationDetails({ ...locationDetails, state: e.target.value })}
                               />
                               <datalist id="provinces">
-                                <option value="Province 1" />
-                                <option value="Province 2" />
-                                <option value="Province 3" />
-                                <option value="Province 4" />
                               </datalist>
                             </div>
                             <div className="flex-1">
@@ -1008,10 +1024,6 @@ const ClientDashboard: React.FC = () =>{
                                 onChange={(e) => setLocationDetails({ ...locationDetails, city: e.target.value })}
                               />
                               <datalist id="cities">
-                                <option value="City 1" />
-                                <option value="City 2" />
-                                <option value="City 3" />
-                                <option value="City 4" />
                               </datalist>
                             </div>
                             <div className="flex-1">
@@ -1028,10 +1040,6 @@ const ClientDashboard: React.FC = () =>{
                                 onChange={(e) => setLocationDetails({ ...locationDetails, road: e.target.value })}
                               />
                               <datalist id="barangays">
-                                <option value="Barangay 1" />
-                                <option value="Barangay 2" />
-                                <option value="Barangay 3" />
-                                <option value="Barangay 4" />
                               </datalist>
                             </div>
                           </div>
@@ -1101,8 +1109,15 @@ const ClientDashboard: React.FC = () =>{
                     </>
                     )}
           </main>
-        </div>
-      );
+          <Modal 
+            showModal={showModal} 
+            closeModal={() => setShowModal(false)} 
+            message={modalMessage} 
+            isSuccess={modalMessage.includes('success')} 
+          />
+
+                  </div>
+                );
     };
 
 export default ClientDashboard;

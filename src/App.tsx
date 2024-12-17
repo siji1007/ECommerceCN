@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import HomePage from '../src/pages/Home';
 import Shop from '../src/pages/Shop';
@@ -27,6 +27,8 @@ import host from "./host/host.txt?raw";
 import NewOrders from './Client/BusinessPage/NewOrder';
 import Productmanagement from './Admin/sidebarPages/ProductManage';
 import SaleReport from './Admin/sidebarPages/SalesReport';
+import ContractDetails from './Client/BusinessPage/ContractDetails';
+
 
 function App() {
 
@@ -67,6 +69,8 @@ function App() {
     setAdminID(storedAdminID);
   }, [adminID]);
 
+
+
   return (
     <Router>
       <Header />
@@ -102,6 +106,7 @@ function App() {
           <Route path="business-form" element={<Business />} />
           <Route path="product-list" element={<ProductList />}/>
           <Route path="neworders" element={<NewOrders />} />
+          <Route path="contract-details" element={<ContractDetails />} />
           
           <Route path="products-add" element={<ProductUpload />} />
         </Route>
