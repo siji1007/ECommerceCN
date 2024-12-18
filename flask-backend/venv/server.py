@@ -38,9 +38,9 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587 
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = 'ecommercecn7@gmail.com'  # Replace with your email
-app.config['MAIL_PASSWORD'] = 'ztvspewrpwmagddl'  # Replace with your password
-app.config['MAIL_DEFAULT_SENDER'] = 'ecommercecn7@gmail.com'
+app.config['MAIL_USERNAME'] = ''  # Replace with your email
+app.config['MAIL_PASSWORD'] = ''  # Replace with your password
+app.config['MAIL_DEFAULT_SENDER'] = ''
 
 mail = Mail(app)
 
